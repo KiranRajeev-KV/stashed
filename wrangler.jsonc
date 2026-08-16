@@ -13,6 +13,9 @@
   "observability": {
     "enabled": true,
   },
+  "secrets": {
+    "required": ["GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET", "SESSION_SECRET"],
+  },
   "upload_source_maps": true,
   "d1_databases": [
     {
