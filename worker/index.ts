@@ -5,6 +5,7 @@ import { authRoutes } from "./auth/routes.js";
 import { ideasRoutes, searchRoutes } from "./ideas/routes.js";
 import { databaseMiddleware } from "./middleware/database.js";
 import { requireSameOrigin } from "./middleware/same-origin.js";
+import { tagsRoutes } from "./tags/routes.js";
 import type { AppEnv } from "./types.js";
 
 const app = new Hono<AppEnv>();
@@ -15,6 +16,7 @@ app.use("/api/*", databaseMiddleware);
 app.route("/api/auth", authRoutes);
 app.route("/api/ideas", ideasRoutes);
 app.route("/api/search", searchRoutes);
+app.route("/api/tags", tagsRoutes);
 
 app.get("/api/health", (c) => {
   return c.json({
