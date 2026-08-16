@@ -17,6 +17,37 @@
     />
     <script>
       (() => {
+        const reloadKey = "stashed-preload-reload-at";
+        const reloadGuardMs = 60_000;
+
+        window.addEventListener("vite:preloadError", (event) => {
+          try {
+            const storedReloadAt = window.sessionStorage.getItem(reloadKey);
+            const lastReloadAt = storedReloadAt
+              ? Number.parseInt(storedReloadAt, 10)
+              : 0;
+            const now = Date.now();
+
+            if (
+              Number.isFinite(lastReloadAt) &&
+              now - lastReloadAt < reloadGuardMs
+            ) {
+              return;
+            }
+
+            window.sessionStorage.setItem(reloadKey, String(now));
+          } catch {
+            // Keep the normal error boundary when session storage is unavailable.
+            return;
+          }
+
+          event.preventDefault();
+          window.location.reload();
+        });
+      })();
+    </script>
+    <script>
+      (() => {
         const storageKey = "stashed-theme";
         let preference = "system";
 
