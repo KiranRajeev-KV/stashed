@@ -9,7 +9,7 @@ CREATE TABLE `idea_tags` (
 --> statement-breakpoint
 CREATE INDEX `idea_tags_tag_id_idx` ON `idea_tags` (`tag_id`);--> statement-breakpoint
 CREATE TABLE `ideas` (
-	`row_id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`row_id` integer PRIMARY KEY NOT NULL,
 	`id` text NOT NULL,
 	`title` text NOT NULL,
 	`content` text NOT NULL,

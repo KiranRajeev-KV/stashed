@@ -138,9 +138,7 @@ export const ideas = sqliteTable(
      * FTS5 requires an integer row ID when using an external-content table.
      * This value does not need to be exposed by the API.
      */
-    rowId: integer("row_id").primaryKey({
-      autoIncrement: true,
-    }),
+    rowId: integer("row_id").primaryKey(),
 
     /*
      * Public idea identifier.
