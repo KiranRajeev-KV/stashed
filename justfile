@@ -46,11 +46,11 @@ types:
 
 # Login to Cloudflare
 login:
-    wrangler login
+    pnpm exec wrangler login
 
 # Build + deploy to Cloudflare
 deploy: build
-    wrangler deploy
+    pnpm exec wrangler deploy
 
 # Generate Drizzle migrations from the schema
 db-generate:
@@ -64,13 +64,9 @@ db-local:
 db-remote:
     pnpm db:remote
 
-# Open Drizzle Studio to inspect data
-db-studio:
-    pnpm exec drizzle-kit studio
-
 # Run raw SQL on the local DB: just db-query "SELECT * FROM notes;"
 db-query SQL:
-    wrangler d1 execute stashed-db --local --command "{{ SQL }}"
+    pnpm exec wrangler d1 execute stashed-db --local --command "{{ SQL }}"
 
 # Wipe local D1 state and re-apply migrations from scratch
 db-reset: _wipe-local-db db-local
