@@ -1,9 +1,39 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light" data-theme-preference="system">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>stashed</title>
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      (() => {
+        const storageKey = "stashed-theme";
+        let preference = "system";
+
+        try {
+          const storedPreference = window.localStorage.getItem(storageKey);
+          if (
+            storedPreference === "light" ||
+            storedPreference === "dark" ||
+            storedPreference === "system"
+          ) {
+            preference = storedPreference;
+          }
+        } catch {
+          // Storage can be unavailable in privacy-restricted browsing contexts.
+        }
+
+        const theme =
+          preference === "system"
+            ? window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light"
+            : preference;
+
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.themePreference = preference;
+      })();
+    </script>
+    <title>Stashed</title>
   </head>
   <body>
     <div id="root"></div>

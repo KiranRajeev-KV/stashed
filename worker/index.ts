@@ -13,17 +13,17 @@ const app = new Hono<AppEnv>();
 app.use("/api/*", requireSameOrigin);
 app.use("/api/*", databaseMiddleware);
 
-app.route("/api/auth", authRoutes);
-app.route("/api/ideas", ideasRoutes);
-app.route("/api/search", searchRoutes);
-app.route("/api/tags", tagsRoutes);
-
-app.get("/api/health", (c) => {
-  return c.json({
-    ok: true,
-    app: "Stashed",
+const routes = app
+  .route("/api/auth", authRoutes)
+  .route("/api/ideas", ideasRoutes)
+  .route("/api/search", searchRoutes)
+  .route("/api/tags", tagsRoutes)
+  .get("/api/health", (c) => {
+    return c.json({
+      ok: true,
+      app: "Stashed",
+    });
   });
-});
 
 app.onError((error, c) => {
   if (error instanceof ApiError) {
@@ -42,5 +42,7 @@ app.onError((error, c) => {
 });
 
 app.notFound((c) => apiError(c, 404, "NOT_FOUND", "Endpoint not found"));
+
+export type AppType = typeof routes;
 
 export default app;

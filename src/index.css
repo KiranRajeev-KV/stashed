@@ -1,1 +1,183 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-interface);
+  --font-editor: var(--font-writing);
+  --font-mono: var(--font-code);
+
+  --text-display: clamp(2.75rem, 9vw, 6.5rem);
+  --text-display--line-height: 0.94;
+  --text-display--letter-spacing: -0.045em;
+  --text-page-title: clamp(2rem, 5vw, 3.5rem);
+  --text-page-title--line-height: 1.05;
+  --text-page-title--letter-spacing: -0.03em;
+  --text-prose: 1rem;
+  --text-prose--line-height: 1.7;
+  --text-label: 0.75rem;
+  --text-label--line-height: 1.25;
+  --text-label--letter-spacing: 0.06em;
+
+  --radius-control: var(--shape-control);
+  --radius-card: var(--shape-card);
+  --radius-surface: var(--shape-surface);
+
+  --spacing-gutter: var(--layout-gutter);
+  --container-app: var(--layout-app);
+  --container-reading: var(--layout-reading);
+
+  --shadow-raised: var(--elevation-raised);
+  --shadow-overlay: var(--elevation-overlay);
+
+  --ease-standard: var(--motion-standard);
+  --ease-emphasized: var(--motion-emphasized);
+}
+
+:root {
+  color-scheme: light;
+
+  --background: #f4f0e6;
+  --foreground: #202722;
+  --surface: #faf8f1;
+  --surface-muted: #ebe6da;
+  --surface-elevated: #fffdf8;
+  --border: #d4cebf;
+  --border-strong: #9f9887;
+  --muted-foreground: #62685f;
+  --primary: #315b48;
+  --primary-foreground: #f8fcf8;
+  --accent: #ad5539;
+  --accent-foreground: #fffaf7;
+  --success: #2f684d;
+  --success-foreground: #f5fcf7;
+  --warning: #865713;
+  --warning-foreground: #fff9ec;
+  --danger: #9c3d35;
+  --danger-foreground: #fff8f5;
+  --ring: #356d57;
+
+  --font-interface:
+    "IBM Plex Sans Variable", "IBM Plex Sans", ui-sans-serif, sans-serif;
+  --font-writing:
+    "IBM Plex Sans Variable", "IBM Plex Sans", ui-sans-serif, sans-serif;
+  --font-code:
+    "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+  --shape-control: 0.375rem;
+  --shape-card: 0.5rem;
+  --shape-surface: 0.625rem;
+  --border-subtle-width: 1px;
+
+  --layout-gutter: clamp(1rem, 4vw, 2rem);
+  --layout-app: 72rem;
+  --layout-reading: 48rem;
+
+  --elevation-raised:
+    0 1px 1px rgb(40 44 38 / 0.06), 0 6px 18px rgb(40 44 38 / 0.05);
+  --elevation-overlay:
+    0 2px 4px rgb(40 44 38 / 0.08), 0 18px 48px rgb(40 44 38 / 0.14);
+
+  --duration-fast: 120ms;
+  --duration-standard: 180ms;
+  --duration-slow: 280ms;
+  --motion-standard: cubic-bezier(0.2, 0, 0, 1);
+  --motion-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --background: #171b18;
+  --foreground: #e8eadf;
+  --surface: #1f2420;
+  --surface-muted: #292f29;
+  --surface-elevated: #252b26;
+  --border: #3b443c;
+  --border-strong: #626c63;
+  --muted-foreground: #abb1a7;
+  --primary: #91c2a3;
+  --primary-foreground: #142219;
+  --accent: #df8967;
+  --accent-foreground: #27140e;
+  --success: #79b992;
+  --success-foreground: #102218;
+  --warning: #d9aa5a;
+  --warning-foreground: #281b08;
+  --danger: #e07c70;
+  --danger-foreground: #29110f;
+  --ring: #9bc9ad;
+
+  --elevation-raised: 0 1px 1px rgb(0 0 0 / 0.18), 0 8px 22px rgb(0 0 0 / 0.14);
+  --elevation-overlay:
+    0 2px 5px rgb(0 0 0 / 0.3), 0 20px 52px rgb(0 0 0 / 0.32);
+}
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--border);
+  }
+
+  html {
+    background: var(--background);
+    font-family: var(--font-interface);
+    text-size-adjust: 100%;
+  }
+
+  body {
+    min-height: 100vh;
+    margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-interface);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 24%, transparent);
+    color: var(--foreground);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-standard: 0ms;
+    --duration-slow: 0ms;
+  }
+}

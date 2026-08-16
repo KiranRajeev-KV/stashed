@@ -13,11 +13,10 @@ const validationHook = (result: { success: boolean }, c: Context) => {
   }
 };
 
-export const tagsRoutes = new Hono<AppEnv>();
-
-tagsRoutes.use("*", requireSession);
-tagsRoutes.get(
-  "/",
-  zValidator("query", listTagsQuerySchema, validationHook),
-  async (c) => c.json(await listTags(c.get("db"), c.req.valid("query"))),
-);
+export const tagsRoutes = new Hono<AppEnv>()
+  .use("*", requireSession)
+  .get(
+    "/",
+    zValidator("query", listTagsQuerySchema, validationHook),
+    async (c) => c.json(await listTags(c.get("db"), c.req.valid("query"))),
+  );

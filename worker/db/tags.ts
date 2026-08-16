@@ -1,4 +1,4 @@
-import { asc, countDistinct, desc, eq, sql } from "drizzle-orm";
+import { asc, count, desc, eq, sql } from "drizzle-orm";
 
 import type { Database } from "./client.js";
 import { ideaTags, tags } from "./schema.js";
@@ -19,7 +19,7 @@ export async function listUsedTagRecords(
   db: Database,
   input: ListUsedTagRecordsInput,
 ): Promise<TagDiscoveryRecord[]> {
-  const ideaCount = countDistinct(ideaTags.ideaId);
+  const ideaCount = count(ideaTags.ideaId);
   const prefixFilter = input.q
     ? sql<boolean>`lower(substr(${tags.name}, 1, length(${input.q}))) = lower(${input.q})`
     : undefined;

@@ -1,15 +1,18 @@
 import type { Context } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
-export type ApiErrorCode =
-  | "AUTHORIZATION_FAILED"
-  | "AUTH_STATE_INVALID"
-  | "FORBIDDEN"
-  | "IDEA_NOT_FOUND"
-  | "INTERNAL_ERROR"
-  | "NOT_FOUND"
-  | "UNAUTHORIZED"
-  | "VALIDATION_ERROR";
+export const apiErrorCodes = [
+  "AUTHORIZATION_FAILED",
+  "AUTH_STATE_INVALID",
+  "FORBIDDEN",
+  "IDEA_NOT_FOUND",
+  "INTERNAL_ERROR",
+  "NOT_FOUND",
+  "UNAUTHORIZED",
+  "VALIDATION_ERROR",
+] as const;
+
+export type ApiErrorCode = (typeof apiErrorCodes)[number];
 
 export class ApiError extends Error {
   readonly status: ContentfulStatusCode;
@@ -27,9 +30,9 @@ export class ApiError extends Error {
   }
 }
 
-export function apiError(
+export function apiError<Status extends ContentfulStatusCode>(
   c: Context,
-  status: ContentfulStatusCode,
+  status: Status,
   code: ApiErrorCode,
   message: string,
 ) {

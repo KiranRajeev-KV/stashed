@@ -26,71 +26,64 @@ const validationHook = (result: { success: boolean }, c: Context) => {
   }
 };
 
-export const ideasRoutes = new Hono<AppEnv>();
-
-ideasRoutes.use("*", requireSession);
-
-ideasRoutes.get(
-  "/",
-  zValidator("query", listIdeasQuerySchema, validationHook),
-  async (c) => c.json(await listIdeas(c.get("db"), c.req.valid("query"))),
-);
-
-ideasRoutes.get(
-  "/:id",
-  zValidator("param", ideaIdParamSchema, validationHook),
-  async (c) => c.json(await getIdea(c.get("db"), c.req.valid("param").id)),
-);
-
-ideasRoutes.post(
-  "/",
-  zValidator("json", createIdeaSchema, validationHook),
-  async (c) => {
-    const result = await createIdea(
-      c.get("db"),
-      c.get("currentUser").id,
-      c.req.valid("json"),
-    );
-    return c.json(result, 201);
-  },
-);
-
-ideasRoutes.patch(
-  "/:id",
-  zValidator("param", ideaIdParamSchema, validationHook),
-  zValidator("json", updateIdeaSchema, validationHook),
-  async (c) =>
-    c.json(
-      await updateIdea(
+export const ideasRoutes = new Hono<AppEnv>()
+  .use("*", requireSession)
+  .get(
+    "/",
+    zValidator("query", listIdeasQuerySchema, validationHook),
+    async (c) => c.json(await listIdeas(c.get("db"), c.req.valid("query"))),
+  )
+  .get(
+    "/:id",
+    zValidator("param", ideaIdParamSchema, validationHook),
+    async (c) => c.json(await getIdea(c.get("db"), c.req.valid("param").id)),
+  )
+  .post(
+    "/",
+    zValidator("json", createIdeaSchema, validationHook),
+    async (c) => {
+      const result = await createIdea(
+        c.get("db"),
+        c.get("currentUser").id,
+        c.req.valid("json"),
+      );
+      return c.json(result, 201);
+    },
+  )
+  .patch(
+    "/:id",
+    zValidator("param", ideaIdParamSchema, validationHook),
+    zValidator("json", updateIdeaSchema, validationHook),
+    async (c) =>
+      c.json(
+        await updateIdea(
+          c.get("db"),
+          c.req.valid("param").id,
+          c.get("currentUser").id,
+          c.req.valid("json"),
+        ),
+      ),
+  )
+  .delete(
+    "/:id",
+    zValidator("param", ideaIdParamSchema, validationHook),
+    async (c) => {
+      await deleteIdea(
         c.get("db"),
         c.req.valid("param").id,
         c.get("currentUser").id,
-        c.req.valid("json"),
-      ),
-    ),
-);
+      );
+      return c.body(null, 204);
+    },
+  );
 
-ideasRoutes.delete(
-  "/:id",
-  zValidator("param", ideaIdParamSchema, validationHook),
-  async (c) => {
-    await deleteIdea(
-      c.get("db"),
-      c.req.valid("param").id,
-      c.get("currentUser").id,
-    );
-    return c.body(null, 204);
-  },
-);
-
-export const searchRoutes = new Hono<AppEnv>();
-
-searchRoutes.use("*", requireSession);
-searchRoutes.get(
-  "/",
-  zValidator("query", searchIdeasQuerySchema, validationHook),
-  async (c) => {
-    const { q, limit, offset } = c.req.valid("query");
-    return c.json(await searchIdeas(c.get("db"), q, limit, offset));
-  },
-);
+export const searchRoutes = new Hono<AppEnv>()
+  .use("*", requireSession)
+  .get(
+    "/",
+    zValidator("query", searchIdeasQuerySchema, validationHook),
+    async (c) => {
+      const { q, limit, offset } = c.req.valid("query");
+      return c.json(await searchIdeas(c.get("db"), q, limit, offset));
+    },
+  );
