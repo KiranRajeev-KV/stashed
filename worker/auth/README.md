@@ -61,7 +61,7 @@ pnpm dev
 ```
 
 Open <http://localhost:5173/api/auth/github> in a browser. After GitHub
-authorization, Stashed redirects to `/`. The auth endpoints are:
+authorization, Stashed redirects to `/ideas`. The auth endpoints are:
 
 | Method | Endpoint                    | Behavior                         |
 | ------ | --------------------------- | -------------------------------- |

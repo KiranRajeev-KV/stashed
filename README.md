@@ -70,3 +70,55 @@ Run `just` to list every recipe. The ones you'll use most:
 | `just db-local`    | Apply migrations to the local D1 database                 |
 | `just db-remote`   | Apply migrations to the remote D1 database                |
 | `just clean`       | Remove build artifacts (dist, .wrangler, tsbuildinfo)     |
+
+## Production deployment
+
+Stashed deploys the React frontend, Hono API, and static assets together as a
+single Cloudflare Worker. The Worker uses the `stashed-db` D1 database declared
+in `wrangler.jsonc`.
+
+Production releases are branch-gated:
+
+- Pull requests and pushes to `main` or `prod` run the CI workflow.
+- Only a push to `prod` can run the production deployment workflow.
+- The deployment applies pending D1 migrations before publishing the Worker.
+- Production seed data is never applied automatically.
+
+The current production origin is:
+
+```text
+https://stashed.kiranrajeevkv.workers.dev
+```
+
+Create a GitHub environment named `production`, restrict it to the `prod`
+branch, and add these environment secrets:
+
+| Secret                  | Purpose                                   |
+| ----------------------- | ----------------------------------------- |
+| `CLOUDFLARE_ACCOUNT_ID` | Selects the Cloudflare account            |
+| `CLOUDFLARE_API_TOKEN`  | Deploys Workers and applies D1 migrations |
+
+Scope the API token to this Cloudflare account. It needs **Workers Scripts:
+Write** and **D1: Edit**. The GitHub App client ID, client secret, and Stashed
+session secret are Worker secrets stored directly in Cloudflare; they do not
+need to be duplicated in GitHub.
+
+The intended release flow is to work normally on `main`, then open a pull
+request from `main` into the protected `prod` branch when the current state is
+ready for production.
+
+For the initial Worker deployment, set the Worker secrets without committing
+the local `.env` file:
+
+```sh
+pnpm exec wrangler secret bulk .env
+pnpm db:remote
+pnpm run deploy
+```
+
+Add this exact GitHub App callback URL alongside the existing localhost
+callback:
+
+```text
+https://stashed.kiranrajeevkv.workers.dev/api/auth/github/callback
+```
