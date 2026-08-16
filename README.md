@@ -1,3 +1,5 @@
+<img src="./public/app_icon_dark.png" alt="Stashed app icon" width="96" height="96" />
+
 # Stashed
 
 Save ideas worth coming back to.
@@ -11,6 +13,8 @@ their own ideas and are the only members who can edit or delete them.
 
 Stashed is a full-stack web app: the React frontend and Hono API run together
 on a single Cloudflare Worker, backed by Cloudflare D1 and Drizzle ORM.
+
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/2c86726f-cb87-4a82-be30-e1f0723b2a71" />
 
 ## Current Features
 

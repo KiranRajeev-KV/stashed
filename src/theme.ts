@@ -29,6 +29,9 @@ function applyThemePreference(preference: ThemePreference) {
   const root = document.documentElement;
   root.dataset.theme = preference;
   root.dataset.themePreference = preference;
+
+  const favicon = document.querySelector<HTMLLinkElement>("#favicon");
+  favicon?.setAttribute("href", `/favicon-${preference}.png`);
 }
 
 export function setThemePreference(preference: ThemePreference) {

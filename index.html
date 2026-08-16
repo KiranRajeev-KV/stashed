@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
+    <link
+      id="favicon"
+      rel="icon"
+      type="image/png"
+      sizes="64x64"
+      href="/favicon-light.png"
+    />
     <meta
       name="description"
       content="Stashed is a self-hosted, shared archive for saving ideas, discovering what others are thinking, and returning to useful thoughts later."
@@ -35,6 +42,7 @@
 
         document.documentElement.dataset.theme = theme;
         document.documentElement.dataset.themePreference = preference;
+        document.getElementById("favicon").href = `/favicon-${theme}.png`;
       })();
     </script>
     <title>Stashed</title>
