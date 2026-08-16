@@ -60,6 +60,10 @@ db-generate:
 db-local:
     pnpm db:local
 
+# Populate local D1 with deterministic users, ideas, and tags
+db-seed:
+    pnpm db:seed
+
 # Apply migrations to the remote D1 database
 db-remote:
     pnpm db:remote

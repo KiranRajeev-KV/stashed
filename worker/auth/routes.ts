@@ -96,7 +96,7 @@ export const authRoutes = new Hono<AppEnv>()
     const user = await findOrCreateGitHubUser(c.get("db"), identity);
 
     await setSessionCookie(c, user.id);
-    return c.redirect("/", 302);
+    return c.redirect("/ideas", 302);
   })
   .get("/me", requireSession, (c) => {
     return c.json({ user: c.get("currentUser") });

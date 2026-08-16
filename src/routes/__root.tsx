@@ -1,14 +1,13 @@
-import * as React from "react";
-import { Outlet, createRootRoute } from "@tanstack/react-router";
+import type { QueryClient } from "@tanstack/react-query";
+import { Outlet, createRootRouteWithContext } from "@tanstack/react-router";
 
-export const Route = createRootRoute({
-  component: RootComponent,
+import { NotFoundPage } from "../components/states/not-found-page.js";
+
+export type RouterContext = {
+  queryClient: QueryClient;
+};
+
+export const Route = createRootRouteWithContext<RouterContext>()({
+  component: () => <Outlet />,
+  notFoundComponent: NotFoundPage,
 });
-
-function RootComponent() {
-  return (
-    <React.Fragment>
-      <Outlet />
-    </React.Fragment>
-  );
-}
