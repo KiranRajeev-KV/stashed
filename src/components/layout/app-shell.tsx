@@ -44,7 +44,7 @@ function UserAvatar({ user }: AppShellProps) {
   );
 }
 
-function UserIdentity({ user }: AppShellProps) {
+export function UserIdentity({ user }: AppShellProps) {
   const tooltipId = useId();
   const [isHovered, setIsHovered] = useState(false);
   const [isFocused, setIsFocused] = useState(false);

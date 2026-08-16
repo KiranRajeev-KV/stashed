@@ -47,6 +47,7 @@
 
   --spacing-gutter: var(--layout-gutter);
   --container-app: var(--layout-app);
+  --container-landing: var(--layout-landing);
   --container-reading: var(--layout-reading);
 
   --shadow-raised: var(--elevation-raised);
@@ -93,6 +94,7 @@
 
   --layout-gutter: clamp(1rem, 4vw, 2rem);
   --layout-app: 72rem;
+  --layout-landing: 84rem;
   --layout-reading: 48rem;
 
   --elevation-raised:

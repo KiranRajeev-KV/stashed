@@ -2,7 +2,36 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 
 import { currentUserQueryOptions, githubLoginPath } from "../../api/auth.js";
+import { UserIdentity } from "../../components/layout/app-shell.js";
 import { ThemeControl } from "../../components/ui/theme-control.js";
+
+function LandingAccountAction() {
+  const currentUserQuery = useQuery(currentUserQueryOptions());
+
+  if (currentUserQuery.isPending) {
+    return (
+      <span
+        className="h-10 w-16 animate-pulse rounded-control bg-surface-muted"
+        role="status"
+      >
+        <span className="sr-only">Checking your session…</span>
+      </span>
+    );
+  }
+
+  if (currentUserQuery.data) {
+    return <UserIdentity user={currentUserQuery.data} />;
+  }
+
+  return (
+    <a
+      href={githubLoginPath}
+      className="inline-flex min-h-10 shrink-0 items-center rounded-control bg-primary px-3 text-sm font-medium text-primary-foreground transition-transform duration-(--duration-fast) hover:-translate-y-0.5 sm:px-4"
+    >
+      Log in
+    </a>
+  );
+}
 
 function LoginCallToAction() {
   const currentUserQuery = useQuery(currentUserQueryOptions());
@@ -66,7 +95,7 @@ export function LandingPage() {
       <a href="#landing-content" className="skip-link">
         Skip to content
       </a>
-      <header className="mx-auto flex w-full max-w-app items-center justify-between gap-4 px-gutter py-5 sm:py-7">
+      <header className="mx-auto flex w-full max-w-landing items-center justify-between gap-3 px-gutter py-5 sm:gap-4 sm:py-7">
         <a
           href="#landing-content"
           className="text-2xl font-semibold tracking-tight text-foreground"
@@ -74,18 +103,21 @@ export function LandingPage() {
         >
           Stashed<span className="text-accent">.</span>
         </a>
-        <div className="sm:hidden">
-          <ThemeControl variant="select" />
-        </div>
-        <div className="hidden sm:block">
-          <ThemeControl />
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="sm:hidden">
+            <ThemeControl variant="select" />
+          </div>
+          <div className="hidden sm:block">
+            <ThemeControl />
+          </div>
+          <LandingAccountAction />
         </div>
       </header>
 
       <section
         id="landing-content"
         tabIndex={-1}
-        className="mx-auto w-full max-w-app px-gutter pb-16 pt-4 sm:pb-24 sm:pt-8"
+        className="mx-auto w-full max-w-landing px-gutter pb-16 pt-4 sm:pb-24 sm:pt-8"
       >
         <div className="notebook-spread">
           <article className="notebook-page notebook-page-primary">
@@ -133,14 +165,14 @@ export function LandingPage() {
 
               <div className="mt-8">
                 <p className="font-mono text-label uppercase text-accent">
-                  Project note
+                  Product idea
                 </p>
                 <h2 className="mt-3 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-                  A local-first field guide for recurring systems problems
+                  A weekly review that brings promising ideas back
                 </h2>
                 <p className="mt-6 text-prose text-muted-foreground">
-                  Keep the practical discoveries that are too specific for a
-                  blog post and too valuable to leave buried in chat history.
+                  Resurface a small set of saved thoughts each Friday so the
+                  ones with potential do not disappear beneath newer notes.
                 </p>
               </div>
 
@@ -149,8 +181,8 @@ export function LandingPage() {
                   Next pass
                 </p>
                 <p className="mt-2 text-sm leading-relaxed">
-                  Add a structure for symptoms, failed approaches, and the clue
-                  that finally unlocked the problem.
+                  Test whether choosing three notes by status and last-opened
+                  date creates a useful review rhythm.
                 </p>
               </div>
 
@@ -159,13 +191,13 @@ export function LandingPage() {
                 aria-label="Example tags"
               >
                 <li className="rounded-full bg-surface-muted px-3 py-1.5 font-mono text-xs">
-                  developer-tools
+                  product-thinking
                 </li>
                 <li className="rounded-full bg-surface-muted px-3 py-1.5 font-mono text-xs">
-                  local-first
+                  knowledge-management
                 </li>
                 <li className="rounded-full bg-surface-muted px-3 py-1.5 font-mono text-xs">
-                  writing
+                  review
                 </li>
               </ul>
             </div>
