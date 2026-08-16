@@ -1,0 +1,6 @@
+.wrangler
+.tanstack
+dist
+src/routeTree.gen.ts
+drizzle
+pnpm-lock.yaml
