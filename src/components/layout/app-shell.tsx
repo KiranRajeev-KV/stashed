@@ -1,5 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { LogOut } from "lucide-react";
+import { useId, useState } from "react";
 
 import {
   currentUserQueryKey,
@@ -38,6 +40,66 @@ function UserAvatar({ user }: AppShellProps) {
       className="grid size-8 shrink-0 place-items-center rounded-full bg-surface-muted font-mono text-xs font-medium text-muted-foreground"
     >
       {initials}
+    </span>
+  );
+}
+
+function UserIdentity({ user }: AppShellProps) {
+  const tooltipId = useId();
+  const [isHovered, setIsHovered] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
+  const isTooltipVisible = !isDismissed && (isHovered || isFocused);
+
+  return (
+    <span
+      className="user-identity"
+      onMouseEnter={() => {
+        setIsHovered(true);
+        setIsDismissed(false);
+      }}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        if (!isFocused) {
+          setIsDismissed(false);
+        }
+      }}
+    >
+      <button
+        type="button"
+        className="user-identity-trigger"
+        aria-describedby={tooltipId}
+        onFocus={() => {
+          setIsFocused(true);
+          setIsDismissed(false);
+        }}
+        onBlur={() => {
+          setIsFocused(false);
+          if (!isHovered) {
+            setIsDismissed(false);
+          }
+        }}
+        onClick={() => setIsDismissed(false)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            setIsDismissed(true);
+          }
+        }}
+      >
+        <UserAvatar user={user} />
+        <span className="sr-only">Signed-in account</span>
+      </button>
+      <span
+        id={tooltipId}
+        role="tooltip"
+        className="user-identity-tooltip"
+        data-visible={isTooltipVisible ? "true" : "false"}
+      >
+        <span className="user-identity-tooltip-name">{user.displayName}</span>
+        <span className="user-identity-tooltip-username">
+          @{user.identity.username}
+        </span>
+      </span>
     </span>
   );
 }
@@ -92,31 +154,21 @@ export function AppShell({ user }: AppShellProps) {
                 >
                   Search
                 </Link>
-                <Link
-                  to="/ideas/new"
-                  className="ml-1 inline-flex min-h-11 items-center rounded-control bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors duration-(--duration-fast) hover:bg-primary/90"
-                >
-                  New idea
-                </Link>
               </nav>
             </div>
 
             <div className="flex min-w-0 items-center gap-2 sm:gap-3">
               <div className="hidden md:block">
-                <ThemeControl compact />
+                <ThemeControl variant="toggle" />
               </div>
-              <div className="flex min-w-0 items-center gap-2">
-                <UserAvatar user={user} />
-                <span className="app-shell-user-name truncate text-sm font-medium">
-                  {user.displayName}
-                </span>
-              </div>
+              <UserIdentity user={user} />
               <button
                 type="button"
                 onClick={() => logoutMutation.mutate()}
                 disabled={logoutMutation.isPending}
-                className="min-h-10 shrink-0 rounded-control px-2 text-sm font-medium text-muted-foreground transition-colors duration-(--duration-fast) hover:bg-surface-muted hover:text-foreground disabled:cursor-wait disabled:opacity-60 sm:px-3"
+                className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-control border border-danger/20 bg-danger/10 px-2 text-sm font-medium text-danger transition-colors duration-(--duration-fast) hover:border-danger/30 hover:bg-danger/15 hover:text-danger disabled:cursor-wait disabled:opacity-60 sm:px-3"
               >
+                <LogOut aria-hidden="true" size={16} strokeWidth={1.8} />
                 {logoutMutation.isPending ? "Leaving…" : "Log out"}
               </button>
             </div>
@@ -145,15 +197,9 @@ export function AppShell({ user }: AppShellProps) {
               >
                 Search
               </Link>
-              <Link
-                to="/ideas/new"
-                className="inline-flex min-h-11 items-center rounded-control bg-primary px-3 text-sm font-medium text-primary-foreground"
-              >
-                New
-              </Link>
             </nav>
             <div className="app-shell-mobile-theme">
-              <ThemeControl compact />
+              <ThemeControl variant="toggle" />
             </div>
           </div>
         </div>

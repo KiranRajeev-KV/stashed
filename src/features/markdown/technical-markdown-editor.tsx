@@ -1,7 +1,9 @@
 import * as React from "react";
+import { Select } from "@base-ui/react/select";
 import {
   Bold,
   Check,
+  ChevronsUpDown,
   Code2,
   FileCode2,
   Italic,
@@ -40,6 +42,13 @@ const BLOCK_TYPES: readonly string[] = [
   KEYS.h3,
   KEYS.blockquote,
 ];
+const BLOCK_LABELS: Record<string, string> = {
+  [KEYS.p]: "Paragraph",
+  [KEYS.h1]: "Heading 1",
+  [KEYS.h2]: "Heading 2",
+  [KEYS.h3]: "Heading 3",
+  [KEYS.blockquote]: "Quote",
+};
 
 type TechnicalMarkdownEditorProps = {
   describedBy?: string;
@@ -74,6 +83,64 @@ function ToolbarButton({
     >
       {children}
     </button>
+  );
+}
+
+function BlockStyleSelect({
+  onValueChange,
+  value,
+}: {
+  onValueChange: (value: string) => void;
+  value: string;
+}) {
+  return (
+    <Select.Root
+      value={value}
+      onValueChange={(nextValue) => {
+        if (nextValue) onValueChange(nextValue);
+      }}
+    >
+      <div className="shrink-0">
+        <Select.Label className="sr-only">Block style</Select.Label>
+        <Select.Trigger className="flex min-h-11 w-36 cursor-pointer items-center justify-between gap-2 rounded-control border border-border bg-surface px-3 text-left text-sm text-foreground transition-colors duration-(--duration-fast) hover:border-border-strong hover:bg-surface-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[popup-open]:border-border-strong data-[popup-open]:bg-surface-elevated">
+          <Select.Value>{BLOCK_LABELS[value]}</Select.Value>
+          <Select.Icon className="grid shrink-0 place-items-center text-muted-foreground">
+            <ChevronsUpDown className="size-4" aria-hidden="true" />
+          </Select.Icon>
+        </Select.Trigger>
+      </div>
+
+      <Select.Portal>
+        <Select.Positioner
+          align="start"
+          alignItemWithTrigger={false}
+          className="z-50 w-(--anchor-width) outline-none"
+          sideOffset={6}
+        >
+          <Select.Popup className="w-full overflow-hidden rounded-card border border-border-strong bg-surface-elevated text-foreground shadow-overlay">
+            <Select.List className="w-full p-1 outline-none">
+              {BLOCK_TYPES.map((blockType) => (
+                <Select.Item
+                  key={blockType}
+                  value={blockType}
+                  className="group grid min-h-11 w-full cursor-pointer grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-2 rounded-control px-3 py-2 text-sm text-foreground outline-none select-none data-[highlighted]:bg-surface-muted"
+                >
+                  <Select.ItemIndicator
+                    keepMounted
+                    className="invisible grid place-items-center text-primary group-data-[selected]:visible [&_svg]:size-4"
+                  >
+                    <Check aria-hidden="true" />
+                  </Select.ItemIndicator>
+                  <Select.ItemText className="min-w-0 whitespace-nowrap">
+                    {BLOCK_LABELS[blockType]}
+                  </Select.ItemText>
+                </Select.Item>
+              ))}
+            </Select.List>
+          </Select.Popup>
+        </Select.Positioner>
+      </Select.Portal>
+    </Select.Root>
   );
 }
 
@@ -155,30 +222,20 @@ function EditorToolbar() {
         role="toolbar"
         aria-label="Formatting tools"
       >
-        <label className="idea-editor-block-select">
-          <span className="sr-only">Block style</span>
-          <select
-            aria-label="Block style"
-            value={
-              typeof blockType === "string" && BLOCK_TYPES.includes(blockType)
-                ? blockType
-                : KEYS.p
-            }
-            onChange={(event) =>
-              runTransform(() =>
-                editor.tf.toggleBlock(event.currentTarget.value, {
-                  defaultType: KEYS.p,
-                }),
-              )
-            }
-          >
-            <option value={KEYS.p}>Paragraph</option>
-            <option value={KEYS.h1}>Heading 1</option>
-            <option value={KEYS.h2}>Heading 2</option>
-            <option value={KEYS.h3}>Heading 3</option>
-            <option value={KEYS.blockquote}>Quote</option>
-          </select>
-        </label>
+        <BlockStyleSelect
+          value={
+            typeof blockType === "string" && BLOCK_TYPES.includes(blockType)
+              ? blockType
+              : KEYS.p
+          }
+          onValueChange={(nextBlockType) =>
+            runTransform(() =>
+              editor.tf.toggleBlock(nextBlockType, {
+                defaultType: KEYS.p,
+              }),
+            )
+          }
+        />
 
         <span
           className="idea-editor-tool-group"

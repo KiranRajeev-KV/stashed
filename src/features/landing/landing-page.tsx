@@ -75,7 +75,7 @@ export function LandingPage() {
           Stashed<span className="text-accent">.</span>
         </a>
         <div className="sm:hidden">
-          <ThemeControl compact />
+          <ThemeControl variant="select" />
         </div>
         <div className="hidden sm:block">
           <ThemeControl />

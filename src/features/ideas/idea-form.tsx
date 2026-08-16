@@ -2,10 +2,11 @@ import { revalidateLogic, useForm } from "@tanstack/react-form";
 import { LoaderCircle } from "lucide-react";
 import { z } from "zod";
 
-import type { CreateIdeaInput, IdeaStatus } from "../../api/ideas.js";
+import type { CreateIdeaInput } from "../../api/ideas.js";
 import { TechnicalMarkdownEditor } from "../markdown/technical-markdown-editor.js";
 import { TagSelector } from "../tags/tag-selector.js";
-import { IDEA_STATUSES, IDEA_STATUS_LABELS } from "./idea-status.js";
+import { IDEA_STATUSES } from "./idea-status.js";
+import { StatusSelect } from "./status-select.js";
 
 const ideaFormSchema = z
   .object({
@@ -155,26 +156,23 @@ export function IdeaForm({
 
         <form.Field name="status">
           {(field) => (
-            <label className="idea-form-field idea-form-status-field">
-              <span className="idea-form-label">Status</span>
-              <select
-                name={field.name}
-                value={field.state.value}
-                onBlur={field.handleBlur}
-                onChange={(event) =>
-                  field.handleChange(event.currentTarget.value as IdeaStatus)
-                }
-              >
-                {IDEA_STATUSES.map((status) => (
-                  <option key={status} value={status}>
-                    {IDEA_STATUS_LABELS[status]}
-                  </option>
-                ))}
-              </select>
-              <span className="idea-form-field-foot">
-                <span>Where this thought sits in its lifecycle.</span>
-              </span>
-            </label>
+            <StatusSelect
+              className="idea-form-field idea-form-status-field"
+              description={
+                <span className="idea-form-field-foot">
+                  <span>Where this thought sits in its lifecycle.</span>
+                </span>
+              }
+              label="Status"
+              labelClassName="idea-form-label"
+              name={field.name}
+              onBlur={field.handleBlur}
+              onValueChange={(status) => {
+                if (status) field.handleChange(status);
+              }}
+              size="form"
+              value={field.state.value}
+            />
           )}
         </form.Field>
       </div>

@@ -27,30 +27,38 @@ export type UpdateIdeaInput = InferRequestType<
 
 export type IdeaListFilters = {
   status?: IdeaStatus;
-  tagId?: string;
+  tagIds?: string[];
 };
 
 export const IDEAS_PAGE_SIZE = "20";
 
 export function ideasQueryKey(filters: IdeaListFilters) {
+  const tagIds = filters.tagIds
+    ? [...new Set(filters.tagIds)].sort()
+    : undefined;
+
   return [
     "ideas",
     {
       status: filters.status,
-      tagId: filters.tagId,
+      tagIds,
       limit: IDEAS_PAGE_SIZE,
     },
   ] as const;
 }
 
 export function ideasInfiniteQueryOptions(filters: IdeaListFilters) {
+  const tagIds = filters.tagIds
+    ? [...new Set(filters.tagIds)].sort()
+    : undefined;
+
   return infiniteQueryOptions({
-    queryKey: ideasQueryKey(filters),
+    queryKey: ideasQueryKey({ ...filters, tagIds }),
     initialPageParam: null as string | null,
     queryFn: ({ pageParam }) =>
       listIdeas({
         status: filters.status,
-        tagId: filters.tagId,
+        tagId: tagIds,
         cursor: pageParam ?? undefined,
         limit: IDEAS_PAGE_SIZE,
       }),

@@ -4,6 +4,7 @@ import { ideaStatusValues } from "../db/schema.js";
 
 const MAX_CONTENT_LENGTH = 200_000;
 const MAX_TAGS = 20;
+const MAX_TAG_FILTERS = 20;
 
 const titleSchema = z.string().trim().min(1).max(200);
 const contentSchema = z
@@ -19,7 +20,16 @@ export const ideaIdParamSchema = z.object({
 
 export const listIdeasQuerySchema = z.object({
   status: z.enum(ideaStatusValues).optional(),
-  tagId: z.string().uuid().optional(),
+  tagId: z
+    .union([
+      z.string().uuid(),
+      z.array(z.string().uuid()).min(1).max(MAX_TAG_FILTERS),
+    ])
+    .optional()
+    .transform((value) => {
+      if (!value) return undefined;
+      return [...new Set(Array.isArray(value) ? value : [value])];
+    }),
   cursor: z.string().min(1).max(500).optional(),
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });

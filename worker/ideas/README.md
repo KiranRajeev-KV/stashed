@@ -32,12 +32,16 @@ Every endpoint requires a valid Stashed session cookie.
 
 `GET /api/ideas` accepts these query parameters:
 
-| Parameter | Behavior                                        |
-| --------- | ----------------------------------------------- |
-| `status`  | Filter by one of the configured idea statuses   |
-| `tagId`   | Filter by a tag's UUID                          |
-| `cursor`  | Continue after an opaque pagination cursor      |
-| `limit`   | Page size; defaults to `20` and is at most `50` |
+| Parameter | Behavior                                         |
+| --------- | ------------------------------------------------ |
+| `status`  | Filter by one of the configured idea statuses    |
+| `tagId`   | Filter by one or more tag UUIDs (repeat the key) |
+| `cursor`  | Continue after an opaque pagination cursor       |
+| `limit`   | Page size; defaults to `20` and is at most `50`  |
+
+Multiple `tagId` values use AND matching: an idea is included only when it has
+every selected tag. A single `tagId` remains supported for backwards
+compatibility.
 
 The response is newest-first and does not expose `ideas.row_id` or full idea
 content:
@@ -116,18 +120,22 @@ Search uses the custom `ideas_fts` FTS5 table and joins matches back through
 `ideas.row_id = ideas_fts.rowid`. The tokenizer keeps `+` and `#` inside terms,
 so searches for `C++`, `C#`, and `C` remain distinct. A period remains a
 separator, so a term such as `Node.js` is tokenized as `node` and `js`.
+Each whitespace-separated query term is treated as a word prefix, so `arch`
+matches tokens such as `archive`, `archived`, and `archaeology`. All terms must
+match somewhere across the title or content.
 
 Results are ordered using BM25 relevance, with title matches weighted more
-heavily than content matches. Excerpts always come from idea content and use
-these non-HTML sentinels around matched terms:
+heavily than content matches. The response preserves the unmodified `title`
+and includes `highlightedTitle` for presentation. Highlighted titles and
+content excerpts use these non-HTML sentinels around matched terms:
 
 ```text
 [[[HIGHLIGHT_START]]]matched text[[[HIGHLIGHT_END]]]
 ```
 
-Frontend code should split the excerpt around those sentinels, render every
-piece as ordinary escaped text, and wrap only matched pieces in a React
-`<mark>` element. Do not pass the excerpt to `dangerouslySetInnerHTML`.
+Frontend code should split both highlighted fields around those sentinels,
+render every piece as ordinary escaped text, and wrap only matched pieces in a
+React `<mark>` element. Do not pass either field to `dangerouslySetInnerHTML`.
 
 The existing migration triggers keep FTS synchronized after insert, searchable
 updates, and deletion. API code must not write directly to `ideas_fts`.

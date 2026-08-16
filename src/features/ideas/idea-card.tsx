@@ -1,10 +1,13 @@
 import { Link } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 
 import type { IdeaListItem } from "../../api/ideas.js";
 import { IDEA_STATUS_LABELS } from "./idea-status.js";
 
 type IdeaCardProps = {
   idea: IdeaListItem;
+  excerpt?: ReactNode;
+  title?: ReactNode;
 };
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -36,20 +39,12 @@ function IdeaAuthor({ idea }: IdeaCardProps) {
           {initials}
         </span>
       )}
-      <span className="truncate">
-        {author.displayName}
-        {author.username ? (
-          <span className="hidden text-muted-foreground sm:inline">
-            {" "}
-            @{author.username}
-          </span>
-        ) : null}
-      </span>
+      <span className="truncate">{author.displayName}</span>
     </span>
   );
 }
 
-export function IdeaCard({ idea }: IdeaCardProps) {
+export function IdeaCard({ excerpt, idea, title }: IdeaCardProps) {
   const updated = idea.updatedAt !== idea.createdAt;
   const timestamp = updated ? idea.updatedAt : idea.createdAt;
 
@@ -59,7 +54,7 @@ export function IdeaCard({ idea }: IdeaCardProps) {
         <span>{IDEA_STATUS_LABELS[idea.status].slice(0, 1)}</span>
       </div>
 
-      <div className="idea-card-content">
+      <div className="idea-card-content flex h-full flex-col">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <span className="idea-status" data-status={idea.status}>
             {IDEA_STATUS_LABELS[idea.status]}
@@ -80,12 +75,12 @@ export function IdeaCard({ idea }: IdeaCardProps) {
             params={{ ideaId: idea.id }}
             className="idea-card-link text-foreground decoration-1 underline-offset-4 group-hover:text-primary group-hover:underline"
           >
-            {idea.title}
+            {title ?? idea.title}
           </Link>
         </h2>
 
         <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
-          {idea.excerpt}
+          {excerpt ?? idea.excerpt}
         </p>
 
         {idea.tags.length > 0 ? (
@@ -104,16 +99,18 @@ export function IdeaCard({ idea }: IdeaCardProps) {
           </ul>
         ) : null}
 
-        <footer className="mt-5 flex items-center justify-between gap-4 border-t border-border pt-4 text-sm text-muted-foreground">
-          <IdeaAuthor idea={idea} />
-          <Link
-            to="/ideas/$ideaId"
-            params={{ ideaId: idea.id }}
-            className="shrink-0 font-medium text-primary underline-offset-4 hover:underline"
-            aria-label={`Open ${idea.title}`}
-          >
-            Read note <span aria-hidden="true">→</span>
-          </Link>
+        <footer className="mt-auto pt-5 text-sm text-muted-foreground">
+          <div className="flex items-center justify-between gap-4 border-t border-border pt-4">
+            <IdeaAuthor idea={idea} />
+            <Link
+              to="/ideas/$ideaId"
+              params={{ ideaId: idea.id }}
+              className="shrink-0 font-medium text-primary underline-offset-4 hover:underline"
+              aria-label={`Open ${idea.title}`}
+            >
+              Read note <span aria-hidden="true">→</span>
+            </Link>
+          </div>
         </footer>
       </div>
     </article>

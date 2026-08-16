@@ -35,12 +35,13 @@ export type IdeaListRecord = Omit<IdeaRecord, "content"> & {
 };
 
 export type IdeaSearchRecord = Omit<IdeaRecord, "content" | "rowId"> & {
+  highlightedTitle: string;
   excerpt: string;
 };
 
 type ListIdeasInput = {
   status?: IdeaStatus;
-  tagId?: string;
+  tagIds?: string[];
   cursorRowId?: number;
   limit: number;
 };
@@ -48,6 +49,7 @@ type ListIdeasInput = {
 type SearchRow = {
   id: string;
   title: string;
+  highlightedTitle: string;
   status: IdeaStatus;
   authorId: string;
   authorDisplayName: string;
@@ -157,15 +159,13 @@ export async function listIdeaRecords(
   if (input.cursorRowId !== undefined) {
     filters.push(lt(ideas.rowId, input.cursorRowId));
   }
-  if (input.tagId) {
+  for (const tagId of input.tagIds ?? []) {
     filters.push(
       exists(
         db
           .select({ value: sql`1` })
           .from(ideaTags)
-          .where(
-            and(eq(ideaTags.ideaId, ideas.id), eq(ideaTags.tagId, input.tagId)),
-          ),
+          .where(and(eq(ideaTags.ideaId, ideas.id), eq(ideaTags.tagId, tagId))),
       ),
     );
   }
@@ -366,10 +366,12 @@ export async function deleteIdeaRecord(db: Database, ideaId: string) {
 }
 
 function toSafeFtsQuery(query: string) {
+  // Keep user input literal while leaving FTS5's prefix operator outside the
+  // quotes so a term such as `arch` matches `archive`.
   return query
     .trim()
     .split(/\s+/)
-    .map((term) => `"${term.replaceAll('"', '""')}"`)
+    .map((term) => `"${term.replaceAll('"', '""')}"*`)
     .join(" ");
 }
 
@@ -384,6 +386,12 @@ export async function searchIdeaRecords(
       `SELECT
         i.id AS id,
         i.title AS title,
+        highlight(
+          ideas_fts,
+          0,
+          '[[[HIGHLIGHT_START]]]',
+          '[[[HIGHLIGHT_END]]]'
+        ) AS highlightedTitle,
         i.status AS status,
         u.id AS authorId,
         u.display_name AS authorDisplayName,
@@ -414,6 +422,7 @@ export async function searchIdeaRecords(
   return result.results.map((row) => ({
     id: row.id,
     title: row.title,
+    highlightedTitle: row.highlightedTitle,
     status: row.status,
     author: {
       id: row.authorId,

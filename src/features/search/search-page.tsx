@@ -73,7 +73,7 @@ export function SearchPage() {
 
         <p className="search-page-annotation" aria-hidden="true">
           <span>Index note</span>
-          Exact words work well. Separate terms to narrow the result.
+          Type the beginning of a word. Separate terms to narrow the result.
         </p>
       </header>
 
@@ -143,12 +143,8 @@ export function SearchPage() {
             </div>
 
             <div className="grid gap-4">
-              {results.map((result, index) => (
-                <SearchResultCard
-                  key={result.id}
-                  result={result}
-                  index={index}
-                />
+              {results.map((result) => (
+                <SearchResultCard key={result.id} result={result} />
               ))}
             </div>
 

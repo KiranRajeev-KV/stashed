@@ -1,4 +1,13 @@
 import {
+  BlockquoteRules,
+  BoldRules,
+  CodeRules,
+  HeadingRules,
+  ItalicRules,
+  MarkComboRules,
+  StrikethroughRules,
+} from "@platejs/basic-nodes";
+import {
   BlockquotePlugin,
   BoldPlugin,
   CodePlugin,
@@ -8,12 +17,14 @@ import {
   ItalicPlugin,
   StrikethroughPlugin,
 } from "@platejs/basic-nodes/react";
+import { CodeBlockRules } from "@platejs/code-block";
 import {
   CodeBlockPlugin,
   CodeLinePlugin,
   CodeSyntaxPlugin,
 } from "@platejs/code-block/react";
 import { IndentPlugin } from "@platejs/indent/react";
+import { LinkRules } from "@platejs/link";
 import { LinkPlugin } from "@platejs/link/react";
 import {
   BulletedListRules,
@@ -49,14 +60,37 @@ const listTargetPlugins = [
 
 export const technicalMarkdownPlugins = [
   ParagraphPlugin.withComponent(ParagraphElement),
-  H1Plugin.withComponent(H1Element),
-  H2Plugin.withComponent(H2Element),
-  H3Plugin.withComponent(H3Element),
-  BlockquotePlugin.withComponent(BlockquoteElement),
-  BoldPlugin,
-  ItalicPlugin,
-  StrikethroughPlugin,
-  CodePlugin.withComponent(InlineCodeLeaf),
+  H1Plugin.configure({
+    inputRules: [HeadingRules.markdown()],
+  }).withComponent(H1Element),
+  H2Plugin.configure({
+    inputRules: [HeadingRules.markdown()],
+  }).withComponent(H2Element),
+  H3Plugin.configure({
+    inputRules: [HeadingRules.markdown()],
+  }).withComponent(H3Element),
+  BlockquotePlugin.configure({
+    inputRules: [BlockquoteRules.markdown()],
+  }).withComponent(BlockquoteElement),
+  BoldPlugin.configure({
+    inputRules: [
+      BoldRules.markdown({ variant: "*" }),
+      BoldRules.markdown({ variant: "_" }),
+      MarkComboRules.markdown({ variant: "boldItalic" }),
+    ],
+  }),
+  ItalicPlugin.configure({
+    inputRules: [
+      ItalicRules.markdown({ variant: "*" }),
+      ItalicRules.markdown({ variant: "_" }),
+    ],
+  }),
+  StrikethroughPlugin.configure({
+    inputRules: [StrikethroughRules.markdown()],
+  }),
+  CodePlugin.configure({
+    inputRules: [CodeRules.markdown()],
+  }).withComponent(InlineCodeLeaf),
   IndentPlugin.configure({
     inject: {
       targetPlugins: listTargetPlugins,
@@ -77,8 +111,12 @@ export const technicalMarkdownPlugins = [
       belowNodes: MarkdownBlockList,
     },
   }),
-  LinkPlugin.withComponent(LinkElement),
-  CodeBlockPlugin.withComponent(CodeBlockElement),
+  LinkPlugin.configure({
+    inputRules: [LinkRules.markdown()],
+  }).withComponent(LinkElement),
+  CodeBlockPlugin.configure({
+    inputRules: [CodeBlockRules.markdown({ on: "break" })],
+  }).withComponent(CodeBlockElement),
   CodeLinePlugin.withComponent(CodeLineElement),
   CodeSyntaxPlugin.withComponent(CodeSyntaxLeaf),
   MarkdownPlugin.configure({

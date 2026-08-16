@@ -26,7 +26,7 @@ const cursorSchema = z.object({
 
 type ListIdeasInput = {
   status?: IdeaStatus;
-  tagId?: string;
+  tagId?: string[];
   cursor?: string;
   limit: number;
 };
@@ -91,6 +91,7 @@ function serializeSearchResult(idea: IdeaSearchRecord, tags: IdeaTagRecord[]) {
   return {
     id: idea.id,
     title: idea.title,
+    highlightedTitle: idea.highlightedTitle,
     excerpt: idea.excerpt,
     status: idea.status,
     author: idea.author,
@@ -114,7 +115,7 @@ export async function listIdeas(db: Database, input: ListIdeasInput) {
   const cursorRowId = input.cursor ? decodeCursor(input.cursor) : undefined;
   const records = await listIdeaRecords(db, {
     status: input.status,
-    tagId: input.tagId,
+    tagIds: input.tagId,
     cursorRowId,
     limit: input.limit + 1,
   });

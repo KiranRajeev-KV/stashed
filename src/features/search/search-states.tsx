@@ -84,10 +84,10 @@ export function SearchResultsSkeleton() {
       {Array.from({ length: 4 }, (_, index) => (
         <div
           key={index}
-          className="search-result-card min-h-56 animate-pulse motion-reduce:animate-none"
+          className="idea-card min-h-72 animate-pulse motion-reduce:animate-none"
         >
-          <div className="search-result-margin" />
-          <div className="search-result-content">
+          <div className="idea-card-margin" />
+          <div className="idea-card-content">
             <div className="h-6 w-20 rounded-full bg-surface-muted" />
             <div className="mt-5 h-7 w-4/5 rounded-control bg-surface-muted" />
             <div className="mt-6 space-y-2">

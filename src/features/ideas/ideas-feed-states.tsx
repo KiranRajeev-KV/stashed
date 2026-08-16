@@ -79,7 +79,7 @@ export function IdeasEmptyState({
         </h2>
         <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
           Clear the filters to return to the complete index, or try a different
-          status or tag.
+          status or selected tags.
         </p>
         <button
           type="button"
