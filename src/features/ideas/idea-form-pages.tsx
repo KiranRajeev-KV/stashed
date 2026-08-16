@@ -23,15 +23,15 @@ function IdeaFormHeader({ mode }: { mode: "create" | "edit" }) {
   return (
     <header className="idea-form-page-header">
       <p className="font-mono text-label uppercase text-accent">
-        {mode === "create" ? "Fresh page" : "Revision"}
+        {mode === "create" ? "New contribution" : "Revision"}
       </p>
       <h1 className="mt-3 text-page-title font-semibold">
-        {mode === "create" ? "New idea" : "Edit idea"}
+        {mode === "create" ? "Save an idea" : "Edit your idea"}
       </h1>
       <p className="mt-4 max-w-2xl text-prose text-muted-foreground">
         {mode === "create"
-          ? "Capture the shape of a thought now; develop the details when they arrive."
-          : "Return to the note, sharpen the language, and move the idea forward."}
+          ? "Capture enough context to recognize the thought later. Everyone signed in to this Stashed instance will be able to discover it."
+          : "Return to your idea, sharpen the details, and make the next revision useful to the group."}
       </p>
     </header>
   );
@@ -108,7 +108,8 @@ function IdeaEditForbidden({ ideaId }: { ideaId: string }) {
         Only the author can revise this idea.
       </h1>
       <p className="mt-3 max-w-xl text-muted-foreground">
-        You can still read the complete note and follow its development.
+        You can still read the complete idea and see future revisions from its
+        author.
       </p>
       <Link
         to="/ideas/$ideaId"

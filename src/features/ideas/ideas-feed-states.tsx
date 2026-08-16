@@ -42,7 +42,7 @@ export function IdeasErrorState({ message, onRetry }: IdeasErrorStateProps) {
       role="alert"
     >
       <p className="font-mono text-label uppercase text-danger">
-        Index unavailable
+        Archive unavailable
       </p>
       <h2 className="mt-2 text-xl font-semibold">
         The ideas could not be opened.
@@ -75,11 +75,11 @@ export function IdeasEmptyState({
       <section className="idea-empty-state">
         <p className="font-mono text-label uppercase text-accent">No match</p>
         <h2 className="mt-3 text-2xl font-semibold tracking-tight">
-          No ideas fit these notes.
+          No ideas match these filters.
         </h2>
         <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-          Clear the filters to return to the complete index, or try a different
-          status or selected tags.
+          Clear the filters to browse everything the group has saved, or try a
+          different status or set of tags.
         </p>
         <button
           type="button"
@@ -94,13 +94,15 @@ export function IdeasEmptyState({
 
   return (
     <section className="idea-empty-state">
-      <p className="font-mono text-label uppercase text-accent">First page</p>
+      <p className="font-mono text-label uppercase text-accent">
+        Nothing saved yet
+      </p>
       <h2 className="mt-3 text-2xl font-semibold tracking-tight">
-        Your idea index is waiting.
+        The shared archive is ready for its first idea.
       </h2>
       <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-        Capture the useful fragment now. It can become more complete the next
-        time you return.
+        Save enough of a thought to make it recognizable. You—or someone else in
+        the group—can find it again when it becomes useful.
       </p>
       <Link
         to="/ideas/new"

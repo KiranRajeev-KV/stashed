@@ -56,7 +56,7 @@ export function IdeaDetail() {
         className="inline-flex min-h-10 items-center font-mono text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
       >
         <span aria-hidden="true">←</span>
-        <span className="ml-2">Idea index</span>
+        <span className="ml-2">Shared archive</span>
       </Link>
 
       <header className="mt-5 border-b border-border pb-8">
@@ -152,7 +152,7 @@ export function IdeaDetail() {
 
       <div className="idea-detail-sheet mt-8 sm:mt-10">
         <aside className="idea-detail-margin" aria-hidden="true">
-          <span>NOTE</span>
+          <span>IDEA</span>
           <span>{idea.id.slice(0, 8)}</span>
         </aside>
         <div className="idea-detail-paper">

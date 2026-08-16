@@ -39,7 +39,7 @@ export function IdeaDetailError({ message, onRetry }: IdeaDetailErrorProps) {
       role="alert"
     >
       <p className="font-mono text-label uppercase text-danger">
-        Note unavailable
+        Idea unavailable
       </p>
       <h1 className="mt-3 text-page-title font-semibold">
         This idea could not be opened.
@@ -73,11 +73,11 @@ export function IdeaNotFound() {
         404 / Misfiled
       </p>
       <h1 className="mt-3 text-page-title font-semibold">
-        That idea is not in the index.
+        That idea is not in the shared archive.
       </h1>
       <p className="mt-4 max-w-xl text-prose text-muted-foreground">
         It may have been deleted, or the address may no longer point to a saved
-        note.
+        idea.
       </p>
       <Link
         to="/ideas"

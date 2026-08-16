@@ -8,7 +8,7 @@ export function NotFoundPage() {
           404 / Misfiled
         </p>
         <h1 className="mt-3 text-page-title font-semibold">
-          That note is not in this stash.
+          That page is not in this archive.
         </h1>
         <p className="mt-4 max-w-xl text-prose text-muted-foreground">
           The address may have changed, or the idea may have been moved.

@@ -42,12 +42,12 @@ export function IdeasFeed() {
       <header className="grid gap-6 border-b border-border pb-7 sm:pb-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
         <div>
           <p className="font-mono text-label uppercase text-accent">
-            Idea index
+            Shared archive
           </p>
           <h1 className="mt-3 text-page-title font-semibold">Ideas</h1>
           <p className="mt-4 max-w-2xl text-prose text-muted-foreground">
-            Saved thoughts in every stage—ready to revisit, connect, and carry
-            forward.
+            Ideas saved by this group—ready to discover, revisit, and develop
+            over time.
           </p>
         </div>
         <Link
@@ -104,7 +104,7 @@ export function IdeasFeed() {
                   className="min-h-11 rounded-control border border-border-strong bg-surface px-6 font-medium transition-colors duration-(--duration-fast) hover:bg-surface-muted disabled:cursor-wait disabled:opacity-60"
                 >
                   {ideasQuery.isFetchingNextPage
-                    ? "Opening more pages…"
+                    ? "Loading more ideas…"
                     : "Load more"}
                 </button>
               ) : (

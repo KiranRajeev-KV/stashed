@@ -62,17 +62,17 @@ export function SearchPage() {
       <header className="search-page-header">
         <div>
           <p className="font-mono text-label uppercase text-accent">
-            Find a thread
+            Search the archive
           </p>
           <h1 className="mt-3 text-page-title font-semibold">Search</h1>
           <p className="mt-4 max-w-2xl text-prose text-muted-foreground">
-            Search across titles and notes, then follow the highlighted fragment
-            back to the full idea.
+            Search titles and content from across the group, then open the full
+            idea behind a matching fragment.
           </p>
         </div>
 
         <p className="search-page-annotation" aria-hidden="true">
-          <span>Index note</span>
+          <span>Search tip</span>
           Type the beginning of a word. Separate terms to narrow the result.
         </p>
       </header>

@@ -145,7 +145,7 @@ export function IdeaForm({
                       {error}
                     </span>
                   ) : (
-                    <span>Make it recognizable when you return.</span>
+                    <span>Make it recognizable to you and the group.</span>
                   )}
                   <span>{field.state.value.length}/200</span>
                 </span>
@@ -278,7 +278,7 @@ export function IdeaForm({
               ) : null}
               {isSubmitting
                 ? mode === "create"
-                  ? "Stashing idea…"
+                  ? "Saving idea…"
                   : "Saving revision…"
                 : mode === "create"
                   ? "Create idea"

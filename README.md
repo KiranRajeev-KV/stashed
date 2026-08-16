@@ -1,12 +1,36 @@
 # Stashed
 
-A place for ideas worth keeping.
+Save ideas worth coming back to.
 
-A full-stack web app — React frontend + Hono API running together on a single Cloudflare Worker, backed by Cloudflare D1 with Drizzle ORM.
+Stashed is a self-hosted, shared idea archive designed for small groups. Members
+can save their own ideas, discover what others are thinking, and return to
+useful thoughts later.
+
+Each signed-in member can read the shared archive. Authors retain control of
+their own ideas and are the only members who can edit or delete them.
+
+Stashed is a full-stack web app: the React frontend and Hono API run together
+on a single Cloudflare Worker, backed by Cloudflare D1 and Drizzle ORM.
+
+## Current Features
+
+- GitHub authentication and registration
+- A shared, newest-first idea feed
+- Author-owned idea creation, editing, and deletion
+- Idea statuses for tracking how thoughts develop
+- Searchable tags created as ideas are saved
+- Full-text search across idea titles and content
+- Markdown editing and rendering
+- Responsive light and dark appearances
+
+> [!IMPORTANT]
+> Registration is currently open through GitHub. Anyone who can reach a
+> deployed instance and authenticate with GitHub can register; Stashed does not
+> currently include invitations or an approved-members list.
 
 ## Tech Stack
 
-- **Frontend:** React 19, Vite, TypeScript, Tailwind CSS v4, TanStack Router, TanStack Query
+- **Frontend:** React 19, Vite, TypeScript, Tailwind CSS v4, TanStack Router, TanStack Query, TanStack Form, Plate
 - **Backend:** Hono on Cloudflare Workers (serves the SPA and the API from one Worker)
 - **Database:** Cloudflare D1 + Drizzle ORM
 - **Tooling:** pnpm, just, Oxlint, Prettier, Wrangler

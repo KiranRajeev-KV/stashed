@@ -5,15 +5,13 @@ export function SearchPromptState() {
   return (
     <section className="search-empty-state">
       <Search aria-hidden="true" className="search-empty-icon" />
-      <p className="font-mono text-label uppercase text-accent">
-        Open the index
-      </p>
+      <p className="font-mono text-label uppercase text-accent">Find an idea</p>
       <h2 className="mt-3 text-2xl font-semibold tracking-tight wrap-anywhere">
-        What thread are you looking for?
+        What do you want to return to?
       </h2>
       <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-        Search the words you remember from a title or note. Short fragments are
-        often enough to find your way back.
+        Search words you remember from any title or idea in the shared archive.
+        A short fragment is often enough.
       </p>
     </section>
   );
@@ -29,7 +27,7 @@ export function SearchNoResultsState({ query }: { query: string }) {
       </h2>
       <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
         Try fewer or more specific words, check the spelling, or return to the
-        idea index and browse by status or tag.
+        shared archive and browse by status or tag.
       </p>
       <Link
         to="/ideas"
@@ -57,7 +55,7 @@ export function SearchErrorState({
         Search unavailable
       </p>
       <h2 className="mt-2 text-xl font-semibold">
-        The index could not be searched.
+        The shared archive could not be searched.
       </h2>
       <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
         {message || "Stashed could not reach the search service."}

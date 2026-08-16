@@ -53,7 +53,7 @@ function LoginCallToAction() {
         to="/ideas"
         className="inline-flex min-h-12 items-center rounded-control bg-primary px-5 font-medium text-primary-foreground transition-transform duration-(--duration-fast) hover:-translate-y-0.5"
       >
-        Open your ideas
+        Open the idea archive
         <span aria-hidden="true" className="ml-3 font-mono">
           →
         </span>
@@ -123,21 +123,21 @@ export function LandingPage() {
           <article className="notebook-page notebook-page-primary">
             <div className="notebook-page-content">
               <p className="font-mono text-label uppercase text-accent">
-                A working archive for unfinished thinking
+                A shared archive for ideas worth returning to
               </p>
               <h1 className="mt-6 max-w-3xl text-display font-semibold">
-                Keep the ideas that keep returning.
+                Save ideas worth coming back to.
               </h1>
               <p className="mt-7 max-w-xl text-prose text-muted-foreground sm:text-lg">
-                Stashed gives promising thoughts a durable place to land—then
-                lets you tag, revisit, search, and develop them without forcing
-                them into a finished shape too soon.
+                A shared idea archive where members can save their own ideas,
+                discover what others are thinking, and return to useful thoughts
+                later.
               </p>
               <div className="mt-9">
                 <LoginCallToAction />
               </div>
               <p className="mt-5 font-mono text-xs text-muted-foreground">
-                Public registration · GitHub authentication
+                Self-hosted · Made for small groups · GitHub sign-in
               </p>
             </div>
 
@@ -145,7 +145,7 @@ export function LandingPage() {
               <span className="annotation-mark" aria-hidden="true">
                 01
               </span>
-              <p>Capture the useful fragment before it disappears.</p>
+              <p>Save enough of the thought to recognize it later.</p>
             </aside>
           </article>
 
@@ -172,7 +172,7 @@ export function LandingPage() {
                 </h2>
                 <p className="mt-6 text-prose text-muted-foreground">
                   Resurface a small set of saved thoughts each Friday so the
-                  ones with potential do not disappear beneath newer notes.
+                  ones with potential do not disappear beneath newer ideas.
                 </p>
               </div>
 
@@ -181,7 +181,7 @@ export function LandingPage() {
                   Next pass
                 </p>
                 <p className="mt-2 text-sm leading-relaxed">
-                  Test whether choosing three notes by status and last-opened
+                  Test whether choosing three ideas by status and last-opened
                   date creates a useful review rhythm.
                 </p>
               </div>
@@ -206,7 +206,7 @@ export function LandingPage() {
               <span className="annotation-mark" aria-hidden="true">
                 02
               </span>
-              <p>Return when the next connection appears.</p>
+              <p>See what the group is thinking and follow ideas over time.</p>
             </aside>
           </article>
         </div>
@@ -223,33 +223,33 @@ export function LandingPage() {
               id="principles-title"
               className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl"
             >
-              Ideas need room, not ceremony.
+              Keep good ideas within reach.
             </h2>
           </div>
           <ol className="grid gap-px overflow-hidden rounded-card border border-border bg-border sm:grid-cols-3">
             <li className="bg-surface p-5 sm:p-6">
-              <span className="font-mono text-xs text-accent">
-                01 / Collect
-              </span>
+              <span className="font-mono text-xs text-accent">01 / Save</span>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                Save a title and enough context to recognize the thought later.
+                Capture a title and enough context to make the idea useful when
+                you return.
               </p>
             </li>
             <li className="bg-surface p-5 sm:p-6">
               <span className="font-mono text-xs text-accent">
-                02 / Develop
+                02 / Discover
               </span>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                Rework the note as evidence, questions, and useful edges emerge.
+                Browse the shared archive and see what the rest of the group is
+                thinking about.
               </p>
             </li>
             <li className="bg-surface p-5 sm:p-6">
               <span className="font-mono text-xs text-accent">
-                03 / Retrieve
+                03 / Revisit
               </span>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                Use status, tags, and search to recover the right idea on
-                demand.
+                Use status, tags, and search to find the right idea when it
+                becomes relevant again.
               </p>
             </li>
           </ol>

@@ -108,7 +108,7 @@ export function IdeaCard({ excerpt, idea, title }: IdeaCardProps) {
               className="shrink-0 font-medium text-primary underline-offset-4 hover:underline"
               aria-label={`Open ${idea.title}`}
             >
-              Read note <span aria-hidden="true">→</span>
+              Read idea <span aria-hidden="true">→</span>
             </Link>
           </div>
         </footer>
