@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 
+import { apiError } from "../api/errors.js";
 import { findOrCreateGitHubUser } from "../db/users.js";
 import { requireSession } from "../middleware/session.js";
 import type { AppEnv } from "../types.js";
@@ -59,19 +60,31 @@ authRoutes.get("/github/callback", async (c) => {
     !stateMatches ||
     transaction.redirectUri !== callbackUrl(c.req.url)
   ) {
-    return c.json({ error: "Invalid or expired authorization state" }, 400);
+    return apiError(
+      c,
+      400,
+      "AUTH_STATE_INVALID",
+      "Invalid or expired authorization state",
+    );
   }
 
   const githubError = c.req.query("error");
   if (githubError) {
-    return c.json({ error: "GitHub authorization was not completed" }, 400);
+    return apiError(
+      c,
+      400,
+      "AUTHORIZATION_FAILED",
+      "GitHub authorization was not completed",
+    );
   }
 
   const code = c.req.query("code");
   if (!code) {
-    return c.json(
-      { error: "GitHub did not provide an authorization code" },
+    return apiError(
+      c,
       400,
+      "AUTHORIZATION_FAILED",
+      "GitHub did not provide an authorization code",
     );
   }
 
