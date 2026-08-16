@@ -29,8 +29,8 @@ SELECT name FROM sqlite_master WHERE name = 'ideas_fts';
 SELECT name FROM sqlite_master
 WHERE type = 'trigger' AND tbl_name = 'ideas' AND name LIKE 'ideas_fts_%';
 
--- Index is consistent with the ideas table
-INSERT INTO ideas_fts(ideas_fts) VALUES ('integrity-check');
+-- Index is internally consistent and agrees with the external ideas table
+INSERT INTO ideas_fts(ideas_fts, rank) VALUES ('integrity-check', 1);
 ```
 
 ### If the FTS setup is damaged

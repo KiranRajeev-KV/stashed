@@ -10,6 +10,7 @@ import {
   listIdeaRecords,
   searchIdeaRecords,
   updateIdeaRecord,
+  type IdeaListRecord,
   type IdeaRecord,
   type IdeaSearchRecord,
   type IdeaTagRecord,
@@ -60,17 +61,24 @@ function serializeTag(tag: IdeaTagRecord) {
   return { id: tag.id, name: tag.name };
 }
 
-function serializeIdea(
-  idea: IdeaRecord,
-  tags: IdeaTagRecord[],
-  includeContent: boolean,
-) {
+function serializeIdea(idea: IdeaRecord, tags: IdeaTagRecord[]) {
   return {
     id: idea.id,
     title: idea.title,
-    ...(includeContent
-      ? { content: idea.content }
-      : { excerpt: excerpt(idea.content) }),
+    content: idea.content,
+    status: idea.status,
+    author: idea.author,
+    tags: tags.map(serializeTag),
+    createdAt: idea.createdAt.toISOString(),
+    updatedAt: idea.updatedAt.toISOString(),
+  };
+}
+
+function serializeIdeaListItem(idea: IdeaListRecord, tags: IdeaTagRecord[]) {
+  return {
+    id: idea.id,
+    title: idea.title,
+    excerpt: excerpt(idea.contentPreview),
     status: idea.status,
     author: idea.author,
     tags: tags.map(serializeTag),
@@ -119,7 +127,7 @@ export async function listIdeas(db: Database, input: ListIdeasInput) {
 
   return {
     ideas: page.map((idea) =>
-      serializeIdea(idea, tagsByIdea.get(idea.id) ?? [], false),
+      serializeIdeaListItem(idea, tagsByIdea.get(idea.id) ?? []),
     ),
     nextCursor:
       hasMore && page.length > 0
@@ -134,7 +142,7 @@ export async function getIdea(db: Database, ideaId: string) {
     throw new ApiError(404, "IDEA_NOT_FOUND", "Idea not found");
   }
   const tagsByIdea = await getTagsForIdeas(db, [ideaId]);
-  return { idea: serializeIdea(idea, tagsByIdea.get(ideaId) ?? [], true) };
+  return { idea: serializeIdea(idea, tagsByIdea.get(ideaId) ?? []) };
 }
 
 export async function createIdea(

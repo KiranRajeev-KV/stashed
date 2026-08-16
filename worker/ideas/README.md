@@ -93,9 +93,16 @@ PATCH requests may contain `title`, `content`, `status`, or `tags`:
 - An empty PATCH object is rejected.
 
 Tag names are trimmed, limited to 50 characters, and deduplicated
-case-insensitively. Idea creation and tag replacement use D1 transactional
-batches. Existing tags are reused through the database's
-`UNIQUE(lower(name))` constraint, including during concurrent requests.
+case-insensitively in application code. Idea creation and tag replacement use
+D1 transactional batches. Existing ASCII tag names are reused through the
+database's `UNIQUE(lower(name))` constraint, including during concurrent
+requests.
+
+SQLite's built-in `lower()` only case-folds ASCII characters. Unicode tag names
+are accepted, but differently cased non-ASCII names are not currently
+guaranteed to resolve to one database tag. Full Unicode uniqueness is deferred
+until tags have an application-generated normalized column with a defined
+normalization and case-folding policy.
 
 ## Search
 
@@ -106,9 +113,21 @@ GET /api/search?q=cloudflare+d1&limit=20&offset=0
 ```
 
 Search uses the custom `ideas_fts` FTS5 table and joins matches back through
-`ideas.row_id = ideas_fts.rowid`. Results are ordered using BM25 relevance,
-with title matches weighted more heavily than content matches. Result excerpts
-use `<mark>` and `</mark>` around matched terms.
+`ideas.row_id = ideas_fts.rowid`. The tokenizer keeps `+` and `#` inside terms,
+so searches for `C++`, `C#`, and `C` remain distinct. A period remains a
+separator, so a term such as `Node.js` is tokenized as `node` and `js`.
+
+Results are ordered using BM25 relevance, with title matches weighted more
+heavily than content matches. Excerpts always come from idea content and use
+these non-HTML sentinels around matched terms:
+
+```text
+[[[HIGHLIGHT_START]]]matched text[[[HIGHLIGHT_END]]]
+```
+
+Frontend code should split the excerpt around those sentinels, render every
+piece as ordinary escaped text, and wrap only matched pieces in a React
+`<mark>` element. Do not pass the excerpt to `dangerouslySetInnerHTML`.
 
 The existing migration triggers keep FTS synchronized after insert, searchable
 updates, and deletion. API code must not write directly to `ideas_fts`.

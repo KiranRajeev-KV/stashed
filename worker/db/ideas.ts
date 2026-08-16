@@ -30,6 +30,10 @@ export type IdeaRecord = {
   updatedAt: Date;
 };
 
+export type IdeaListRecord = Omit<IdeaRecord, "content"> & {
+  contentPreview: string;
+};
+
 export type IdeaSearchRecord = Omit<IdeaRecord, "content" | "rowId"> & {
   excerpt: string;
 };
@@ -54,12 +58,11 @@ type SearchRow = {
   excerpt: string;
 };
 
-function ideaSelection() {
+function ideaBaseSelection() {
   return {
     rowId: ideas.rowId,
     id: ideas.id,
     title: ideas.title,
-    content: ideas.content,
     status: ideas.status,
     authorId: users.id,
     authorDisplayName: users.displayName,
@@ -67,6 +70,20 @@ function ideaSelection() {
     authorAvatarUrl: userIdentities.providerAvatarUrl,
     createdAt: ideas.createdAt,
     updatedAt: ideas.updatedAt,
+  };
+}
+
+function ideaSelection() {
+  return {
+    ...ideaBaseSelection(),
+    content: ideas.content,
+  };
+}
+
+function ideaListSelection() {
+  return {
+    ...ideaBaseSelection(),
+    contentPreview: sql<string>`substr(${ideas.content}, 1, 500)`,
   };
 }
 
@@ -114,10 +131,24 @@ function withAuthor(db: Database) {
     );
 }
 
+function withListAuthor(db: Database) {
+  return db
+    .select(ideaListSelection())
+    .from(ideas)
+    .innerJoin(users, eq(users.id, ideas.authorId))
+    .innerJoin(
+      userIdentities,
+      and(
+        eq(userIdentities.userId, users.id),
+        eq(userIdentities.provider, GITHUB_PROVIDER),
+      ),
+    );
+}
+
 export async function listIdeaRecords(
   db: Database,
   input: ListIdeasInput,
-): Promise<IdeaRecord[]> {
+): Promise<IdeaListRecord[]> {
   const filters = [];
 
   if (input.status) {
@@ -139,12 +170,26 @@ export async function listIdeaRecords(
     );
   }
 
-  const rows = await withAuthor(db)
+  const rows = await withListAuthor(db)
     .where(filters.length > 0 ? and(...filters) : undefined)
     .orderBy(desc(ideas.rowId))
     .limit(input.limit);
 
-  return rows.map(toIdeaRecord);
+  return rows.map((row) => ({
+    rowId: row.rowId,
+    id: row.id,
+    title: row.title,
+    contentPreview: row.contentPreview,
+    status: row.status,
+    author: {
+      id: row.authorId,
+      displayName: row.authorDisplayName,
+      username: row.authorUsername,
+      avatarUrl: row.authorAvatarUrl,
+    },
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  }));
 }
 
 export async function getIdeaRecord(
@@ -346,7 +391,14 @@ export async function searchIdeaRecords(
         ui.provider_avatar_url AS authorAvatarUrl,
         i.created_at AS createdAt,
         i.updated_at AS updatedAt,
-        snippet(ideas_fts, -1, '<mark>', '</mark>', '…', 32) AS excerpt
+        snippet(
+          ideas_fts,
+          1,
+          '[[[HIGHLIGHT_START]]]',
+          '[[[HIGHLIGHT_END]]]',
+          '…',
+          32
+        ) AS excerpt
       FROM ideas_fts
       INNER JOIN ideas AS i ON i.row_id = ideas_fts.rowid
       INNER JOIN users AS u ON u.id = i.author_id

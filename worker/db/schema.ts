@@ -219,13 +219,16 @@ export const tags = sqliteTable(
   },
   (table) => [
     /*
-     * Case-insensitive uniqueness.
+     * ASCII case-insensitive uniqueness.
      *
      * These should all represent the same tag:
      *
      * backend
      * Backend
      * BACKEND
+     *
+     * SQLite's built-in lower() does not case-fold non-ASCII characters.
+     * Full Unicode uniqueness requires a separately normalized column.
      */
     uniqueIndex("tags_name_lower_unique").on(sql`lower(${table.name})`),
   ],

@@ -9,7 +9,7 @@ CREATE VIRTUAL TABLE ideas_fts USING fts5(
     content,
     content = 'ideas',
     content_rowid = 'row_id',
-    tokenize = 'unicode61'
+    tokenize = "unicode61 tokenchars '+#'"
 );
 
 --> statement-breakpoint
