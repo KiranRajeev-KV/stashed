@@ -1,3 +1,5 @@
+<img src="./public/app_icon_dark.png" alt="Stashed app icon" width="96" height="96" />
+
 # Stashed
 
 Save ideas worth coming back to.
