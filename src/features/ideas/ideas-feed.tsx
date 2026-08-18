@@ -1,6 +1,7 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi } from "@tanstack/react-router";
 
+import { currentUserQueryOptions, githubLoginPath } from "../../api/auth.js";
 import { ideasInfiniteQueryOptions, type IdeaStatus } from "../../api/ideas.js";
 import { IdeaCard } from "./idea-card.js";
 import { IdeaFilters } from "./idea-filters.js";
@@ -10,9 +11,10 @@ import {
   IdeasFeedSkeleton,
 } from "./ideas-feed-states.js";
 
-const routeApi = getRouteApi("/_authenticated/ideas/");
+const routeApi = getRouteApi("/ideas/");
 
 export function IdeasFeed() {
+  const currentUserQuery = useQuery(currentUserQueryOptions());
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const filters = {
@@ -50,15 +52,27 @@ export function IdeasFeed() {
             over time.
           </p>
         </div>
-        <Link
-          to="/ideas/new"
-          className="inline-flex min-h-11 w-fit items-center rounded-control bg-primary px-5 font-medium text-primary-foreground transition-colors duration-(--duration-fast) hover:bg-primary/90 lg:mb-1"
-        >
-          New idea{" "}
-          <span className="ml-2" aria-hidden="true">
-            ＋
-          </span>
-        </Link>
+        {currentUserQuery.data ? (
+          <Link
+            to="/ideas/new"
+            className="inline-flex min-h-11 w-fit items-center rounded-control bg-primary px-5 font-medium text-primary-foreground transition-colors duration-(--duration-fast) hover:bg-primary/90 lg:mb-1"
+          >
+            New idea{" "}
+            <span className="ml-2" aria-hidden="true">
+              ＋
+            </span>
+          </Link>
+        ) : (
+          <a
+            href={githubLoginPath}
+            className="inline-flex min-h-11 w-fit items-center rounded-control bg-primary px-5 font-medium text-primary-foreground transition-colors duration-(--duration-fast) hover:bg-primary/90 lg:mb-1"
+          >
+            Sign in to contribute
+            <span className="ml-2" aria-hidden="true">
+              →
+            </span>
+          </a>
+        )}
       </header>
 
       <IdeaFilters

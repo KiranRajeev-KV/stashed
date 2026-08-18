@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
-import { IdeasFeed } from "../../../features/ideas/ideas-feed.js";
-import { IDEA_STATUSES } from "../../../features/ideas/idea-status.js";
+import { IdeasFeed } from "../../features/ideas/ideas-feed.js";
+import { IDEA_STATUSES } from "../../features/ideas/idea-status.js";
 
 const tagSearchSchema = z
   .union([z.string().uuid(), z.array(z.string().uuid()).max(20)])
@@ -18,7 +18,7 @@ const ideasSearchSchema = z.object({
   }),
 });
 
-export const Route = createFileRoute("/_authenticated/ideas/")({
+export const Route = createFileRoute("/ideas/")({
   validateSearch: ideasSearchSchema,
   component: IdeasFeed,
 });

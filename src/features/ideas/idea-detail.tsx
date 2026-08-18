@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi } from "@tanstack/react-router";
 
+import { currentUserQueryOptions } from "../../api/auth.js";
 import { ApiClientError } from "../../api/client.js";
 import { ideaQueryOptions } from "../../api/ideas.js";
 import { MarkdownContent } from "../markdown/markdown-content.js";
@@ -12,8 +13,7 @@ import {
 import { DeleteIdeaDialog } from "./delete-idea-dialog.js";
 import { IDEA_STATUS_LABELS } from "./idea-status.js";
 
-const routeApi = getRouteApi("/_authenticated/ideas/$ideaId/");
-const authenticatedRouteApi = getRouteApi("/_authenticated");
+const routeApi = getRouteApi("/ideas/$ideaId");
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: "long",
   timeStyle: "short",
@@ -21,7 +21,7 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
 
 export function IdeaDetail() {
   const { ideaId } = routeApi.useParams();
-  const { currentUser } = authenticatedRouteApi.useRouteContext();
+  const currentUserQuery = useQuery(currentUserQueryOptions());
   const ideaQuery = useQuery(ideaQueryOptions(ideaId));
 
   if (ideaQuery.isPending) {
@@ -45,7 +45,7 @@ export function IdeaDetail() {
   }
 
   const idea = ideaQuery.data;
-  const isOwner = currentUser.id === idea.author.id;
+  const isOwner = currentUserQuery.data?.id === idea.author.id;
   const authorInitials =
     idea.author.displayName.trim().slice(0, 2).toUpperCase() || "ST";
 
@@ -156,7 +156,13 @@ export function IdeaDetail() {
           <span>{idea.id.slice(0, 8)}</span>
         </aside>
         <div className="idea-detail-paper">
-          <MarkdownContent markdown={idea.content} />
+          {/^\s*(?:&#x20;)?\s*$/i.test(idea.content) ? (
+            <p className="text-sm text-muted-foreground">
+              No additional context was added.
+            </p>
+          ) : (
+            <MarkdownContent markdown={idea.content} />
+          )}
         </div>
       </div>
     </article>

@@ -79,9 +79,11 @@ export function IdeaCard({ excerpt, idea, title }: IdeaCardProps) {
           </Link>
         </h2>
 
-        <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
-          {excerpt ?? idea.excerpt}
-        </p>
+        {(excerpt ?? idea.excerpt) ? (
+          <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
+            {excerpt ?? idea.excerpt}
+          </p>
+        ) : null}
 
         {idea.tags.length > 0 ? (
           <ul className="mt-5 flex flex-wrap gap-2" aria-label="Tags">

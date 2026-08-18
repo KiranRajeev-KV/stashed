@@ -12,7 +12,7 @@ import {
   SearchResultsSkeleton,
 } from "./search-states.js";
 
-const routeApi = getRouteApi("/_authenticated/search");
+const routeApi = getRouteApi("/search");
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function SearchPage() {

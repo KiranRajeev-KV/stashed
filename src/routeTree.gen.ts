@@ -11,10 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as AuthenticatedSearchRouteImport } from './routes/_authenticated/search'
-import { Route as AuthenticatedIdeasIndexRouteImport } from './routes/_authenticated/ideas/index'
+import { Route as IdeasRouteImport } from './routes/ideas'
+import { Route as SearchRouteImport } from './routes/search'
+import { Route as IdeasIndexRouteImport } from './routes/ideas/index'
+import { Route as IdeasIdeaIdRouteImport } from './routes/ideas/$ideaId'
 import { Route as AuthenticatedIdeasNewRouteImport } from './routes/_authenticated/ideas/new'
-import { Route as AuthenticatedIdeasIdeaIdIndexRouteImport } from './routes/_authenticated/ideas/$ideaId/index'
 import { Route as AuthenticatedIdeasIdeaIdEditRouteImport } from './routes/_authenticated/ideas/$ideaId/edit'
 
 const IndexRoute = IndexRouteImport.update({
@@ -26,27 +27,31 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedSearchRoute = AuthenticatedSearchRouteImport.update({
+const IdeasRoute = IdeasRouteImport.update({
+  id: '/ideas',
+  path: '/ideas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedIdeasIndexRoute = AuthenticatedIdeasIndexRouteImport.update({
-  id: '/ideas/',
-  path: '/ideas/',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const IdeasIndexRoute = IdeasIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => IdeasRoute,
+} as any)
+const IdeasIdeaIdRoute = IdeasIdeaIdRouteImport.update({
+  id: '/$ideaId',
+  path: '/$ideaId',
+  getParentRoute: () => IdeasRoute,
 } as any)
 const AuthenticatedIdeasNewRoute = AuthenticatedIdeasNewRouteImport.update({
   id: '/ideas/new',
   path: '/ideas/new',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedIdeasIdeaIdIndexRoute =
-  AuthenticatedIdeasIdeaIdIndexRouteImport.update({
-    id: '/ideas/$ideaId/',
-    path: '/ideas/$ideaId/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedIdeasIdeaIdEditRoute =
   AuthenticatedIdeasIdeaIdEditRouteImport.update({
     id: '/ideas/$ideaId/edit',
@@ -56,61 +61,67 @@ const AuthenticatedIdeasIdeaIdEditRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/search': typeof AuthenticatedSearchRoute
+  '/ideas': typeof IdeasRouteWithChildren
+  '/search': typeof SearchRoute
+  '/ideas/$ideaId': typeof IdeasIdeaIdRoute
+  '/ideas/': typeof IdeasIndexRoute
   '/ideas/new': typeof AuthenticatedIdeasNewRoute
-  '/ideas/': typeof AuthenticatedIdeasIndexRoute
   '/ideas/$ideaId/edit': typeof AuthenticatedIdeasIdeaIdEditRoute
-  '/ideas/$ideaId/': typeof AuthenticatedIdeasIdeaIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/search': typeof AuthenticatedSearchRoute
+  '/search': typeof SearchRoute
+  '/ideas/$ideaId': typeof IdeasIdeaIdRoute
+  '/ideas': typeof IdeasIndexRoute
   '/ideas/new': typeof AuthenticatedIdeasNewRoute
-  '/ideas': typeof AuthenticatedIdeasIndexRoute
   '/ideas/$ideaId/edit': typeof AuthenticatedIdeasIdeaIdEditRoute
-  '/ideas/$ideaId': typeof AuthenticatedIdeasIdeaIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/_authenticated/search': typeof AuthenticatedSearchRoute
+  '/ideas': typeof IdeasRouteWithChildren
+  '/search': typeof SearchRoute
+  '/ideas/$ideaId': typeof IdeasIdeaIdRoute
+  '/ideas/': typeof IdeasIndexRoute
   '/_authenticated/ideas/new': typeof AuthenticatedIdeasNewRoute
-  '/_authenticated/ideas/': typeof AuthenticatedIdeasIndexRoute
   '/_authenticated/ideas/$ideaId/edit': typeof AuthenticatedIdeasIdeaIdEditRoute
-  '/_authenticated/ideas/$ideaId/': typeof AuthenticatedIdeasIdeaIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/ideas'
     | '/search'
-    | '/ideas/new'
+    | '/ideas/$ideaId'
     | '/ideas/'
+    | '/ideas/new'
     | '/ideas/$ideaId/edit'
-    | '/ideas/$ideaId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/search'
-    | '/ideas/new'
-    | '/ideas'
-    | '/ideas/$ideaId/edit'
     | '/ideas/$ideaId'
+    | '/ideas'
+    | '/ideas/new'
+    | '/ideas/$ideaId/edit'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
-    | '/_authenticated/search'
+    | '/ideas'
+    | '/search'
+    | '/ideas/$ideaId'
+    | '/ideas/'
     | '/_authenticated/ideas/new'
-    | '/_authenticated/ideas/'
     | '/_authenticated/ideas/$ideaId/edit'
-    | '/_authenticated/ideas/$ideaId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  IdeasRoute: typeof IdeasRouteWithChildren
+  SearchRoute: typeof SearchRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -129,32 +140,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/search': {
-      id: '/_authenticated/search'
+    '/ideas': {
+      id: '/ideas'
+      path: '/ideas'
+      fullPath: '/ideas'
+      preLoaderRoute: typeof IdeasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
       path: '/search'
       fullPath: '/search'
-      preLoaderRoute: typeof AuthenticatedSearchRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/ideas/': {
-      id: '/_authenticated/ideas/'
-      path: '/ideas'
+    '/ideas/': {
+      id: '/ideas/'
+      path: '/'
       fullPath: '/ideas/'
-      preLoaderRoute: typeof AuthenticatedIdeasIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      preLoaderRoute: typeof IdeasIndexRouteImport
+      parentRoute: typeof IdeasRoute
+    }
+    '/ideas/$ideaId': {
+      id: '/ideas/$ideaId'
+      path: '/$ideaId'
+      fullPath: '/ideas/$ideaId'
+      preLoaderRoute: typeof IdeasIdeaIdRouteImport
+      parentRoute: typeof IdeasRoute
     }
     '/_authenticated/ideas/new': {
       id: '/_authenticated/ideas/new'
       path: '/ideas/new'
       fullPath: '/ideas/new'
       preLoaderRoute: typeof AuthenticatedIdeasNewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/ideas/$ideaId/': {
-      id: '/_authenticated/ideas/$ideaId/'
-      path: '/ideas/$ideaId'
-      fullPath: '/ideas/$ideaId/'
-      preLoaderRoute: typeof AuthenticatedIdeasIdeaIdIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ideas/$ideaId/edit': {
@@ -168,27 +186,35 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedSearchRoute: typeof AuthenticatedSearchRoute
   AuthenticatedIdeasNewRoute: typeof AuthenticatedIdeasNewRoute
-  AuthenticatedIdeasIndexRoute: typeof AuthenticatedIdeasIndexRoute
   AuthenticatedIdeasIdeaIdEditRoute: typeof AuthenticatedIdeasIdeaIdEditRoute
-  AuthenticatedIdeasIdeaIdIndexRoute: typeof AuthenticatedIdeasIdeaIdIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedSearchRoute: AuthenticatedSearchRoute,
   AuthenticatedIdeasNewRoute: AuthenticatedIdeasNewRoute,
-  AuthenticatedIdeasIndexRoute: AuthenticatedIdeasIndexRoute,
   AuthenticatedIdeasIdeaIdEditRoute: AuthenticatedIdeasIdeaIdEditRoute,
-  AuthenticatedIdeasIdeaIdIndexRoute: AuthenticatedIdeasIdeaIdIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface IdeasRouteChildren {
+  IdeasIdeaIdRoute: typeof IdeasIdeaIdRoute
+  IdeasIndexRoute: typeof IdeasIndexRoute
+}
+
+const IdeasRouteChildren: IdeasRouteChildren = {
+  IdeasIdeaIdRoute: IdeasIdeaIdRoute,
+  IdeasIndexRoute: IdeasIndexRoute,
+}
+
+const IdeasRouteWithChildren = IdeasRoute._addFileChildren(IdeasRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  IdeasRoute: IdeasRouteWithChildren,
+  SearchRoute: SearchRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
