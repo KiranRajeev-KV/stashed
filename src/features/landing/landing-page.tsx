@@ -49,29 +49,42 @@ function LoginCallToAction() {
 
   if (currentUserQuery.data) {
     return (
-      <Link
-        to="/ideas"
-        className="inline-flex min-h-12 items-center rounded-control bg-primary px-5 font-medium text-primary-foreground transition-transform duration-(--duration-fast) hover:-translate-y-0.5"
-      >
-        Open the idea archive
-        <span aria-hidden="true" className="ml-3 font-mono">
-          →
-        </span>
-      </Link>
+      <div className="flex flex-wrap gap-3">
+        <Link
+          to="/ideas"
+          className="inline-flex min-h-12 items-center rounded-control bg-primary px-5 font-medium text-primary-foreground transition-transform duration-(--duration-fast) hover:-translate-y-0.5"
+        >
+          Open the idea archive
+          <span aria-hidden="true" className="ml-3 font-mono">
+            →
+          </span>
+        </Link>
+      </div>
     );
   }
 
   return (
     <div>
-      <a
-        href={githubLoginPath}
-        className="inline-flex min-h-12 items-center rounded-control bg-primary px-5 font-medium text-primary-foreground transition-transform duration-(--duration-fast) hover:-translate-y-0.5"
-      >
-        Continue with GitHub
-        <span aria-hidden="true" className="ml-3 font-mono">
-          →
-        </span>
-      </a>
+      <div className="flex flex-wrap gap-3">
+        <Link
+          to="/ideas"
+          className="inline-flex min-h-12 items-center rounded-control border border-border-strong bg-surface px-5 font-medium text-foreground transition-transform duration-(--duration-fast) hover:-translate-y-0.5 hover:bg-surface-elevated"
+        >
+          Browse ideas
+          <span aria-hidden="true" className="ml-3 font-mono">
+            →
+          </span>
+        </Link>
+        <a
+          href={githubLoginPath}
+          className="inline-flex min-h-12 items-center rounded-control bg-primary px-5 font-medium text-primary-foreground transition-transform duration-(--duration-fast) hover:-translate-y-0.5"
+        >
+          Continue with GitHub
+          <span aria-hidden="true" className="ml-3 font-mono">
+            →
+          </span>
+        </a>
+      </div>
       {currentUserQuery.isError ? (
         <p className="mt-3 max-w-sm text-sm text-danger" role="status">
           Session check failed. You can still sign in, or{" "}

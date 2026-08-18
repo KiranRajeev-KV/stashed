@@ -27,7 +27,6 @@ const validationHook = (result: { success: boolean }, c: Context) => {
 };
 
 export const ideasRoutes = new Hono<AppEnv>()
-  .use("*", requireSession)
   .get(
     "/",
     zValidator("query", listIdeasQuerySchema, validationHook),
@@ -40,6 +39,7 @@ export const ideasRoutes = new Hono<AppEnv>()
   )
   .post(
     "/",
+    requireSession,
     zValidator("json", createIdeaSchema, validationHook),
     async (c) => {
       const result = await createIdea(
@@ -52,6 +52,7 @@ export const ideasRoutes = new Hono<AppEnv>()
   )
   .patch(
     "/:id",
+    requireSession,
     zValidator("param", ideaIdParamSchema, validationHook),
     zValidator("json", updateIdeaSchema, validationHook),
     async (c) =>
@@ -66,6 +67,7 @@ export const ideasRoutes = new Hono<AppEnv>()
   )
   .delete(
     "/:id",
+    requireSession,
     zValidator("param", ideaIdParamSchema, validationHook),
     async (c) => {
       await deleteIdea(
@@ -77,13 +79,11 @@ export const ideasRoutes = new Hono<AppEnv>()
     },
   );
 
-export const searchRoutes = new Hono<AppEnv>()
-  .use("*", requireSession)
-  .get(
-    "/",
-    zValidator("query", searchIdeasQuerySchema, validationHook),
-    async (c) => {
-      const { q, limit, offset } = c.req.valid("query");
-      return c.json(await searchIdeas(c.get("db"), q, limit, offset));
-    },
-  );
+export const searchRoutes = new Hono<AppEnv>().get(
+  "/",
+  zValidator("query", searchIdeasQuerySchema, validationHook),
+  async (c) => {
+    const { q, limit, offset } = c.req.valid("query");
+    return c.json(await searchIdeas(c.get("db"), q, limit, offset));
+  },
+);

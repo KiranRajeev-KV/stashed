@@ -11,10 +11,7 @@ import { StatusSelect } from "./status-select.js";
 const ideaFormSchema = z
   .object({
     title: z.string().trim().min(1, "Give the idea a title.").max(200),
-    content: z
-      .string()
-      .max(200_000)
-      .refine((value) => value.trim().length > 0, "Add some content."),
+    content: z.string().max(200_000),
     status: z.enum(IDEA_STATUSES),
     tags: z.array(z.string().trim().min(1).max(50)).max(20),
     tagDraft: z.string().trim().max(50, "Tags can be up to 50 characters."),
@@ -231,7 +228,8 @@ export function IdeaForm({
               <div className="idea-form-editor-heading">
                 <span className="idea-form-label">Content</span>
                 <p id={contentDescriptionId}>
-                  Markdown is stored underneath. Formatting remains portable.
+                  Optional. Markdown is stored underneath, so formatting remains
+                  portable.
                 </p>
               </div>
               <TechnicalMarkdownEditor

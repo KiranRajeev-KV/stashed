@@ -50,6 +50,10 @@ const BLOCK_LABELS: Record<string, string> = {
   [KEYS.blockquote]: "Quote",
 };
 
+function normalizeEmptyMarkdown(markdown: string) {
+  return /^\s*&#x20;\s*$/i.test(markdown) ? "" : markdown;
+}
+
 type TechnicalMarkdownEditorProps = {
   describedBy?: string;
   initialMarkdown: string;
@@ -454,7 +458,11 @@ export function TechnicalMarkdownEditor({
       <Plate
         editor={editor}
         onValueChange={({ value }) =>
-          onChange(editor.getApi(MarkdownPlugin).markdown.serialize({ value }))
+          onChange(
+            normalizeEmptyMarkdown(
+              editor.getApi(MarkdownPlugin).markdown.serialize({ value }),
+            ),
+          )
         }
       >
         <EditorToolbar />

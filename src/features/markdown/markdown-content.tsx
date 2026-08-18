@@ -8,6 +8,8 @@ type MarkdownContentProps = {
 };
 
 export function MarkdownContent({ markdown }: MarkdownContentProps) {
+  const isEmpty = /^\s*(?:&#x20;)?\s*$/i.test(markdown);
+
   const editor = usePlateEditor(
     {
       plugins: technicalMarkdownPlugins,
@@ -16,6 +18,8 @@ export function MarkdownContent({ markdown }: MarkdownContentProps) {
     },
     [markdown],
   );
+
+  if (isEmpty) return null;
 
   return (
     <section aria-label="Idea content" className="markdown-reading-surface">

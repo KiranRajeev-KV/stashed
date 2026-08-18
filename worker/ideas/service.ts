@@ -53,8 +53,17 @@ function decodeCursor(cursor: string): number {
 }
 
 function excerpt(content: string) {
+  if (isEmptyEditorContent(content)) return "";
   const compact = content.replace(/\s+/g, " ").trim();
   return compact.length <= 240 ? compact : `${compact.slice(0, 239)}…`;
+}
+
+function isEmptyEditorContent(content: string) {
+  return /^\s*(?:&#x20;)?\s*$/i.test(content);
+}
+
+function normalizeEditorContent(content: string) {
+  return isEmptyEditorContent(content) ? "" : content;
 }
 
 function serializeTag(tag: IdeaTagRecord) {
@@ -151,7 +160,10 @@ export async function createIdea(
   userId: string,
   input: CreateIdeaInput,
 ) {
-  const ideaId = await createIdeaRecord(db, userId, input);
+  const ideaId = await createIdeaRecord(db, userId, {
+    ...input,
+    content: normalizeEditorContent(input.content),
+  });
   return getIdea(db, ideaId);
 }
 
@@ -162,7 +174,12 @@ export async function updateIdea(
   input: UpdateIdeaInput,
 ) {
   await requireIdeaAuthor(db, ideaId, userId);
-  await updateIdeaRecord(db, ideaId, input);
+  await updateIdeaRecord(db, ideaId, {
+    ...input,
+    ...(input.content === undefined
+      ? {}
+      : { content: normalizeEditorContent(input.content) }),
+  });
   return getIdea(db, ideaId);
 }
 
