@@ -15,6 +15,7 @@
     "db:generate": "drizzle-kit generate",
     "db:local": "wrangler d1 migrations apply stashed-db --local",
     "db:seed": "node ./scripts/seed.mjs",
+    "db:backfill-content-plain": "node --experimental-strip-types ./scripts/backfill-idea-content-plain.ts",
     "db:remote": "wrangler d1 migrations apply stashed-db --remote"
   },
   "dependencies": {
@@ -42,7 +43,9 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "remark-gfm": "4.0.1",
+    "remark-parse": "11.0.0",
     "sonner": "^2.0.8",
+    "unified": "11.0.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {

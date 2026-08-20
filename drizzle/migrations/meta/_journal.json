@@ -15,6 +15,13 @@
       "when": 1786865722490,
       "tag": "0001_ideas_fts",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787208326228,
+      "tag": "0002_puzzling_justice",
+      "breakpoints": true
     }
   ]
 }

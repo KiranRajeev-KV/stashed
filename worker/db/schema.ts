@@ -156,6 +156,9 @@ export const ideas = sqliteTable(
     // Main idea body. This can contain Markdown at the application layer.
     content: text("content").notNull(),
 
+    // Derived display/search text. It is generated server-side from content.
+    contentPlain: text("content_plain").notNull().default(""),
+
     /*
      * Lifecycle state.
      *
