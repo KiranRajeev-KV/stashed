@@ -19,7 +19,7 @@ the database middleware. They do not create global database state.
 
 | Method   | Endpoint         | Description                                    |
 | -------- | ---------------- | ---------------------------------------------- |
-| `GET`    | `/api/ideas`     | List ideas newest-first with cursor pagination |
+| `GET`    | `/api/ideas`     | List ideas with cursor pagination              |
 | `GET`    | `/api/ideas/:id` | Get one idea with its full content             |
 | `POST`   | `/api/ideas`     | Create an idea for the authenticated user      |
 | `PATCH`  | `/api/ideas/:id` | Update an idea owned by the authenticated user |
@@ -35,6 +35,7 @@ Every endpoint requires a valid Stashed session cookie.
 | Parameter | Behavior                                         |
 | --------- | ------------------------------------------------ |
 | `status`  | Filter by one of the configured idea statuses    |
+| `sort`    | Order results; defaults to `UPDATED_DESC`        |
 | `tagId`   | Filter by one or more tag UUIDs (repeat the key) |
 | `cursor`  | Continue after an opaque pagination cursor       |
 | `limit`   | Page size; defaults to `20` and is at most `50`  |
@@ -43,8 +44,9 @@ Multiple `tagId` values use AND matching: an idea is included only when it has
 every selected tag. A single `tagId` remains supported for backwards
 compatibility.
 
-The response is newest-first and does not expose `ideas.row_id` or full idea
-content:
+Sort accepts `UPDATED_DESC` (default), `CREATED_DESC`, `UPDATED_ASC`, or
+`CREATED_ASC`. The cursor is tied to its sort order and does not expose
+`ideas.row_id` or full idea content:
 
 ```json
 {

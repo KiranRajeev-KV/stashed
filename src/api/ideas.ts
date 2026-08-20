@@ -16,6 +16,7 @@ export type ListIdeasQuery = InferRequestType<typeof listIdeasRequest>["query"];
 export type IdeasPage = InferResponseType<typeof listIdeasRequest, 200>;
 export type IdeaListItem = IdeasPage["ideas"][number];
 export type IdeaStatus = IdeaListItem["status"];
+export type IdeaSort = Exclude<ListIdeasQuery["sort"], undefined>;
 export type IdeaResponse = InferResponseType<typeof getIdeaRequest, 200>;
 export type Idea = IdeaResponse["idea"];
 export type CreateIdeaInput = InferRequestType<
@@ -27,6 +28,7 @@ export type UpdateIdeaInput = InferRequestType<
 
 export type IdeaListFilters = {
   status?: IdeaStatus;
+  sort?: IdeaSort;
   tagIds?: string[];
 };
 
@@ -41,6 +43,7 @@ export function ideasQueryKey(filters: IdeaListFilters) {
     "ideas",
     {
       status: filters.status,
+      sort: filters.sort,
       tagIds,
       limit: IDEAS_PAGE_SIZE,
     },
@@ -58,6 +61,7 @@ export function ideasInfiniteQueryOptions(filters: IdeaListFilters) {
     queryFn: ({ pageParam }) =>
       listIdeas({
         status: filters.status,
+        sort: filters.sort,
         tagId: tagIds,
         cursor: pageParam ?? undefined,
         limit: IDEAS_PAGE_SIZE,

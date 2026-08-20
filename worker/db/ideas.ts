@@ -1,6 +1,21 @@
-import { and, asc, desc, eq, exists, inArray, lt, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  exists,
+  gt,
+  inArray,
+  lt,
+  or,
+  sql,
+} from "drizzle-orm";
 
-import type { CreateIdeaInput, UpdateIdeaInput } from "../ideas/schemas.js";
+import type {
+  CreateIdeaInput,
+  IdeaSort,
+  UpdateIdeaInput,
+} from "../ideas/schemas.js";
 import type { Database } from "./client.js";
 import type { IdeaStatus } from "./schema.js";
 import { ideaTags, ideas, tags, userIdentities, users } from "./schema.js";
@@ -42,7 +57,8 @@ export type IdeaSearchRecord = Omit<IdeaRecord, "content" | "rowId"> & {
 type ListIdeasInput = {
   status?: IdeaStatus;
   tagIds?: string[];
-  cursorRowId?: number;
+  sort: IdeaSort;
+  cursor?: { timestamp: number; rowId: number };
   limit: number;
 };
 
@@ -156,8 +172,24 @@ export async function listIdeaRecords(
   if (input.status) {
     filters.push(eq(ideas.status, input.status));
   }
-  if (input.cursorRowId !== undefined) {
-    filters.push(lt(ideas.rowId, input.cursorRowId));
+  const sortByUpdatedAt = input.sort.startsWith("UPDATED");
+  const ascending = input.sort.endsWith("ASC");
+  const sortColumn = sortByUpdatedAt ? ideas.updatedAt : ideas.createdAt;
+
+  if (input.cursor) {
+    const cursorTimestamp = new Date(input.cursor.timestamp);
+    const isAfterCursor = ascending
+      ? gt(sortColumn, cursorTimestamp)
+      : lt(sortColumn, cursorTimestamp);
+    const isSameTimestampAfterCursor = ascending
+      ? gt(ideas.rowId, input.cursor.rowId)
+      : lt(ideas.rowId, input.cursor.rowId);
+    filters.push(
+      or(
+        isAfterCursor,
+        and(eq(sortColumn, cursorTimestamp), isSameTimestampAfterCursor),
+      ),
+    );
   }
   for (const tagId of input.tagIds ?? []) {
     filters.push(
@@ -172,7 +204,10 @@ export async function listIdeaRecords(
 
   const rows = await withListAuthor(db)
     .where(filters.length > 0 ? and(...filters) : undefined)
-    .orderBy(desc(ideas.rowId))
+    .orderBy(
+      ascending ? asc(sortColumn) : desc(sortColumn),
+      ascending ? asc(ideas.rowId) : desc(ideas.rowId),
+    )
     .limit(input.limit);
 
   return rows.map((row) => ({

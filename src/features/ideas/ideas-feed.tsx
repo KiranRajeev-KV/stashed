@@ -2,7 +2,11 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi } from "@tanstack/react-router";
 
 import { currentUserQueryOptions, githubLoginPath } from "../../api/auth.js";
-import { ideasInfiniteQueryOptions, type IdeaStatus } from "../../api/ideas.js";
+import {
+  ideasInfiniteQueryOptions,
+  type IdeaSort,
+  type IdeaStatus,
+} from "../../api/ideas.js";
 import { IdeaCard } from "./idea-card.js";
 import { IdeaFilters } from "./idea-filters.js";
 import {
@@ -19,6 +23,7 @@ export function IdeasFeed() {
   const navigate = routeApi.useNavigate();
   const filters = {
     status: search.status,
+    sort: search.sort,
     tagIds: search.tag,
   };
   const ideasQuery = useInfiniteQuery(ideasInfiniteQueryOptions(filters));
@@ -30,10 +35,15 @@ export function IdeasFeed() {
     ).values(),
   ];
 
-  const updateFilters = (next: { status?: IdeaStatus; tag?: string[] }) =>
+  const updateFilters = (next: {
+    status?: IdeaStatus;
+    sort?: IdeaSort;
+    tag?: string[];
+  }) =>
     navigate({
       search: {
         status: next.status,
+        sort: next.sort,
         tag: next.tag,
       },
       replace: true,
@@ -78,9 +88,17 @@ export function IdeasFeed() {
       <IdeaFilters
         ideaTags={ideaTags}
         status={search.status}
+        sort={search.sort}
         tagIds={search.tag}
-        onStatusChange={(status) => updateFilters({ status, tag: search.tag })}
-        onTagsChange={(tag) => updateFilters({ status: search.status, tag })}
+        onStatusChange={(status) =>
+          updateFilters({ status, sort: search.sort, tag: search.tag })
+        }
+        onSortChange={(sort) =>
+          updateFilters({ status: search.status, sort, tag: search.tag })
+        }
+        onTagsChange={(tag) =>
+          updateFilters({ status: search.status, sort: search.sort, tag })
+        }
         onClear={() => updateFilters({})}
       />
 

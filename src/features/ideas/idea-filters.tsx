@@ -11,8 +11,9 @@ import {
 import * as React from "react";
 
 import { tagsQueryOptions, type Tag } from "../../api/tags.js";
-import type { IdeaStatus } from "../../api/ideas.js";
+import type { IdeaSort, IdeaStatus } from "../../api/ideas.js";
 import { StatusSelect } from "./status-select.js";
+import { SortSelect } from "./sort-select.js";
 
 const tagDiscoveryQuery = { limit: "100", offset: "0" } as const;
 const filterFieldClass = "grid min-w-0 gap-2";
@@ -32,9 +33,11 @@ type FilterTag = Pick<Tag, "id" | "name"> & {
 type IdeaFiltersProps = {
   ideaTags: FilterTag[];
   onClear: () => void;
+  onSortChange: (sort?: IdeaSort) => void;
   onStatusChange: (status?: IdeaStatus) => void;
   onTagsChange: (tagIds?: string[]) => void;
   status?: IdeaStatus;
+  sort?: IdeaSort;
   tagIds?: string[];
 };
 
@@ -228,7 +231,7 @@ function TagFilter({
 
         {selectedTags.length > 0 ? (
           <div
-            className="flex min-w-0 flex-wrap items-center gap-1.5 sm:col-span-2 sm:col-start-1 sm:row-start-2 lg:col-span-3 lg:row-start-2"
+            className="flex min-w-0 flex-wrap items-center gap-1.5 sm:col-span-2 sm:col-start-1 sm:row-start-3 lg:col-span-3 lg:row-start-2"
             aria-label="Selected tag filters"
           >
             <span className="mr-0.5 font-mono text-xs uppercase tracking-wider text-muted-foreground">
@@ -263,16 +266,18 @@ function TagFilter({
 export function IdeaFilters({
   ideaTags,
   onClear,
+  onSortChange,
   onStatusChange,
   onTagsChange,
   status,
+  sort,
   tagIds = [],
 }: IdeaFiltersProps) {
   const isFiltered = Boolean(status || tagIds.length > 0);
 
   return (
     <div className="mt-6">
-      <div className="grid gap-x-4 gap-y-3 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] sm:items-start lg:grid-cols-[minmax(0,14rem)_minmax(0,18rem)_minmax(0,1fr)]">
+      <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2 sm:items-start lg:grid-cols-[minmax(0,14rem)_minmax(0,18rem)_minmax(0,1fr)]">
         <StatusSelect
           allowAll
           className={`${filterFieldClass} sm:col-start-1 sm:row-start-1`}
@@ -286,11 +291,17 @@ export function IdeaFilters({
           tagIds={tagIds}
           onChange={onTagsChange}
         />
+        <SortSelect
+          className={`${filterFieldClass} sm:col-start-1 sm:row-start-2 lg:col-start-3 lg:row-start-1 lg:w-56 lg:justify-self-end`}
+          labelClassName={filterLabelClass}
+          value={sort}
+          onValueChange={onSortChange}
+        />
         {isFiltered ? (
           <button
             type="button"
             onClick={onClear}
-            className="min-h-11 w-fit rounded-control px-3 text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:col-start-2 sm:row-start-3 sm:justify-self-end lg:col-start-3 lg:row-start-1 lg:mt-6"
+            className="min-h-11 w-fit rounded-control px-3 text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:col-start-2 sm:row-start-2 sm:justify-self-end lg:col-start-3 lg:row-start-2 lg:mt-0 lg:justify-self-end"
           >
             Clear filters
           </button>

@@ -11,6 +11,10 @@ const tagSearchSchema = z
 
 const ideasSearchSchema = z.object({
   status: z.enum(IDEA_STATUSES).optional().catch(undefined),
+  sort: z
+    .enum(["UPDATED_DESC", "CREATED_DESC", "UPDATED_ASC", "CREATED_ASC"])
+    .optional()
+    .catch(undefined),
   tag: tagSearchSchema.transform((value) => {
     if (!value) return undefined;
     const tags = [...new Set(Array.isArray(value) ? value : [value])].sort();
