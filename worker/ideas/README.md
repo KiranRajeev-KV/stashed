@@ -121,13 +121,12 @@ ideas list endpoint. `sort` defaults to `UPDATED_DESC` and also accepts
 GET /api/search?q=cloudflare+d1&status=ACTIVE&sort=BEST_MATCH&limit=20&offset=0
 ```
 
-which makes technical terms such as `C++`, `C#`, and `#workers` searchable.
 Search uses the custom `ideas_fts` FTS5 table and joins matches back through
 `ideas.row_id = ideas_fts.rowid`. It indexes `title` and the server-generated
 `content_plain` text instead of raw Markdown. The tokenizer keeps `+` and `#`
 inside terms, which makes technical terms such as `C++`, `C#`, and `#workers`
 searchable.
-so searches for `C++`, `C#`, and `C` remain distinct. A period remains a
+Searches for `C++`, `C#`, and `C` remain distinct. A period remains a
 separator, so a term such as `Node.js` is tokenized as `node` and `js`.
 Each whitespace-separated query term is treated as a word prefix, so `arch`
 matches tokens such as `archive`, `archived`, and `archaeology`. All terms must
@@ -145,7 +144,7 @@ updates, and deletion. API code must not write directly to `ideas_fts`.
 Current input limits are:
 
 - Title: 1–200 trimmed characters
-- Content: non-empty and at most 200,000 characters
+- Content: at most 200,000 characters; an empty body is allowed
 - Tags per request: at most 20
 - Tag name: 1–50 trimmed characters
 - List/search limit: 1–50

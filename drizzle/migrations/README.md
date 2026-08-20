@@ -10,15 +10,28 @@ They are NOT represented in `worker/db/schema.ts`, so Drizzle has no knowledge
 of them. `0002_puzzling_justice.sql` rebuilds it to index `content_plain`.
 Custom migrations are the intended solution for unsupported DDL such as this.
 
-After applying `0002_puzzling_justice.sql` remotely, run this once from an
-authenticated checkout to replace its transitional raw-Markdown values with
-normalized text and update the FTS index through its triggers:
+## Data migrations
+
+Most migrations only change schema and are fully handled by `pnpm db:remote`.
+When a migration needs existing records transformed, its instructions belong in
+this section rather than in the root README.
+
+### `0002_puzzling_justice.sql`: plain-text idea search index
+
+Run this once **only if the target database contained ideas before migration
+`0002`**. The schema migration preserves those rows temporarily, then this
+backfill replaces their raw Markdown with normalized `content_plain` text and
+updates FTS through its triggers:
 
 ```bash
 pnpm db:backfill-content-plain
 ```
 
-For a local D1 simulator check, append `--local` to the command.
+Fresh databases do not need this command: new ideas always derive
+`content_plain` when they are created or their content changes.
+
+For a local D1 simulator check, append `--local` to the command. Run the
+remote command after `pnpm db:remote` has applied migration `0002`.
 
 Whenever a future migration substantially modifies or rebuilds the `ideas`
 table, inspect the generated SQL and verify:
