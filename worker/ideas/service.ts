@@ -23,6 +23,7 @@ import type {
   SearchIdeaSort,
   UpdateIdeaInput,
 } from "./schemas.js";
+import { excerptFromPlainText } from "./markdown.js";
 
 const cursorSchema = z.object({
   v: z.literal(2),
@@ -60,12 +61,6 @@ function decodeCursor(cursor: string, sort: IdeaSort) {
   throw new ApiError(400, "VALIDATION_ERROR", "Invalid cursor");
 }
 
-function excerpt(content: string) {
-  if (isEmptyEditorContent(content)) return "";
-  const compact = content.replace(/\s+/g, " ").trim();
-  return compact.length <= 240 ? compact : `${compact.slice(0, 239)}…`;
-}
-
 function isEmptyEditorContent(content: string) {
   return /^\s*(?:&#x20;)?\s*$/i.test(content);
 }
@@ -95,7 +90,7 @@ function serializeIdeaListItem(idea: IdeaListRecord, tags: IdeaTagRecord[]) {
   return {
     id: idea.id,
     title: idea.title,
-    excerpt: excerpt(idea.contentPreview),
+    excerpt: excerptFromPlainText(idea.contentPlain),
     status: idea.status,
     author: idea.author,
     tags: tags.map(serializeTag),
@@ -108,7 +103,7 @@ function serializeSearchResult(idea: IdeaSearchRecord, tags: IdeaTagRecord[]) {
   return {
     id: idea.id,
     title: idea.title,
-    excerpt: idea.excerpt,
+    excerpt: excerptFromPlainText(idea.excerpt),
     status: idea.status,
     author: idea.author,
     tags: tags.map(serializeTag),

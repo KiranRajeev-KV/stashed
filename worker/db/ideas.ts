@@ -17,6 +17,7 @@ import type {
   SearchIdeaSort,
   UpdateIdeaInput,
 } from "../ideas/schemas.js";
+import { markdownToPlainText } from "../ideas/markdown.js";
 import type { Database } from "./client.js";
 import type { IdeaStatus } from "./schema.js";
 import { ideaTags, ideas, tags, userIdentities, users } from "./schema.js";
@@ -47,7 +48,7 @@ export type IdeaRecord = {
 };
 
 export type IdeaListRecord = Omit<IdeaRecord, "content"> & {
-  contentPreview: string;
+  contentPlain: string;
 };
 
 export type IdeaSearchRecord = Omit<IdeaRecord, "content" | "rowId"> & {
@@ -100,7 +101,7 @@ function ideaSelection() {
 function ideaListSelection() {
   return {
     ...ideaBaseSelection(),
-    contentPreview: sql<string>`substr(${ideas.content}, 1, 500)`,
+    contentPlain: ideas.contentPlain,
   };
 }
 
@@ -213,7 +214,7 @@ export async function listIdeaRecords(
     rowId: row.rowId,
     id: row.id,
     title: row.title,
-    contentPreview: row.contentPreview,
+    contentPlain: row.contentPlain,
     status: row.status,
     author: {
       id: row.authorId,
@@ -332,6 +333,7 @@ export async function createIdeaRecord(
     id: ideaId,
     title: input.title,
     content: input.content,
+    contentPlain: markdownToPlainText(input.content),
     status: input.status ?? "DRAFT",
     authorId,
     createdAt: now,
@@ -360,12 +362,16 @@ export async function updateIdeaRecord(
   const values: {
     title?: string;
     content?: string;
+    contentPlain?: string;
     status?: IdeaStatus;
     updatedAt: Date;
   } = { updatedAt: now };
 
   if (input.title !== undefined) values.title = input.title;
-  if (input.content !== undefined) values.content = input.content;
+  if (input.content !== undefined) {
+    values.content = input.content;
+    values.contentPlain = markdownToPlainText(input.content);
+  }
   if (input.status !== undefined) values.status = input.status;
 
   const updateIdea = db.update(ideas).set(values).where(eq(ideas.id, ideaId));
