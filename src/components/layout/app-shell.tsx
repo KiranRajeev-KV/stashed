@@ -145,15 +145,6 @@ export function AppShell({ user }: AppShellProps) {
                 >
                   Ideas
                 </Link>
-                <Link
-                  to="/search"
-                  className={navLinkClass}
-                  activeProps={{
-                    className: `${navLinkClass} ${activeNavLinkClass}`,
-                  }}
-                >
-                  Search
-                </Link>
               </nav>
             </div>
 
@@ -187,15 +178,6 @@ export function AppShell({ user }: AppShellProps) {
                 }}
               >
                 Ideas
-              </Link>
-              <Link
-                to="/search"
-                className={navLinkClass}
-                activeProps={{
-                  className: `${navLinkClass} ${activeNavLinkClass}`,
-                }}
-              >
-                Search
               </Link>
             </nav>
             <div className="app-shell-mobile-theme">

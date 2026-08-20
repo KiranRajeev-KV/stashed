@@ -6,6 +6,19 @@ const MAX_CONTENT_LENGTH = 200_000;
 const MAX_TAGS = 20;
 const MAX_TAG_FILTERS = 20;
 
+export const ideaSortValues = [
+  "UPDATED_DESC",
+  "CREATED_DESC",
+  "UPDATED_ASC",
+  "CREATED_ASC",
+] as const;
+
+export type IdeaSort = (typeof ideaSortValues)[number];
+
+export const searchIdeaSortValues = [...ideaSortValues, "BEST_MATCH"] as const;
+
+export type SearchIdeaSort = (typeof searchIdeaSortValues)[number];
+
 const titleSchema = z.string().trim().min(1).max(200);
 const contentSchema = z.string().max(MAX_CONTENT_LENGTH);
 const tagNameSchema = z.string().trim().min(1).max(50);
@@ -17,6 +30,7 @@ export const ideaIdParamSchema = z.object({
 
 export const listIdeasQuerySchema = z.object({
   status: z.enum(ideaStatusValues).optional(),
+  sort: z.enum(ideaSortValues).optional(),
   tagId: z
     .union([
       z.string().uuid(),
@@ -54,6 +68,18 @@ export const updateIdeaSchema = z
 
 export const searchIdeasQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),
+  status: z.enum(ideaStatusValues).optional(),
+  sort: z.enum(searchIdeaSortValues).optional(),
+  tagId: z
+    .union([
+      z.string().uuid(),
+      z.array(z.string().uuid()).min(1).max(MAX_TAG_FILTERS),
+    ])
+    .optional()
+    .transform((value) => {
+      if (!value) return undefined;
+      return [...new Set(Array.isArray(value) ? value : [value])];
+    }),
   limit: z.coerce.number().int().min(1).max(50).default(20),
   offset: z.coerce.number().int().min(0).max(10_000).default(0),
 });

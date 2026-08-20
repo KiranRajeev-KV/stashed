@@ -1,6 +1,22 @@
-import { and, asc, desc, eq, exists, inArray, lt, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  exists,
+  gt,
+  inArray,
+  lt,
+  or,
+  sql,
+} from "drizzle-orm";
 
-import type { CreateIdeaInput, UpdateIdeaInput } from "../ideas/schemas.js";
+import type {
+  CreateIdeaInput,
+  IdeaSort,
+  SearchIdeaSort,
+  UpdateIdeaInput,
+} from "../ideas/schemas.js";
 import type { Database } from "./client.js";
 import type { IdeaStatus } from "./schema.js";
 import { ideaTags, ideas, tags, userIdentities, users } from "./schema.js";
@@ -35,21 +51,20 @@ export type IdeaListRecord = Omit<IdeaRecord, "content"> & {
 };
 
 export type IdeaSearchRecord = Omit<IdeaRecord, "content" | "rowId"> & {
-  highlightedTitle: string;
   excerpt: string;
 };
 
 type ListIdeasInput = {
   status?: IdeaStatus;
   tagIds?: string[];
-  cursorRowId?: number;
+  sort: IdeaSort;
+  cursor?: { timestamp: number; rowId: number };
   limit: number;
 };
 
 type SearchRow = {
   id: string;
   title: string;
-  highlightedTitle: string;
   status: IdeaStatus;
   authorId: string;
   authorDisplayName: string;
@@ -156,8 +171,24 @@ export async function listIdeaRecords(
   if (input.status) {
     filters.push(eq(ideas.status, input.status));
   }
-  if (input.cursorRowId !== undefined) {
-    filters.push(lt(ideas.rowId, input.cursorRowId));
+  const sortByUpdatedAt = input.sort.startsWith("UPDATED");
+  const ascending = input.sort.endsWith("ASC");
+  const sortColumn = sortByUpdatedAt ? ideas.updatedAt : ideas.createdAt;
+
+  if (input.cursor) {
+    const cursorTimestamp = new Date(input.cursor.timestamp);
+    const isAfterCursor = ascending
+      ? gt(sortColumn, cursorTimestamp)
+      : lt(sortColumn, cursorTimestamp);
+    const isSameTimestampAfterCursor = ascending
+      ? gt(ideas.rowId, input.cursor.rowId)
+      : lt(ideas.rowId, input.cursor.rowId);
+    filters.push(
+      or(
+        isAfterCursor,
+        and(eq(sortColumn, cursorTimestamp), isSameTimestampAfterCursor),
+      ),
+    );
   }
   for (const tagId of input.tagIds ?? []) {
     filters.push(
@@ -172,7 +203,10 @@ export async function listIdeaRecords(
 
   const rows = await withListAuthor(db)
     .where(filters.length > 0 ? and(...filters) : undefined)
-    .orderBy(desc(ideas.rowId))
+    .orderBy(
+      ascending ? asc(sortColumn) : desc(sortColumn),
+      ascending ? asc(ideas.rowId) : desc(ideas.rowId),
+    )
     .limit(input.limit);
 
   return rows.map((row) => ({
@@ -377,21 +411,48 @@ function toSafeFtsQuery(query: string) {
 
 export async function searchIdeaRecords(
   db: Database,
-  query: string,
-  limit: number,
-  offset: number,
+  input: {
+    query: string;
+    status?: IdeaStatus;
+    sort?: SearchIdeaSort;
+    tagIds?: string[];
+    limit: number;
+    offset: number;
+  },
 ): Promise<IdeaSearchRecord[]> {
+  const bindings: (number | string)[] = [toSafeFtsQuery(input.query)];
+  const nextPlaceholder = () => `?${bindings.length + 1}`;
+  const filters = ["ideas_fts MATCH ?1"];
+
+  if (input.status) {
+    filters.push(`i.status = ${nextPlaceholder()}`);
+    bindings.push(input.status);
+  }
+  for (const tagId of input.tagIds ?? []) {
+    filters.push(`EXISTS (
+      SELECT 1 FROM idea_tags AS it
+      WHERE it.idea_id = i.id AND it.tag_id = ${nextPlaceholder()}
+    )`);
+    bindings.push(tagId);
+  }
+
+  const orderBy = {
+    BEST_MATCH: "bm25(ideas_fts, 5.0, 1.0), i.row_id DESC",
+    UPDATED_DESC: "i.updated_at DESC, i.row_id DESC",
+    CREATED_DESC: "i.created_at DESC, i.row_id DESC",
+    UPDATED_ASC: "i.updated_at ASC, i.row_id ASC",
+    CREATED_ASC: "i.created_at ASC, i.row_id ASC",
+  }[input.sort ?? "UPDATED_DESC"];
+  const limitPlaceholder = nextPlaceholder();
+  bindings.push(input.limit);
+  const offsetPlaceholder = nextPlaceholder();
+  bindings.push(input.offset);
+
   const result = await db.$client
     .prepare(
       `SELECT
         i.id AS id,
         i.title AS title,
-        highlight(
-          ideas_fts,
-          0,
-          '[[[HIGHLIGHT_START]]]',
-          '[[[HIGHLIGHT_END]]]'
-        ) AS highlightedTitle,
         i.status AS status,
         u.id AS authorId,
         u.display_name AS authorDisplayName,
@@ -402,8 +463,8 @@ export async function searchIdeaRecords(
         snippet(
           ideas_fts,
           1,
-          '[[[HIGHLIGHT_START]]]',
-          '[[[HIGHLIGHT_END]]]',
+          '',
+          '',
           '…',
           32
         ) AS excerpt
@@ -412,17 +473,16 @@ export async function searchIdeaRecords(
       INNER JOIN users AS u ON u.id = i.author_id
       INNER JOIN user_identities AS ui
         ON ui.user_id = u.id AND ui.provider = 'github'
-      WHERE ideas_fts MATCH ?1
-      ORDER BY bm25(ideas_fts, 5.0, 1.0), i.row_id DESC
-      LIMIT ?2 OFFSET ?3`,
+      WHERE ${filters.join(" AND ")}
+      ORDER BY ${orderBy}
+      LIMIT ${limitPlaceholder} OFFSET ${offsetPlaceholder}`,
     )
-    .bind(toSafeFtsQuery(query), limit, offset)
+    .bind(...bindings)
     .all<SearchRow>();
 
   return result.results.map((row) => ({
     id: row.id,
     title: row.title,
-    highlightedTitle: row.highlightedTitle,
     status: row.status,
     author: {
       id: row.authorId,

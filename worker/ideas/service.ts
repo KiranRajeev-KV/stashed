@@ -17,34 +17,42 @@ import {
 } from "../db/ideas.js";
 import type { Database } from "../db/client.js";
 import type { IdeaStatus } from "../db/schema.js";
-import type { CreateIdeaInput, UpdateIdeaInput } from "./schemas.js";
+import type {
+  CreateIdeaInput,
+  IdeaSort,
+  SearchIdeaSort,
+  UpdateIdeaInput,
+} from "./schemas.js";
 
 const cursorSchema = z.object({
-  v: z.literal(1),
+  v: z.literal(2),
+  sort: z.enum(["UPDATED_DESC", "CREATED_DESC", "UPDATED_ASC", "CREATED_ASC"]),
+  timestamp: z.number().int().nonnegative(),
   rowId: z.number().int().positive(),
 });
 
 type ListIdeasInput = {
   status?: IdeaStatus;
   tagId?: string[];
+  sort?: IdeaSort;
   cursor?: string;
   limit: number;
 };
 
-function encodeCursor(rowId: number) {
-  return btoa(JSON.stringify({ v: 1, rowId }))
+function encodeCursor(sort: IdeaSort, timestamp: number, rowId: number) {
+  return btoa(JSON.stringify({ v: 2, sort, timestamp, rowId }))
     .replaceAll("+", "-")
     .replaceAll("/", "_")
     .replace(/=+$/, "");
 }
 
-function decodeCursor(cursor: string): number {
+function decodeCursor(cursor: string, sort: IdeaSort) {
   try {
     const base64 = cursor.replaceAll("-", "+").replaceAll("_", "/");
     const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
     const parsed = cursorSchema.safeParse(JSON.parse(atob(padded)));
-    if (parsed.success) {
-      return parsed.data.rowId;
+    if (parsed.success && parsed.data.sort === sort) {
+      return parsed.data;
     }
   } catch {
     // Invalid cursors use the same public validation response below.
@@ -100,7 +108,6 @@ function serializeSearchResult(idea: IdeaSearchRecord, tags: IdeaTagRecord[]) {
   return {
     id: idea.id,
     title: idea.title,
-    highlightedTitle: idea.highlightedTitle,
     excerpt: idea.excerpt,
     status: idea.status,
     author: idea.author,
@@ -121,11 +128,13 @@ async function requireIdeaAuthor(db: Database, ideaId: string, userId: string) {
 }
 
 export async function listIdeas(db: Database, input: ListIdeasInput) {
-  const cursorRowId = input.cursor ? decodeCursor(input.cursor) : undefined;
+  const sort = input.sort ?? "UPDATED_DESC";
+  const cursor = input.cursor ? decodeCursor(input.cursor, sort) : undefined;
   const records = await listIdeaRecords(db, {
     status: input.status,
     tagIds: input.tagId,
-    cursorRowId,
+    sort,
+    cursor,
     limit: input.limit + 1,
   });
   const hasMore = records.length > input.limit;
@@ -141,7 +150,13 @@ export async function listIdeas(db: Database, input: ListIdeasInput) {
     ),
     nextCursor:
       hasMore && page.length > 0
-        ? encodeCursor(page[page.length - 1].rowId)
+        ? encodeCursor(
+            sort,
+            page[page.length - 1][
+              sort.startsWith("UPDATED") ? "updatedAt" : "createdAt"
+            ].getTime(),
+            page[page.length - 1].rowId,
+          )
         : null,
   };
 }
@@ -192,11 +207,23 @@ export async function deleteIdea(db: Database, ideaId: string, userId: string) {
 
 export async function searchIdeas(
   db: Database,
-  query: string,
-  limit: number,
-  offset: number,
+  input: {
+    q: string;
+    status?: IdeaStatus;
+    sort?: SearchIdeaSort;
+    tagId?: string[];
+    limit: number;
+    offset: number;
+  },
 ) {
-  const records = await searchIdeaRecords(db, query, limit, offset);
+  const records = await searchIdeaRecords(db, {
+    query: input.q,
+    status: input.status,
+    sort: input.sort,
+    tagIds: input.tagId,
+    limit: input.limit,
+    offset: input.offset,
+  });
   const tagsByIdea = await getTagsForIdeas(
     db,
     records.map((idea) => idea.id),
@@ -205,7 +232,7 @@ export async function searchIdeas(
     results: records.map((idea) =>
       serializeSearchResult(idea, tagsByIdea.get(idea.id) ?? []),
     ),
-    limit,
-    offset,
+    limit: input.limit,
+    offset: input.offset,
   };
 }

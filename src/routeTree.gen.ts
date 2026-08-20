@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IdeasRouteImport } from './routes/ideas'
-import { Route as SearchRouteImport } from './routes/search'
 import { Route as IdeasIndexRouteImport } from './routes/ideas/index'
 import { Route as IdeasIdeaIdRouteImport } from './routes/ideas/$ideaId'
 import { Route as AuthenticatedIdeasNewRouteImport } from './routes/_authenticated/ideas/new'
@@ -30,11 +29,6 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IdeasRoute = IdeasRouteImport.update({
   id: '/ideas',
   path: '/ideas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SearchRoute = SearchRouteImport.update({
-  id: '/search',
-  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IdeasIndexRoute = IdeasIndexRouteImport.update({
@@ -62,7 +56,6 @@ const AuthenticatedIdeasIdeaIdEditRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ideas': typeof IdeasRouteWithChildren
-  '/search': typeof SearchRoute
   '/ideas/$ideaId': typeof IdeasIdeaIdRoute
   '/ideas/': typeof IdeasIndexRoute
   '/ideas/new': typeof AuthenticatedIdeasNewRoute
@@ -70,7 +63,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/search': typeof SearchRoute
   '/ideas/$ideaId': typeof IdeasIdeaIdRoute
   '/ideas': typeof IdeasIndexRoute
   '/ideas/new': typeof AuthenticatedIdeasNewRoute
@@ -81,7 +73,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/ideas': typeof IdeasRouteWithChildren
-  '/search': typeof SearchRoute
   '/ideas/$ideaId': typeof IdeasIdeaIdRoute
   '/ideas/': typeof IdeasIndexRoute
   '/_authenticated/ideas/new': typeof AuthenticatedIdeasNewRoute
@@ -92,25 +83,17 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/ideas'
-    | '/search'
     | '/ideas/$ideaId'
     | '/ideas/'
     | '/ideas/new'
     | '/ideas/$ideaId/edit'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/search'
-    | '/ideas/$ideaId'
-    | '/ideas'
-    | '/ideas/new'
-    | '/ideas/$ideaId/edit'
+  to: '/' | '/ideas/$ideaId' | '/ideas' | '/ideas/new' | '/ideas/$ideaId/edit'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/ideas'
-    | '/search'
     | '/ideas/$ideaId'
     | '/ideas/'
     | '/_authenticated/ideas/new'
@@ -121,7 +104,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   IdeasRoute: typeof IdeasRouteWithChildren
-  SearchRoute: typeof SearchRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -145,13 +127,6 @@ declare module '@tanstack/react-router' {
       path: '/ideas'
       fullPath: '/ideas'
       preLoaderRoute: typeof IdeasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/search': {
-      id: '/search'
-      path: '/search'
-      fullPath: '/search'
-      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ideas/': {
@@ -214,7 +189,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   IdeasRoute: IdeasRouteWithChildren,
-  SearchRoute: SearchRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -19,12 +19,12 @@ the database middleware. They do not create global database state.
 
 | Method   | Endpoint         | Description                                    |
 | -------- | ---------------- | ---------------------------------------------- |
-| `GET`    | `/api/ideas`     | List ideas newest-first with cursor pagination |
+| `GET`    | `/api/ideas`     | List ideas with cursor pagination              |
 | `GET`    | `/api/ideas/:id` | Get one idea with its full content             |
 | `POST`   | `/api/ideas`     | Create an idea for the authenticated user      |
 | `PATCH`  | `/api/ideas/:id` | Update an idea owned by the authenticated user |
 | `DELETE` | `/api/ideas/:id` | Permanently delete an idea owned by the user   |
-| `GET`    | `/api/search`    | Search ideas through the existing FTS5 index   |
+| `GET`    | `/api/search`    | Search and filter ideas through the FTS5 index |
 
 Every endpoint requires a valid Stashed session cookie.
 
@@ -35,6 +35,7 @@ Every endpoint requires a valid Stashed session cookie.
 | Parameter | Behavior                                         |
 | --------- | ------------------------------------------------ |
 | `status`  | Filter by one of the configured idea statuses    |
+| `sort`    | Order results; defaults to `UPDATED_DESC`        |
 | `tagId`   | Filter by one or more tag UUIDs (repeat the key) |
 | `cursor`  | Continue after an opaque pagination cursor       |
 | `limit`   | Page size; defaults to `20` and is at most `50`  |
@@ -43,8 +44,9 @@ Multiple `tagId` values use AND matching: an idea is included only when it has
 every selected tag. A single `tagId` remains supported for backwards
 compatibility.
 
-The response is newest-first and does not expose `ideas.row_id` or full idea
-content:
+Sort accepts `UPDATED_DESC` (default), `CREATED_DESC`, `UPDATED_ASC`, or
+`CREATED_ASC`. The cursor is tied to its sort order and does not expose
+`ideas.row_id` or full idea content:
 
 ```json
 {
@@ -110,10 +112,13 @@ normalization and case-folding policy.
 
 ## Search
 
-`GET /api/search` requires `q` and accepts `limit` and `offset`:
+`GET /api/search` requires `q` and accepts `status`, repeated `tagId`, `sort`,
+`limit`, and `offset`. It applies status and tag filters in the same way as the
+ideas list endpoint. `sort` defaults to `UPDATED_DESC` and also accepts
+`BEST_MATCH` for weighted FTS relevance:
 
 ```text
-GET /api/search?q=cloudflare+d1&limit=20&offset=0
+GET /api/search?q=cloudflare+d1&status=ACTIVE&sort=BEST_MATCH&limit=20&offset=0
 ```
 
 Search uses the custom `ideas_fts` FTS5 table and joins matches back through
@@ -124,18 +129,9 @@ Each whitespace-separated query term is treated as a word prefix, so `arch`
 matches tokens such as `archive`, `archived`, and `archaeology`. All terms must
 match somewhere across the title or content.
 
-Results are ordered using BM25 relevance, with title matches weighted more
-heavily than content matches. The response preserves the unmodified `title`
-and includes `highlightedTitle` for presentation. Highlighted titles and
-content excerpts use these non-HTML sentinels around matched terms:
-
-```text
-[[[HIGHLIGHT_START]]]matched text[[[HIGHLIGHT_END]]]
-```
-
-Frontend code should split both highlighted fields around those sentinels,
-render every piece as ordinary escaped text, and wrap only matched pieces in a
-React `<mark>` element. Do not pass either field to `dangerouslySetInnerHTML`.
+Results use the selected date sort by default. `sort=BEST_MATCH` uses weighted
+BM25 relevance, where title matches are weighted more heavily than content
+matches. Titles and excerpts are returned as plain text.
 
 The existing migration triggers keep FTS synchronized after insert, searchable
 updates, and deletion. API code must not write directly to `ideas_fts`.

@@ -11,8 +11,10 @@ import {
 import * as React from "react";
 
 import { tagsQueryOptions, type Tag } from "../../api/tags.js";
-import type { IdeaStatus } from "../../api/ideas.js";
+import type { IdeaSort, IdeaStatus } from "../../api/ideas.js";
+import type { SearchIdeaSort } from "../../api/search.js";
 import { StatusSelect } from "./status-select.js";
+import { SortSelect } from "./sort-select.js";
 
 const tagDiscoveryQuery = { limit: "100", offset: "0" } as const;
 const filterFieldClass = "grid min-w-0 gap-2";
@@ -32,10 +34,14 @@ type FilterTag = Pick<Tag, "id" | "name"> & {
 type IdeaFiltersProps = {
   ideaTags: FilterTag[];
   onClear: () => void;
+  onQueryChange: (query?: string) => void;
+  onSortChange: (sort?: IdeaSort | SearchIdeaSort) => void;
   onStatusChange: (status?: IdeaStatus) => void;
   onTagsChange: (tagIds?: string[]) => void;
   status?: IdeaStatus;
+  sort?: IdeaSort | SearchIdeaSort;
   tagIds?: string[];
+  query?: string;
 };
 
 function useDebouncedValue(value: string, delay: number) {
@@ -228,7 +234,7 @@ function TagFilter({
 
         {selectedTags.length > 0 ? (
           <div
-            className="flex min-w-0 flex-wrap items-center gap-1.5 sm:col-span-2 sm:col-start-1 sm:row-start-2 lg:col-span-3 lg:row-start-2"
+            className="flex min-w-0 flex-wrap items-center gap-1.5 sm:col-span-2 sm:col-start-1 sm:row-start-3 lg:col-span-3 lg:row-start-3"
             aria-label="Selected tag filters"
           >
             <span className="mr-0.5 font-mono text-xs uppercase tracking-wider text-muted-foreground">
@@ -263,16 +269,78 @@ function TagFilter({
 export function IdeaFilters({
   ideaTags,
   onClear,
+  onQueryChange,
+  onSortChange,
   onStatusChange,
   onTagsChange,
   status,
+  sort,
   tagIds = [],
+  query,
 }: IdeaFiltersProps) {
-  const isFiltered = Boolean(status || tagIds.length > 0);
+  const [draftQuery, setDraftQuery] = React.useState(query ?? "");
+  const isFiltered = Boolean(query || status || tagIds.length > 0 || sort);
+
+  React.useEffect(() => {
+    setDraftQuery(query ?? "");
+  }, [query]);
+
+  React.useEffect(() => {
+    const nextQuery = draftQuery.trim();
+    if (nextQuery === (query ?? "")) return;
+
+    const timeout = window.setTimeout(
+      () => onQueryChange(nextQuery || undefined),
+      300,
+    );
+    return () => window.clearTimeout(timeout);
+  }, [draftQuery, onQueryChange, query]);
+
+  const submitSearch = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    onQueryChange(draftQuery.trim() || undefined);
+  };
 
   return (
     <div className="mt-6">
-      <div className="grid gap-x-4 gap-y-3 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] sm:items-start lg:grid-cols-[minmax(0,14rem)_minmax(0,18rem)_minmax(0,1fr)]">
+      <form
+        className="search-field-shell"
+        role="search"
+        onSubmit={submitSearch}
+      >
+        <label htmlFor="idea-search" className="sr-only">
+          Search ideas
+        </label>
+        <Search aria-hidden="true" className="search-field-icon" />
+        <input
+          id="idea-search"
+          type="search"
+          value={draftQuery}
+          onChange={(event) => setDraftQuery(event.target.value)}
+          maxLength={200}
+          autoComplete="off"
+          placeholder="Search titles and content"
+          className="search-field-input"
+        />
+        {draftQuery ? (
+          <button
+            type="button"
+            onClick={() => {
+              setDraftQuery("");
+              onQueryChange(undefined);
+            }}
+            className="search-field-clear"
+            aria-label="Clear search"
+          >
+            <X aria-hidden="true" />
+          </button>
+        ) : null}
+        <button type="submit" className="search-field-submit">
+          Search
+        </button>
+      </form>
+
+      <div className="mt-5 grid gap-x-4 gap-y-3 sm:grid-cols-2 sm:items-start lg:grid-cols-[minmax(0,14rem)_minmax(0,18rem)_minmax(0,1fr)]">
         <StatusSelect
           allowAll
           className={`${filterFieldClass} sm:col-start-1 sm:row-start-1`}
@@ -286,13 +354,20 @@ export function IdeaFilters({
           tagIds={tagIds}
           onChange={onTagsChange}
         />
+        <SortSelect
+          className={`${filterFieldClass} sm:col-start-1 sm:row-start-2 lg:col-start-3 lg:row-start-1 lg:w-56 lg:justify-self-end`}
+          labelClassName={filterLabelClass}
+          value={sort}
+          includeBestMatch={Boolean(query)}
+          onValueChange={onSortChange}
+        />
         {isFiltered ? (
           <button
             type="button"
             onClick={onClear}
-            className="min-h-11 w-fit rounded-control px-3 text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:col-start-2 sm:row-start-3 sm:justify-self-end lg:col-start-3 lg:row-start-1 lg:mt-6"
+            className="min-h-11 w-fit rounded-control px-3 text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:col-start-2 sm:row-start-2 sm:justify-self-end lg:col-start-3 lg:row-start-2 lg:mt-0 lg:justify-self-end"
           >
-            Clear filters
+            Clear all
           </button>
         ) : null}
       </div>
