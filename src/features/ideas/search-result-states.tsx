@@ -1,21 +1,4 @@
-import { Link } from "@tanstack/react-router";
-import { Search, SearchX } from "lucide-react";
-
-export function SearchPromptState() {
-  return (
-    <section className="search-empty-state">
-      <Search aria-hidden="true" className="search-empty-icon" />
-      <p className="font-mono text-label uppercase text-accent">Find an idea</p>
-      <h2 className="mt-3 text-2xl font-semibold tracking-tight wrap-anywhere">
-        What do you want to return to?
-      </h2>
-      <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-        Search words you remember from any title or idea in the shared archive.
-        A short fragment is often enough.
-      </p>
-    </section>
-  );
-}
+import { SearchX } from "lucide-react";
 
 export function SearchNoResultsState({ query }: { query: string }) {
   return (
@@ -26,15 +9,9 @@ export function SearchNoResultsState({ query }: { query: string }) {
         Nothing surfaced for “{query}”.
       </h2>
       <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-        Try fewer or more specific words, check the spelling, or return to the
-        shared archive and browse by status or tag.
+        Try fewer or more specific words, check the spelling, or adjust the
+        filters above.
       </p>
-      <Link
-        to="/ideas"
-        className="mt-6 inline-flex min-h-11 items-center rounded-control border border-border-strong bg-surface px-5 font-medium transition-colors duration-(--duration-fast) hover:bg-surface-muted"
-      >
-        Browse all ideas
-      </Link>
     </section>
   );
 }

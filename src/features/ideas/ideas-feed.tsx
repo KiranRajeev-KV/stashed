@@ -7,6 +7,10 @@ import {
   type IdeaSort,
   type IdeaStatus,
 } from "../../api/ideas.js";
+import {
+  searchInfiniteQueryOptions,
+  type SearchIdeaSort,
+} from "../../api/search.js";
 import { IdeaCard } from "./idea-card.js";
 import { IdeaFilters } from "./idea-filters.js";
 import {
@@ -14,6 +18,11 @@ import {
   IdeasErrorState,
   IdeasFeedSkeleton,
 } from "./ideas-feed-states.js";
+import {
+  SearchErrorState,
+  SearchNoResultsState,
+  SearchResultsSkeleton,
+} from "./search-result-states.js";
 
 const routeApi = getRouteApi("/ideas/");
 
@@ -21,13 +30,26 @@ export function IdeasFeed() {
   const currentUserQuery = useQuery(currentUserQueryOptions());
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
+  const query = search.q ?? "";
+  const browseSort = search.sort === "BEST_MATCH" ? undefined : search.sort;
   const filters = {
     status: search.status,
-    sort: search.sort,
+    sort: browseSort,
     tagIds: search.tag,
   };
-  const ideasQuery = useInfiniteQuery(ideasInfiniteQueryOptions(filters));
+  const ideasQuery = useInfiniteQuery(
+    ideasInfiniteQueryOptions(filters, { enabled: !query }),
+  );
+  const searchQuery = useInfiniteQuery(
+    searchInfiniteQueryOptions({
+      q: query,
+      status: search.status,
+      sort: search.sort,
+      tagIds: search.tag,
+    }),
+  );
   const ideas = ideasQuery.data?.pages.flatMap((page) => page.ideas) ?? [];
+  const results = searchQuery.data?.pages.flatMap((page) => page.results) ?? [];
   const isFiltered = Boolean(search.status || search.tag?.length);
   const ideaTags = [
     ...new Map(
@@ -36,17 +58,27 @@ export function IdeasFeed() {
   ];
 
   const updateFilters = (next: {
+    q?: string;
     status?: IdeaStatus;
-    sort?: IdeaSort;
+    sort?: IdeaSort | SearchIdeaSort;
     tag?: string[];
   }) =>
     navigate({
       search: {
+        q: next.q,
         status: next.status,
         sort: next.sort,
         tag: next.tag,
       },
       replace: true,
+    });
+
+  const updateQuery = (nextQuery?: string) =>
+    updateFilters({
+      q: nextQuery,
+      status: search.status,
+      sort: nextQuery ? search.sort : browseSort,
+      tag: search.tag,
     });
 
   return (
@@ -87,82 +119,254 @@ export function IdeasFeed() {
 
       <IdeaFilters
         ideaTags={ideaTags}
+        query={query}
         status={search.status}
-        sort={search.sort}
+        sort={query ? search.sort : browseSort}
         tagIds={search.tag}
+        onQueryChange={updateQuery}
         onStatusChange={(status) =>
-          updateFilters({ status, sort: search.sort, tag: search.tag })
+          updateFilters({
+            q: query || undefined,
+            status,
+            sort: query ? search.sort : browseSort,
+            tag: search.tag,
+          })
         }
         onSortChange={(sort) =>
-          updateFilters({ status: search.status, sort, tag: search.tag })
+          updateFilters({
+            q: query || undefined,
+            status: search.status,
+            sort,
+            tag: search.tag,
+          })
         }
         onTagsChange={(tag) =>
-          updateFilters({ status: search.status, sort: search.sort, tag })
+          updateFilters({
+            q: query || undefined,
+            status: search.status,
+            sort: query ? search.sort : browseSort,
+            tag,
+          })
         }
         onClear={() => updateFilters({})}
       />
 
-      <div className="mt-7" aria-busy={ideasQuery.isPending}>
-        {ideasQuery.isPending ? <IdeasFeedSkeleton /> : null}
-
-        {ideasQuery.isError && ideas.length === 0 ? (
-          <IdeasErrorState
-            message={ideasQuery.error.message}
-            onRetry={() => ideasQuery.refetch()}
-          />
-        ) : null}
-
-        {ideasQuery.isSuccess && ideas.length === 0 ? (
-          <IdeasEmptyState
-            filtered={isFiltered}
-            onClearFilters={() => updateFilters({})}
-          />
-        ) : null}
-
-        {ideas.length > 0 ? (
-          <>
-            <div className="grid gap-4 md:grid-cols-2">
-              {ideas.map((idea) => (
-                <IdeaCard key={idea.id} idea={idea} />
-              ))}
-            </div>
-
-            <div className="mt-8 flex flex-col items-center gap-3 border-t border-border pt-7">
-              {ideasQuery.hasNextPage ? (
-                <button
-                  type="button"
-                  onClick={() => ideasQuery.fetchNextPage()}
-                  disabled={ideasQuery.isFetchingNextPage}
-                  className="min-h-11 rounded-control border border-border-strong bg-surface px-6 font-medium transition-colors duration-(--duration-fast) hover:bg-surface-muted disabled:cursor-wait disabled:opacity-60"
-                >
-                  {ideasQuery.isFetchingNextPage
-                    ? "Loading more ideas…"
-                    : "Load more"}
-                </button>
-              ) : (
-                <p className="font-mono text-xs text-muted-foreground">
-                  — End of results —
-                </p>
-              )}
-
-              {ideasQuery.isFetchNextPageError ? (
-                <div className="text-center" role="alert">
-                  <p className="text-sm text-danger">
-                    More ideas could not be loaded.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => ideasQuery.fetchNextPage()}
-                    className="mt-2 min-h-10 px-3 text-sm font-medium text-primary underline-offset-4 hover:underline"
-                  >
-                    Try loading more again
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          </>
-        ) : null}
-      </div>
+      {query ? (
+        <SearchResults
+          query={query}
+          results={results}
+          isPending={searchQuery.isPending}
+          isError={searchQuery.isError}
+          errorMessage={searchQuery.error?.message ?? ""}
+          isSuccess={searchQuery.isSuccess}
+          hasNextPage={searchQuery.hasNextPage}
+          isFetchingNextPage={searchQuery.isFetchingNextPage}
+          isFetchNextPageError={searchQuery.isFetchNextPageError}
+          onRetry={() => searchQuery.refetch()}
+          onFetchNextPage={() => searchQuery.fetchNextPage()}
+        />
+      ) : (
+        <BrowseResults
+          ideas={ideas}
+          filtered={isFiltered}
+          isPending={ideasQuery.isPending}
+          isError={ideasQuery.isError}
+          errorMessage={ideasQuery.error?.message ?? ""}
+          isSuccess={ideasQuery.isSuccess}
+          hasNextPage={ideasQuery.hasNextPage}
+          isFetchingNextPage={ideasQuery.isFetchingNextPage}
+          isFetchNextPageError={ideasQuery.isFetchNextPageError}
+          onRetry={() => ideasQuery.refetch()}
+          onFetchNextPage={() => ideasQuery.fetchNextPage()}
+          onClearFilters={() => updateFilters({})}
+        />
+      )}
     </section>
+  );
+}
+
+function SearchResults({
+  query,
+  results,
+  errorMessage,
+  hasNextPage,
+  isError,
+  isFetchNextPageError,
+  isFetchingNextPage,
+  isPending,
+  isSuccess,
+  onFetchNextPage,
+  onRetry,
+}: {
+  query: string;
+  results: import("../../api/search.js").SearchResult[];
+  errorMessage: string;
+  hasNextPage: boolean;
+  isError: boolean;
+  isFetchNextPageError: boolean;
+  isFetchingNextPage: boolean;
+  isPending: boolean;
+  isSuccess: boolean;
+  onFetchNextPage: () => void;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="mt-7" aria-busy={isPending}>
+      {isPending ? <SearchResultsSkeleton /> : null}
+
+      {isError && results.length === 0 ? (
+        <SearchErrorState message={errorMessage} onRetry={onRetry} />
+      ) : null}
+
+      {isSuccess && results.length === 0 ? (
+        <SearchNoResultsState query={query} />
+      ) : null}
+
+      {results.length > 0 ? (
+        <>
+          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+            <p
+              className="font-mono text-xs text-muted-foreground"
+              role="status"
+            >
+              {results.length} {results.length === 1 ? "match" : "matches"}
+              {hasNextPage ? " found so far" : " found"}
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {results.map((result) => (
+              <IdeaCard key={result.id} idea={result} />
+            ))}
+          </div>
+
+          <LoadMore
+            hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+            isFetchNextPageError={isFetchNextPageError}
+            onFetchNextPage={onFetchNextPage}
+            loadingLabel="Searching further…"
+            loadLabel="Load more matches"
+            errorMessage="More matches could not be loaded."
+            retryLabel="Try searching again"
+          />
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function BrowseResults({
+  ideas,
+  filtered,
+  errorMessage,
+  hasNextPage,
+  isError,
+  isFetchNextPageError,
+  isFetchingNextPage,
+  isPending,
+  isSuccess,
+  onFetchNextPage,
+  onRetry,
+  onClearFilters,
+}: {
+  ideas: import("../../api/ideas.js").IdeaListItem[];
+  filtered: boolean;
+  errorMessage: string;
+  hasNextPage: boolean;
+  isError: boolean;
+  isFetchNextPageError: boolean;
+  isFetchingNextPage: boolean;
+  isPending: boolean;
+  isSuccess: boolean;
+  onFetchNextPage: () => void;
+  onRetry: () => void;
+  onClearFilters: () => void;
+}) {
+  return (
+    <div className="mt-7" aria-busy={isPending}>
+      {isPending ? <IdeasFeedSkeleton /> : null}
+
+      {isError && ideas.length === 0 ? (
+        <IdeasErrorState message={errorMessage} onRetry={onRetry} />
+      ) : null}
+
+      {isSuccess && ideas.length === 0 ? (
+        <IdeasEmptyState filtered={filtered} onClearFilters={onClearFilters} />
+      ) : null}
+
+      {ideas.length > 0 ? (
+        <>
+          <div className="grid gap-4 md:grid-cols-2">
+            {ideas.map((idea) => (
+              <IdeaCard key={idea.id} idea={idea} />
+            ))}
+          </div>
+
+          <LoadMore
+            hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+            isFetchNextPageError={isFetchNextPageError}
+            onFetchNextPage={onFetchNextPage}
+            loadingLabel="Loading more ideas…"
+            loadLabel="Load more"
+            errorMessage="More ideas could not be loaded."
+            retryLabel="Try loading more again"
+          />
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function LoadMore({
+  errorMessage,
+  hasNextPage,
+  isFetchNextPageError,
+  isFetchingNextPage,
+  loadLabel,
+  loadingLabel,
+  onFetchNextPage,
+  retryLabel,
+}: {
+  errorMessage: string;
+  hasNextPage: boolean;
+  isFetchNextPageError: boolean;
+  isFetchingNextPage: boolean;
+  loadLabel: string;
+  loadingLabel: string;
+  onFetchNextPage: () => void;
+  retryLabel: string;
+}) {
+  return (
+    <div className="mt-8 flex flex-col items-center gap-3 border-t border-border pt-7">
+      {hasNextPage ? (
+        <button
+          type="button"
+          onClick={onFetchNextPage}
+          disabled={isFetchingNextPage}
+          className="min-h-11 rounded-control border border-border-strong bg-surface px-6 font-medium transition-colors duration-(--duration-fast) hover:bg-surface-muted disabled:cursor-wait disabled:opacity-60"
+        >
+          {isFetchingNextPage ? loadingLabel : loadLabel}
+        </button>
+      ) : (
+        <p className="font-mono text-xs text-muted-foreground">
+          — End of results —
+        </p>
+      )}
+
+      {isFetchNextPageError ? (
+        <div className="text-center" role="alert">
+          <p className="text-sm text-danger">{errorMessage}</p>
+          <button
+            type="button"
+            onClick={onFetchNextPage}
+            className="mt-2 min-h-10 px-3 text-sm font-medium text-primary underline-offset-4 hover:underline"
+          >
+            {retryLabel}
+          </button>
+        </div>
+      ) : null}
+    </div>
   );
 }

@@ -2,13 +2,20 @@ import { Select } from "@base-ui/react/select";
 import { Check, ChevronsUpDown } from "lucide-react";
 
 import type { IdeaSort } from "../../api/ideas.js";
+import type { SearchIdeaSort } from "../../api/search.js";
 
-const SORT_OPTIONS: { label: string; value: IdeaSort }[] = [
+type SortValue = IdeaSort | SearchIdeaSort;
+
+const SORT_OPTIONS: { label: string; value: SortValue }[] = [
   { value: "UPDATED_DESC", label: "Recently updated" },
   { value: "CREATED_DESC", label: "Recently created" },
   { value: "UPDATED_ASC", label: "Least recently updated" },
   { value: "CREATED_ASC", label: "Oldest created" },
 ];
+const BEST_MATCH_OPTION = {
+  value: "BEST_MATCH" as const,
+  label: "Best match",
+};
 
 const triggerClass =
   "flex min-h-11 w-full min-w-0 cursor-pointer items-center justify-between gap-3 rounded-control border border-border bg-surface px-3 text-left text-sm text-foreground transition-colors duration-(--duration-fast) hover:border-border-strong hover:bg-surface-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[popup-open]:border-border-strong data-[popup-open]:bg-surface-elevated";
@@ -19,25 +26,30 @@ const indicatorClass =
 
 type SortSelectProps = {
   className?: string;
+  includeBestMatch?: boolean;
   labelClassName?: string;
-  onValueChange: (sort?: IdeaSort) => void;
-  value?: IdeaSort;
+  onValueChange: (sort?: SortValue) => void;
+  value?: SortValue;
 };
 
 export function SortSelect({
   className,
+  includeBestMatch = false,
   labelClassName,
   onValueChange,
   value,
 }: SortSelectProps) {
   const selectedValue = value ?? "UPDATED_DESC";
+  const options = includeBestMatch
+    ? [BEST_MATCH_OPTION, ...SORT_OPTIONS]
+    : SORT_OPTIONS;
 
   return (
     <Select.Root
       value={selectedValue}
       onValueChange={(nextValue) =>
         onValueChange(
-          nextValue === "UPDATED_DESC" ? undefined : (nextValue as IdeaSort),
+          nextValue === "UPDATED_DESC" ? undefined : (nextValue as SortValue),
         )
       }
     >
@@ -45,10 +57,7 @@ export function SortSelect({
         <Select.Label className={labelClassName}>Sort</Select.Label>
         <Select.Trigger className={triggerClass}>
           <Select.Value>
-            {
-              SORT_OPTIONS.find((option) => option.value === selectedValue)
-                ?.label
-            }
+            {options.find((option) => option.value === selectedValue)?.label}
           </Select.Value>
           <Select.Icon className="grid shrink-0 place-items-center text-muted-foreground">
             <ChevronsUpDown className="size-4" aria-hidden="true" />
@@ -65,7 +74,7 @@ export function SortSelect({
         >
           <Select.Popup className="flex max-h-[min(24rem,var(--available-height))] w-full min-w-0 flex-col overflow-hidden rounded-card border border-border-strong bg-surface-elevated text-foreground shadow-overlay">
             <Select.List className="w-full max-h-[min(24rem,var(--available-height))] overflow-y-auto p-1 outline-none">
-              {SORT_OPTIONS.map((option) => (
+              {options.map((option) => (
                 <Select.Item
                   key={option.value}
                   value={option.value}

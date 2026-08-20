@@ -102,16 +102,6 @@ export function PublicArchiveShell({ children }: PublicArchiveShellProps) {
                 >
                   Ideas
                 </Link>
-                <Link
-                  to="/search"
-                  className="inline-flex min-h-10 items-center rounded-control px-3 text-sm font-medium text-muted-foreground transition-colors duration-(--duration-fast) hover:bg-surface-muted hover:text-foreground"
-                  activeProps={{
-                    className:
-                      "inline-flex min-h-10 items-center rounded-control bg-surface-muted px-3 text-sm font-medium text-foreground",
-                  }}
-                >
-                  Search
-                </Link>
               </nav>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
@@ -132,16 +122,6 @@ export function PublicArchiveShell({ children }: PublicArchiveShellProps) {
               }}
             >
               Ideas
-            </Link>
-            <Link
-              to="/search"
-              className="inline-flex min-h-10 items-center rounded-control px-3 text-sm font-medium text-muted-foreground transition-colors duration-(--duration-fast) hover:bg-surface-muted hover:text-foreground"
-              activeProps={{
-                className:
-                  "inline-flex min-h-10 items-center rounded-control bg-surface-muted px-3 text-sm font-medium text-foreground",
-              }}
-            >
-              Search
             </Link>
           </nav>
         </div>

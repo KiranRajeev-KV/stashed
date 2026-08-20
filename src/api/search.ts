@@ -17,21 +17,49 @@ export type SearchResultsPage = InferResponseType<
   200
 >;
 export type SearchResult = SearchResultsPage["results"][number];
+export type SearchIdeaSort = Exclude<SearchIdeasQuery["sort"], undefined>;
+
+export type SearchIdeasFilters = {
+  q: string;
+  status?: SearchIdeasQuery["status"];
+  sort?: SearchIdeaSort;
+  tagIds?: string[];
+};
 
 export const SEARCH_PAGE_SIZE = "20";
 
-export function searchQueryKey(q: string) {
-  return ["search", { q, limit: SEARCH_PAGE_SIZE }] as const;
+export function searchQueryKey(filters: SearchIdeasFilters) {
+  const tagIds = filters.tagIds
+    ? [...new Set(filters.tagIds)].sort()
+    : undefined;
+
+  return [
+    "search",
+    {
+      q: filters.q,
+      status: filters.status,
+      sort: filters.sort,
+      tagIds,
+      limit: SEARCH_PAGE_SIZE,
+    },
+  ] as const;
 }
 
-export function searchInfiniteQueryOptions(q: string) {
+export function searchInfiniteQueryOptions(filters: SearchIdeasFilters) {
+  const tagIds = filters.tagIds
+    ? [...new Set(filters.tagIds)].sort()
+    : undefined;
+
   return infiniteQueryOptions({
-    queryKey: searchQueryKey(q),
+    queryKey: searchQueryKey({ ...filters, tagIds }),
     initialPageParam: 0,
-    enabled: q.length > 0,
+    enabled: filters.q.length > 0,
     queryFn: ({ pageParam }) =>
       searchIdeas({
-        q,
+        q: filters.q,
+        status: filters.status,
+        sort: filters.sort,
+        tagId: tagIds,
         limit: SEARCH_PAGE_SIZE,
         offset: String(pageParam),
       }),

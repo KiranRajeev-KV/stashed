@@ -83,7 +83,6 @@ export const searchRoutes = new Hono<AppEnv>().get(
   "/",
   zValidator("query", searchIdeasQuerySchema, validationHook),
   async (c) => {
-    const { q, limit, offset } = c.req.valid("query");
-    return c.json(await searchIdeas(c.get("db"), q, limit, offset));
+    return c.json(await searchIdeas(c.get("db"), c.req.valid("query")));
   },
 );

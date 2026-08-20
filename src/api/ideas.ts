@@ -50,7 +50,10 @@ export function ideasQueryKey(filters: IdeaListFilters) {
   ] as const;
 }
 
-export function ideasInfiniteQueryOptions(filters: IdeaListFilters) {
+export function ideasInfiniteQueryOptions(
+  filters: IdeaListFilters,
+  options: { enabled?: boolean } = {},
+) {
   const tagIds = filters.tagIds
     ? [...new Set(filters.tagIds)].sort()
     : undefined;
@@ -58,6 +61,7 @@ export function ideasInfiniteQueryOptions(filters: IdeaListFilters) {
   return infiniteQueryOptions({
     queryKey: ideasQueryKey({ ...filters, tagIds }),
     initialPageParam: null as string | null,
+    enabled: options.enabled,
     queryFn: ({ pageParam }) =>
       listIdeas({
         status: filters.status,

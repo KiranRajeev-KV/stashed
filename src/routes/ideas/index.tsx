@@ -10,9 +10,16 @@ const tagSearchSchema = z
   .catch(undefined);
 
 const ideasSearchSchema = z.object({
+  q: z.string().trim().min(1).max(200).optional().catch(undefined),
   status: z.enum(IDEA_STATUSES).optional().catch(undefined),
   sort: z
-    .enum(["UPDATED_DESC", "CREATED_DESC", "UPDATED_ASC", "CREATED_ASC"])
+    .enum([
+      "UPDATED_DESC",
+      "CREATED_DESC",
+      "UPDATED_ASC",
+      "CREATED_ASC",
+      "BEST_MATCH",
+    ])
     .optional()
     .catch(undefined),
   tag: tagSearchSchema.transform((value) => {
