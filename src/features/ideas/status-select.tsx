@@ -1,5 +1,5 @@
 import { Select } from "@base-ui/react/select";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronDown, ChevronsUpDown } from "lucide-react";
 import * as React from "react";
 
 import type { IdeaStatus } from "../../api/ideas.js";
@@ -8,6 +8,8 @@ import { IDEA_STATUSES, IDEA_STATUS_LABELS } from "./idea-status.js";
 const ALL_STATUSES = "ALL";
 const triggerClass =
   "flex w-full min-w-0 cursor-pointer items-center justify-between gap-3 rounded-control border border-border bg-surface text-left text-sm text-foreground transition-colors duration-(--duration-fast) hover:border-border-strong hover:bg-surface-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[popup-open]:border-border-strong data-[popup-open]:bg-surface-elevated";
+const badgeTriggerClass =
+  "idea-status inline-flex cursor-pointer items-center gap-1 text-left transition-colors duration-(--duration-fast) hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 const optionClass =
   "group grid min-h-11 w-full cursor-pointer grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-2 rounded-control px-3 py-2 text-sm text-foreground outline-none select-none data-[highlighted]:bg-surface-muted";
 const indicatorClass =
@@ -20,11 +22,16 @@ type StatusSelectProps = {
   disabled?: boolean;
   label: string;
   labelClassName?: string;
+  icon?: "chevrons" | "down";
+  iconClassName?: string;
   name?: string;
   onBlur?: () => void;
   onValueChange: (status?: IdeaStatus) => void;
   size?: "filter" | "form";
+  hideIcon?: boolean;
   triggerClassName?: string;
+  triggerDataStatus?: IdeaStatus;
+  variant?: "default" | "badge";
   value?: IdeaStatus;
 };
 
@@ -33,18 +40,28 @@ export function StatusSelect({
   className,
   description,
   disabled = false,
+  icon = "chevrons",
+  iconClassName,
   label,
   labelClassName,
   name,
   onBlur,
   onValueChange,
+  hideIcon = false,
   size = "filter",
   triggerClassName,
+  triggerDataStatus,
+  variant = "default",
   value,
 }: StatusSelectProps) {
   const descriptionId = React.useId();
   const selectedValue = value ?? ALL_STATUSES;
   const sizeClass = size === "form" ? "min-h-12 px-4" : "min-h-11 px-3";
+  const Icon = icon === "down" ? ChevronDown : ChevronsUpDown;
+  const triggerClasses =
+    variant === "badge"
+      ? `${badgeTriggerClass} ${triggerClassName ?? ""}`
+      : `${triggerClass} ${sizeClass} ${triggerClassName ?? ""}`;
 
   return (
     <Select.Root
@@ -62,8 +79,9 @@ export function StatusSelect({
       <div className={className}>
         <Select.Label className={labelClassName}>{label}</Select.Label>
         <Select.Trigger
-          className={`${triggerClass} ${sizeClass} ${triggerClassName ?? ""}`}
+          className={triggerClasses}
           aria-describedby={description ? descriptionId : undefined}
+          data-status={triggerDataStatus}
           onBlur={onBlur}
         >
           <Select.Value>
@@ -71,9 +89,16 @@ export function StatusSelect({
               ? "Every status"
               : IDEA_STATUS_LABELS[selectedValue]}
           </Select.Value>
-          <Select.Icon className="grid shrink-0 place-items-center text-muted-foreground">
-            <ChevronsUpDown className="size-4" aria-hidden="true" />
-          </Select.Icon>
+          {!hideIcon ? (
+            <Select.Icon
+              className={`grid shrink-0 place-items-center ${iconClassName ?? "text-muted-foreground"}`}
+            >
+              <Icon
+                className={variant === "badge" ? "size-3" : "size-4"}
+                aria-hidden="true"
+              />
+            </Select.Icon>
+          ) : null}
         </Select.Trigger>
         {description ? <div id={descriptionId}>{description}</div> : null}
       </div>

@@ -429,51 +429,39 @@
   }
 
   .idea-status[data-status="ACTIVE"],
-  .idea-status[data-status="COMPLETED"] {
+  .idea-status[data-status="COMPLETED"],
+  .idea-status-trigger[data-status="ACTIVE"],
+  .idea-status-trigger[data-status="COMPLETED"] {
     border-color: color-mix(in srgb, var(--success) 45%, var(--border));
     background: color-mix(in srgb, var(--success) 10%, var(--surface));
     color: var(--success);
   }
 
   .idea-status[data-status="PLANNED"],
-  .idea-status[data-status="IN_PROGRESS"] {
+  .idea-status[data-status="IN_PROGRESS"],
+  .idea-status-trigger[data-status="PLANNED"],
+  .idea-status-trigger[data-status="IN_PROGRESS"] {
     border-color: color-mix(in srgb, var(--warning) 40%, var(--border));
     background: color-mix(in srgb, var(--warning) 9%, var(--surface));
     color: var(--warning);
   }
 
-  .idea-status[data-status="ARCHIVED"] {
+  .idea-status[data-status="ARCHIVED"],
+  .idea-status-trigger[data-status="ARCHIVED"] {
     border-style: dashed;
   }
 
-  .idea-card-status-editor {
+  .idea-status-editor {
     min-width: 0;
   }
 
-  .idea-card-status-trigger {
-    min-height: 2rem;
-    border-color: var(--border);
-    border-radius: 999px;
-    background: var(--surface-muted);
-    padding-inline: 0.65rem;
-    font-family: var(--font-code);
-    font-size: 0.6875rem;
-    font-weight: 500;
+  .idea-status-trigger {
+    gap: 0.25rem;
   }
 
-  .idea-card-status-trigger:disabled {
+  .idea-status-trigger:disabled {
     cursor: wait;
     opacity: 0.65;
-  }
-
-  @media (max-width: 30rem) {
-    .idea-card-status-editor {
-      width: 100%;
-    }
-
-    .idea-card-status-trigger {
-      width: 100%;
-    }
   }
 
   .idea-empty-state {
@@ -994,23 +982,34 @@
 
   .markdown-task-list {
     list-style: none !important;
-    padding-left: 1.75rem !important;
+    padding-left: 2.75rem !important;
+  }
+
+  .markdown-task-list > li {
+    min-height: 2.75rem;
+    padding-top: 0.4rem;
   }
 
   .markdown-task-checkbox {
     position: absolute;
-    top: 0;
+    top: -0.1rem;
     left: 0;
     display: grid;
-    min-height: 1.75rem;
+    width: 2.75rem;
+    height: 2.75rem;
     place-items: center;
   }
 
   .markdown-task-checkbox input {
-    width: 1rem;
-    height: 1rem;
+    width: 1.125rem;
+    height: 1.125rem;
     margin: 0;
     accent-color: var(--primary);
+    cursor: pointer;
+  }
+
+  .markdown-task-checkbox input:disabled {
+    cursor: default;
   }
 
   .markdown-task-complete {

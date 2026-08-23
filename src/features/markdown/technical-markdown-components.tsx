@@ -1,11 +1,13 @@
 import type { TCodeBlockElement, TLinkElement, TListElement } from "platejs";
 import { getLinkAttributes } from "@platejs/link";
 import { isOrderedList } from "@platejs/list";
+import { MarkdownPlugin } from "@platejs/markdown";
 import {
   useTodoListElement,
   useTodoListElementState,
 } from "@platejs/list/react";
 import { KEYS } from "platejs";
+import * as React from "react";
 import {
   PlateElement,
   PlateLeaf,
@@ -14,6 +16,8 @@ import {
   type RenderNodeWrapper,
   useReadOnly,
 } from "platejs/react";
+
+import { TaskListInteractionContext } from "./task-list-interaction.js";
 
 export function ParagraphElement(props: PlateElementProps) {
   return <PlateElement as="p" {...props} />;
@@ -92,10 +96,31 @@ function BlockList(props: PlateElementProps) {
 function TaskListMarker(props: PlateElementProps) {
   const state = useTodoListElementState({ element: props.element });
   const { checkboxProps } = useTodoListElement(state);
+  const interaction = React.useContext(TaskListInteractionContext);
   const readOnly = useReadOnly();
+  const canToggle = !readOnly || interaction !== null;
+
+  function handleCheckedChange(checked: boolean) {
+    if (interaction) {
+      if (interaction.disabled) return;
+
+      const path = state.editor.api.findPath(props.element);
+      if (!path) return;
+
+      state.editor.tf.setNodes({ checked }, { at: path });
+      interaction.onToggle(
+        state.editor
+          .getApi(MarkdownPlugin)
+          .markdown.serialize({ value: state.editor.children }),
+      );
+      return;
+    }
+
+    checkboxProps.onCheckedChange(checked);
+  }
 
   return (
-    <span
+    <label
       className="markdown-task-checkbox"
       contentEditable={false}
       suppressContentEditableWarning
@@ -103,15 +128,19 @@ function TaskListMarker(props: PlateElementProps) {
       <input
         type="checkbox"
         checked={checkboxProps.checked}
-        disabled={readOnly}
+        disabled={!canToggle || interaction?.disabled}
         aria-label={
-          checkboxProps.checked ? "Completed task" : "Incomplete task"
+          canToggle
+            ? checkboxProps.checked
+              ? "Mark task incomplete"
+              : "Mark task complete"
+            : checkboxProps.checked
+              ? "Completed task"
+              : "Incomplete task"
         }
-        onChange={(event) =>
-          checkboxProps.onCheckedChange(event.currentTarget.checked)
-        }
+        onChange={(event) => handleCheckedChange(event.currentTarget.checked)}
       />
-    </span>
+    </label>
   );
 }
 

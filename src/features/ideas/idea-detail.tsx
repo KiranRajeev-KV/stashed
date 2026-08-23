@@ -1,9 +1,15 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi } from "@tanstack/react-router";
+import { toast } from "sonner";
 
 import { currentUserQueryOptions } from "../../api/auth.js";
 import { ApiClientError } from "../../api/client.js";
-import { ideaQueryOptions } from "../../api/ideas.js";
+import {
+  type Idea,
+  ideaQueryKey,
+  ideaQueryOptions,
+  updateIdea,
+} from "../../api/ideas.js";
 import { MarkdownContent } from "../markdown/markdown-content.js";
 import {
   IdeaDetailError,
@@ -12,6 +18,7 @@ import {
 } from "./idea-detail-states.js";
 import { DeleteIdeaDialog } from "./delete-idea-dialog.js";
 import { IDEA_STATUS_LABELS } from "./idea-status.js";
+import { IdeaStatusEditor } from "./idea-status-editor.js";
 
 const routeApi = getRouteApi("/ideas/$ideaId");
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -23,6 +30,35 @@ export function IdeaDetail() {
   const { ideaId } = routeApi.useParams();
   const currentUserQuery = useQuery(currentUserQueryOptions());
   const ideaQuery = useQuery(ideaQueryOptions(ideaId));
+  const queryClient = useQueryClient();
+  const taskListMutation = useMutation({
+    mutationFn: (content: string) => updateIdea(ideaId, { content }),
+    onMutate: async (content) => {
+      await queryClient.cancelQueries({ queryKey: ideaQueryKey(ideaId) });
+      const previousIdea = queryClient.getQueryData<Idea>(ideaQueryKey(ideaId));
+
+      queryClient.setQueryData<Idea>(ideaQueryKey(ideaId), (idea) =>
+        idea ? { ...idea, content } : idea,
+      );
+
+      return { previousIdea };
+    },
+    onError: (error, _content, context) => {
+      if (context?.previousIdea) {
+        queryClient.setQueryData(ideaQueryKey(ideaId), context.previousIdea);
+      }
+      toast.error("Failed to update checklist", { description: error.message });
+    },
+    onSuccess: ({ idea }) => {
+      queryClient.setQueryData(ideaQueryKey(idea.id), idea);
+    },
+    onSettled: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["ideas"] }),
+        queryClient.invalidateQueries({ queryKey: ["search"] }),
+      ]);
+    },
+  });
 
   if (ideaQuery.isPending) {
     return <IdeaDetailSkeleton />;
@@ -46,6 +82,7 @@ export function IdeaDetail() {
 
   const idea = ideaQuery.data;
   const isOwner = currentUserQuery.data?.id === idea.author.id;
+  const content = idea.content;
   const authorInitials =
     idea.author.displayName.trim().slice(0, 2).toUpperCase() || "ST";
 
@@ -61,9 +98,13 @@ export function IdeaDetail() {
 
       <header className="mt-5 border-b border-border pb-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <span className="idea-status" data-status={idea.status}>
-            {IDEA_STATUS_LABELS[idea.status]}
-          </span>
+          {isOwner ? (
+            <IdeaStatusEditor idea={idea} />
+          ) : (
+            <span className="idea-status" data-status={idea.status}>
+              {IDEA_STATUS_LABELS[idea.status]}
+            </span>
+          )}
 
           {isOwner ? (
             <div className="idea-detail-actions">
@@ -156,13 +197,28 @@ export function IdeaDetail() {
           <span>{idea.id.slice(0, 8)}</span>
         </aside>
         <div className="idea-detail-paper">
-          {/^\s*(?:&#x20;)?\s*$/i.test(idea.content) ? (
+          {/^\s*(?:&#x20;)?\s*$/i.test(content) ? (
             <p className="text-sm text-muted-foreground">
               No additional context was added.
             </p>
           ) : (
-            <MarkdownContent markdown={idea.content} />
+            <MarkdownContent
+              markdown={content}
+              onTaskListChange={
+                isOwner
+                  ? (nextContent) => {
+                      if (!taskListMutation.isPending) {
+                        taskListMutation.mutate(nextContent);
+                      }
+                    }
+                  : undefined
+              }
+              taskListDisabled={taskListMutation.isPending}
+            />
           )}
+          <span className="sr-only" aria-live="polite">
+            {taskListMutation.isPending ? "Updating checklist" : ""}
+          </span>
         </div>
       </div>
     </article>
