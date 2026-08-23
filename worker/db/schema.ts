@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
 import {
   index,
   integer,
@@ -211,6 +211,12 @@ export const tags = sqliteTable(
 
     name: text("name").notNull(),
 
+    // Canonical key for uniqueness and prefix discovery.
+    nameKey: text("name_key").notNull().default(""),
+
+    // Maintained by idea_tags triggers so discovery never needs COUNT(*).
+    ideaCount: integer("idea_count").notNull().default(0),
+
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .notNull()
       .default(sql`(unixepoch() * 1000)`),
@@ -234,6 +240,11 @@ export const tags = sqliteTable(
      * Full Unicode uniqueness requires a separately normalized column.
      */
     uniqueIndex("tags_name_lower_unique").on(sql`lower(${table.name})`),
+    index("tags_idea_count_name_key_idx").on(
+      desc(table.ideaCount),
+      table.nameKey,
+      table.name,
+    ),
   ],
 );
 

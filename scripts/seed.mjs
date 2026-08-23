@@ -673,8 +673,11 @@ ${users.map((user) => userStatements(user, seedCreatedAt)).join("\n\n")}
 
 ${tags
   .map(
-    ([id, name]) => `INSERT INTO tags (id, name, created_at, updated_at)
-VALUES (${quote(id)}, ${quote(name)}, ${seedCreatedAt}, ${seedCreatedAt})
+    ([
+      id,
+      name,
+    ]) => `INSERT INTO tags (id, name, name_key, created_at, updated_at)
+VALUES (${quote(id)}, ${quote(name)}, ${quote(name.toLocaleLowerCase("en-US"))}, ${seedCreatedAt}, ${seedCreatedAt})
 ON CONFLICT DO NOTHING;`,
   )
   .join("\n\n")}

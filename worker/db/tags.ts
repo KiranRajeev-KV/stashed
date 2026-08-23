@@ -1,7 +1,7 @@
-import { asc, count, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, gt, sql } from "drizzle-orm";
 
 import type { Database } from "./client.js";
-import { ideaTags, tags } from "./schema.js";
+import { tags } from "./schema.js";
 
 export type TagDiscoveryRecord = {
   id: string;
@@ -15,26 +15,34 @@ type ListUsedTagRecordsInput = {
   offset: number;
 };
 
+function tagNameKey(name: string) {
+  return name.toLocaleLowerCase("en-US");
+}
+
+function escapeLike(value: string) {
+  return value
+    .replaceAll("\\", "\\\\")
+    .replaceAll("%", "\\%")
+    .replaceAll("_", "\\_");
+}
+
 export async function listUsedTagRecords(
   db: Database,
   input: ListUsedTagRecordsInput,
 ): Promise<TagDiscoveryRecord[]> {
-  const ideaCount = count(ideaTags.ideaId);
   const prefixFilter = input.q
-    ? sql<boolean>`lower(substr(${tags.name}, 1, length(${input.q}))) = lower(${input.q})`
+    ? sql<boolean>`${tags.nameKey} LIKE ${`${escapeLike(tagNameKey(input.q))}%`} ESCAPE '\\'`
     : undefined;
 
   return db
     .select({
       id: tags.id,
       name: tags.name,
-      ideaCount,
+      ideaCount: tags.ideaCount,
     })
     .from(tags)
-    .innerJoin(ideaTags, eq(ideaTags.tagId, tags.id))
-    .where(prefixFilter)
-    .groupBy(tags.id, tags.name)
-    .orderBy(desc(ideaCount), asc(sql`lower(${tags.name})`), asc(tags.name))
+    .where(and(gt(tags.ideaCount, 0), prefixFilter))
+    .orderBy(desc(tags.ideaCount), asc(tags.nameKey), asc(tags.name))
     .limit(input.limit)
     .offset(input.offset);
 }
