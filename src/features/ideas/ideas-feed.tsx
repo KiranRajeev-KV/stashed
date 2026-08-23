@@ -153,6 +153,7 @@ export function IdeasFeed() {
 
       {query ? (
         <SearchResults
+          currentUserId={currentUserQuery.data?.id}
           query={query}
           results={results}
           isPending={searchQuery.isPending}
@@ -167,6 +168,7 @@ export function IdeasFeed() {
         />
       ) : (
         <BrowseResults
+          currentUserId={currentUserQuery.data?.id}
           ideas={ideas}
           filtered={isFiltered}
           isPending={ideasQuery.isPending}
@@ -186,6 +188,7 @@ export function IdeasFeed() {
 }
 
 function SearchResults({
+  currentUserId,
   query,
   results,
   errorMessage,
@@ -198,6 +201,7 @@ function SearchResults({
   onFetchNextPage,
   onRetry,
 }: {
+  currentUserId?: string;
   query: string;
   results: import("../../api/search.js").SearchResult[];
   errorMessage: string;
@@ -236,7 +240,11 @@ function SearchResults({
 
           <div className="grid gap-4 md:grid-cols-2">
             {results.map((result) => (
-              <IdeaCard key={result.id} idea={result} />
+              <IdeaCard
+                key={result.id}
+                currentUserId={currentUserId}
+                idea={result}
+              />
             ))}
           </div>
 
@@ -257,6 +265,7 @@ function SearchResults({
 }
 
 function BrowseResults({
+  currentUserId,
   ideas,
   filtered,
   errorMessage,
@@ -270,6 +279,7 @@ function BrowseResults({
   onRetry,
   onClearFilters,
 }: {
+  currentUserId?: string;
   ideas: import("../../api/ideas.js").IdeaListItem[];
   filtered: boolean;
   errorMessage: string;
@@ -299,7 +309,11 @@ function BrowseResults({
         <>
           <div className="grid gap-4 md:grid-cols-2">
             {ideas.map((idea) => (
-              <IdeaCard key={idea.id} idea={idea} />
+              <IdeaCard
+                key={idea.id}
+                currentUserId={currentUserId}
+                idea={idea}
+              />
             ))}
           </div>
 

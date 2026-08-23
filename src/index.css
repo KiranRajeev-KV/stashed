@@ -446,6 +446,36 @@
     border-style: dashed;
   }
 
+  .idea-card-status-editor {
+    min-width: 0;
+  }
+
+  .idea-card-status-trigger {
+    min-height: 2rem;
+    border-color: var(--border);
+    border-radius: 999px;
+    background: var(--surface-muted);
+    padding-inline: 0.65rem;
+    font-family: var(--font-code);
+    font-size: 0.6875rem;
+    font-weight: 500;
+  }
+
+  .idea-card-status-trigger:disabled {
+    cursor: wait;
+    opacity: 0.65;
+  }
+
+  @media (max-width: 30rem) {
+    .idea-card-status-editor {
+      width: 100%;
+    }
+
+    .idea-card-status-trigger {
+      width: 100%;
+    }
+  }
+
   .idea-empty-state {
     position: relative;
     overflow: hidden;
