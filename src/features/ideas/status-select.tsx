@@ -82,7 +82,7 @@ export function StatusSelect({
         <Select.Positioner
           align="start"
           alignItemWithTrigger={false}
-          className="z-50 w-(--anchor-width) outline-none"
+          className="z-50 w-max min-w-(--anchor-width) max-w-[calc(100vw-2rem)] outline-none"
           sideOffset={6}
         >
           <Select.Popup className="flex max-h-[min(24rem,var(--available-height))] w-full min-w-0 flex-col overflow-hidden rounded-card border border-border-strong bg-surface-elevated text-foreground shadow-overlay">
