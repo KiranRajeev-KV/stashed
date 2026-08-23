@@ -17,12 +17,14 @@ type StatusSelectProps = {
   allowAll?: boolean;
   className?: string;
   description?: React.ReactNode;
+  disabled?: boolean;
   label: string;
   labelClassName?: string;
   name?: string;
   onBlur?: () => void;
   onValueChange: (status?: IdeaStatus) => void;
   size?: "filter" | "form";
+  triggerClassName?: string;
   value?: IdeaStatus;
 };
 
@@ -30,12 +32,14 @@ export function StatusSelect({
   allowAll = false,
   className,
   description,
+  disabled = false,
   label,
   labelClassName,
   name,
   onBlur,
   onValueChange,
   size = "filter",
+  triggerClassName,
   value,
 }: StatusSelectProps) {
   const descriptionId = React.useId();
@@ -46,6 +50,7 @@ export function StatusSelect({
     <Select.Root
       name={name}
       value={selectedValue}
+      disabled={disabled}
       onValueChange={(nextValue) =>
         onValueChange(
           allowAll && nextValue === ALL_STATUSES
@@ -57,7 +62,7 @@ export function StatusSelect({
       <div className={className}>
         <Select.Label className={labelClassName}>{label}</Select.Label>
         <Select.Trigger
-          className={`${triggerClass} ${sizeClass}`}
+          className={`${triggerClass} ${sizeClass} ${triggerClassName ?? ""}`}
           aria-describedby={description ? descriptionId : undefined}
           onBlur={onBlur}
         >

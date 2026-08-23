@@ -19,7 +19,7 @@ on a single Cloudflare Worker, backed by Cloudflare D1 and Drizzle ORM.
 ## Current Features
 
 - GitHub authentication and registration
-- A shared, newest-first idea feed
+- A shared idea feed, ordered by recently updated ideas
 - Author-owned idea creation, editing, and deletion
 - Idea statuses for tracking how thoughts develop
 - Searchable tags created as ideas are saved
@@ -87,6 +87,10 @@ Production releases are branch-gated:
 - Only a push to `prod` can run the production deployment workflow.
 - The deployment applies pending D1 migrations before publishing the Worker.
 - Production seed data is never applied automatically.
+
+Some schema migrations also require a one-time data migration for existing
+production records. See the [migration guide](./drizzle/migrations/README.md)
+for release-specific instructions.
 
 The current production origin is:
 
