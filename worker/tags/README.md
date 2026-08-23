@@ -57,8 +57,10 @@ ascending. An additional stored-name comparison makes ordering deterministic
 when names have the same lowercase representation. This ordering is preserved
 when prefix search and pagination are used.
 
-The database query uses an inner join between `tags` and `idea_tags`, groups by
-tag, and counts distinct idea IDs. Consequently:
+The database query reads the materialized `tags.idea_count` value, maintained by
+`idea_tags` insert and delete triggers. It filters to `idea_count > 0` and uses
+the `tags_idea_count_name_key_idx` index for its popularity-first order.
+Consequently:
 
 - tags with no idea relationships remain stored but are not returned;
 - one tag used by multiple ideas reports the correct count;
@@ -66,9 +68,10 @@ tag, and counts distinct idea IDs. Consequently:
   the `idea_tags` composite primary key).
 
 The service fetches one row beyond the requested limit to calculate `hasMore`;
-that extra row is not returned. Prefix matching and case-insensitive ordering
-use SQLite's built-in `lower()`, which is ASCII-only. This is the same current
-case-folding limitation documented for tag uniqueness.
+that extra row is not returned. Prefix matching uses the stored `name_key`
+column with an escaped `LIKE` prefix. Both `name_key` and the database's
+`UNIQUE(lower(name))` constraint retain SQLite's ASCII-only case-folding
+limitation.
 
 The endpoint requires a valid Stashed session cookie. Unauthenticated requests
 use the standard API error response:

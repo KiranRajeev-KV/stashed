@@ -71,7 +71,10 @@ function TagFilter({
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState("");
   const debouncedInput = useDebouncedValue(inputValue.trim(), 220);
-  const discoveryQuery = useQuery(tagsQueryOptions(tagDiscoveryQuery));
+  const discoveryQuery = useQuery({
+    ...tagsQueryOptions(tagDiscoveryQuery),
+    enabled: open,
+  });
   const searchQuery = useQuery({
     ...tagsQueryOptions({
       q: debouncedInput || undefined,

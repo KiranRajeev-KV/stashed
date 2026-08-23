@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 
 import { apiError } from "../api/errors.js";
-import { findOrCreateGitHubUser } from "../db/users.js";
+import { findOrCreateGitHubUser, getUserById } from "../db/users.js";
 import { requireSession } from "../middleware/session.js";
 import type { AppEnv } from "../types.js";
 import {
@@ -98,8 +98,13 @@ export const authRoutes = new Hono<AppEnv>()
     await setSessionCookie(c, user.id);
     return c.redirect("/ideas", 302);
   })
-  .get("/me", requireSession, (c) => {
-    return c.json({ user: c.get("currentUser") });
+  .get("/me", requireSession, async (c) => {
+    const user = await getUserById(c.get("db"), c.get("currentUserId"));
+    if (!user) {
+      clearSessionCookie(c);
+      return apiError(c, 401, "UNAUTHORIZED", "Authentication required");
+    }
+    return c.json({ user });
   })
   .post("/logout", (c) => {
     clearSessionCookie(c);

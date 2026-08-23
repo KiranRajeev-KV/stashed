@@ -39,6 +39,11 @@ on a single Cloudflare Worker, backed by Cloudflare D1 and Drizzle ORM.
 - **Database:** Cloudflare D1 + Drizzle ORM
 - **Tooling:** pnpm, just, Oxlint, Prettier, Wrangler
 
+## Architecture Decisions
+
+Significant technical decisions are recorded as
+[Architecture Decision Records](./docs/adr/README.md).
+
 ## Prerequisites
 
 - Node.js 22+
@@ -50,6 +55,7 @@ on a single Cloudflare Worker, backed by Cloudflare D1 and Drizzle ORM.
 
 ```sh
 pnpm install
+pnpm db:local
 pnpm dev
 ```
 

@@ -44,7 +44,7 @@ export const ideasRoutes = new Hono<AppEnv>()
     async (c) => {
       const result = await createIdea(
         c.get("db"),
-        c.get("currentUser").id,
+        c.get("currentUserId"),
         c.req.valid("json"),
       );
       return c.json(result, 201);
@@ -60,7 +60,7 @@ export const ideasRoutes = new Hono<AppEnv>()
         await updateIdea(
           c.get("db"),
           c.req.valid("param").id,
-          c.get("currentUser").id,
+          c.get("currentUserId"),
           c.req.valid("json"),
         ),
       ),
@@ -73,7 +73,7 @@ export const ideasRoutes = new Hono<AppEnv>()
       await deleteIdea(
         c.get("db"),
         c.req.valid("param").id,
-        c.get("currentUser").id,
+        c.get("currentUserId"),
       );
       return c.body(null, 204);
     },

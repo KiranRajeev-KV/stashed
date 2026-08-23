@@ -34,7 +34,8 @@ export function currentUserQueryOptions() {
   return queryOptions({
     queryKey: currentUserQueryKey,
     queryFn: getSessionUser,
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
     retry: (failureCount, error) =>
       !(error instanceof ApiClientError && error.status === 401) &&
       failureCount < 2,

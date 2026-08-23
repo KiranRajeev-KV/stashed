@@ -104,11 +104,13 @@ D1 transactional batches. Existing ASCII tag names are reused through the
 database's `UNIQUE(lower(name))` constraint, including during concurrent
 requests.
 
-SQLite's built-in `lower()` only case-folds ASCII characters. Unicode tag names
-are accepted, but differently cased non-ASCII names are not currently
-guaranteed to resolve to one database tag. Full Unicode uniqueness is deferred
-until tags have an application-generated normalized column with a defined
-normalization and case-folding policy.
+Tags also store an application-generated `name_key`, but SQLite's
+`UNIQUE(lower(name))` constraint and the legacy migration trigger use
+ASCII-only case-folding. Unicode tag names are accepted, but differently cased
+non-ASCII names are not guaranteed to resolve to one database tag. Full Unicode
+uniqueness remains deferred until Stashed defines a normalization and
+case-folding policy that is enforced consistently by the application and
+database.
 
 ## Search
 

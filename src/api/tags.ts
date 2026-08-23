@@ -28,7 +28,8 @@ export function tagsQueryOptions(query: ListTagsQuery = {}) {
   return queryOptions({
     queryKey: tagsQueryKey(query),
     queryFn: () => listTags(query),
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
   });
 }
 

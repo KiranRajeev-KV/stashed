@@ -30,8 +30,40 @@ pnpm db:backfill-content-plain
 Fresh databases do not need this command: new ideas always derive
 `content_plain` when they are created or their content changes.
 
+### `0003_spicy_proemial_gods.sql`: tag discovery indexes
+
+This migration adds `tags.name_key` and a materialized `tags.idea_count`.
+It backfills both values from existing data and installs triggers that keep
+the count correct whenever an `idea_tags` row is inserted or deleted. It is
+self-contained: do not run a separate production backfill script.
+
+Before applying it remotely, verify it locally:
+
+```bash
+pnpm db:local
+pnpm db:seed
+pnpm exec wrangler d1 execute stashed-db --local --command "SELECT id, name, name_key, idea_count FROM tags ORDER BY name_key LIMIT 10"
+pnpm exec wrangler d1 execute stashed-db --local --command "SELECT t.id, t.idea_count, count(it.idea_id) AS actual_count FROM tags AS t LEFT JOIN idea_tags AS it ON it.tag_id = t.id GROUP BY t.id HAVING t.idea_count != count(it.idea_id)"
+pnpm exec wrangler d1 execute stashed-db --local --command "EXPLAIN QUERY PLAN SELECT id, name, idea_count FROM tags WHERE idea_count > 0 ORDER BY idea_count DESC, name_key ASC, name ASC LIMIT 50"
+```
+
+The count-consistency query must return no rows. The query plan should use
+`tags_idea_count_name_key_idx` and must not join or aggregate `idea_tags`.
+
+After the local check succeeds, apply the already-versioned migration to the
+remote database with `pnpm db:remote`, then run the same verification commands
+with `--remote` instead of `--local`. This migration is compatible with the
+previous Worker version: its `tags_after_insert_populate_name_key` trigger
+fills the new derived key for legacy inserts. Apply the migration, verify it,
+then deploy the Worker that writes `name_key` directly. Run `PRAGMA optimize`
+once after the remote migration so SQLite refreshes planner statistics:
+
+```bash
+pnpm exec wrangler d1 execute stashed-db --remote --command "PRAGMA optimize"
+```
+
 For a local D1 simulator check, append `--local` to the command. Run the
-remote command after `pnpm db:remote` has applied migration `0002`.
+remote command after `pnpm db:remote` has applied migration `0003`.
 
 Whenever a future migration substantially modifies or rebuilds the `ideas`
 table, inspect the generated SQL and verify:

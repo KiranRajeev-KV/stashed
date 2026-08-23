@@ -105,6 +105,17 @@ function ideaListSelection() {
   };
 }
 
+function tagNameKey(name: string) {
+  return name.toLocaleLowerCase("en-US");
+}
+
+function compareTagNames(left: IdeaTagRecord, right: IdeaTagRecord) {
+  return (
+    tagNameKey(left.name).localeCompare(tagNameKey(right.name), "en-US") ||
+    left.name.localeCompare(right.name, "en-US")
+  );
+}
+
 function toIdeaRecord(row: {
   rowId: number;
   id: string;
@@ -261,13 +272,16 @@ export async function getTagsForIdeas(
     .select({ ideaId: ideaTags.ideaId, id: tags.id, name: tags.name })
     .from(ideaTags)
     .innerJoin(tags, eq(tags.id, ideaTags.tagId))
-    .where(inArray(ideaTags.ideaId, ideaIds))
-    .orderBy(asc(sql`lower(${tags.name})`), asc(tags.name));
+    .where(inArray(ideaTags.ideaId, ideaIds));
 
   for (const row of rows) {
     const ideaTagList = tagsByIdea.get(row.ideaId) ?? [];
     ideaTagList.push({ id: row.id, name: row.name });
     tagsByIdea.set(row.ideaId, ideaTagList);
+  }
+
+  for (const ideaTagList of tagsByIdea.values()) {
+    ideaTagList.sort(compareTagNames);
   }
 
   return tagsByIdea;
@@ -292,6 +306,7 @@ function insertTags(db: Database, tagNames: string[], now: Date) {
       tagNames.map((name) => ({
         id: crypto.randomUUID(),
         name,
+        nameKey: tagNameKey(name),
         createdAt: now,
         updatedAt: now,
       })),
@@ -305,9 +320,7 @@ function insertIdeaTags(
   tagNames: string[],
   now: Date,
 ) {
-  const matches = tagNames.map((name) =>
-    eq(sql`lower(${tags.name})`, sql`lower(${name})`),
-  );
+  const tagNameKeys = tagNames.map(tagNameKey);
 
   return db.insert(ideaTags).select(
     db
@@ -317,7 +330,7 @@ function insertIdeaTags(
         createdAt: sql<Date>`${now.getTime()}`.as("created_at"),
       })
       .from(tags)
-      .where(or(...matches)),
+      .where(inArray(tags.nameKey, tagNameKeys)),
   );
 }
 
