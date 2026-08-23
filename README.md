@@ -55,6 +55,7 @@ Significant technical decisions are recorded as
 
 ```sh
 pnpm install
+pnpm db:local
 pnpm dev
 ```
 

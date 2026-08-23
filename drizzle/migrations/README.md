@@ -63,7 +63,7 @@ pnpm exec wrangler d1 execute stashed-db --remote --command "PRAGMA optimize"
 ```
 
 For a local D1 simulator check, append `--local` to the command. Run the
-remote command after `pnpm db:remote` has applied migration `0002`.
+remote command after `pnpm db:remote` has applied migration `0003`.
 
 Whenever a future migration substantially modifies or rebuilds the `ideas`
 table, inspect the generated SQL and verify:
