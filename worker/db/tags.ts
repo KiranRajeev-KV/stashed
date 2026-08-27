@@ -38,11 +38,11 @@ export async function listUsedTagRecords(
     .select({
       id: tags.id,
       name: tags.name,
-      ideaCount: tags.ideaCount,
+      ideaCount: tags.publicIdeaCount,
     })
     .from(tags)
-    .where(and(gt(tags.ideaCount, 0), prefixFilter))
-    .orderBy(desc(tags.ideaCount), asc(tags.nameKey), asc(tags.name))
+    .where(and(gt(tags.publicIdeaCount, 0), prefixFilter))
+    .orderBy(desc(tags.publicIdeaCount), asc(tags.nameKey), asc(tags.name))
     .limit(input.limit)
     .offset(input.offset);
 }

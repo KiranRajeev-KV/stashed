@@ -27,6 +27,17 @@ export const ideaStatusValues = [
 export type IdeaStatus = (typeof ideaStatusValues)[number];
 
 /*
+ * Who can discover or read an idea.
+ *
+ * COLLECTION_MEMBERS is intentionally reserved for the future collections
+ * feature. SQLite does not enforce this list so adding that value later does
+ * not require rebuilding the ideas table.
+ */
+export const ideaVisibilityValues = ["PUBLIC", "UNLISTED", "PRIVATE"] as const;
+
+export type IdeaVisibility = (typeof ideaVisibilityValues)[number];
+
+/*
  * Users inside Stashed.
  *
  * This table contains only Stashed-specific user information.
@@ -174,6 +185,14 @@ export const ideas = sqliteTable(
       .notNull()
       .default("DRAFT"),
 
+    // PUBLIC ideas are discoverable by anyone. UNLISTED ideas require their
+    // direct URL. PRIVATE ideas are available only to their author.
+    visibility: text("visibility", {
+      enum: ideaVisibilityValues,
+    })
+      .notNull()
+      .default("PUBLIC"),
+
     // Stashed user who created the idea.
     authorId: text("author_id")
       .notNull()
@@ -191,6 +210,16 @@ export const ideas = sqliteTable(
   (table) => [
     // Used for queries such as "all ideas created by this user".
     index("ideas_author_id_idx").on(table.authorId),
+    index("ideas_visibility_updated_row_id_idx").on(
+      table.visibility,
+      desc(table.updatedAt),
+      desc(table.rowId),
+    ),
+    index("ideas_visibility_created_row_id_idx").on(
+      table.visibility,
+      desc(table.createdAt),
+      desc(table.rowId),
+    ),
   ],
 );
 
@@ -217,6 +246,9 @@ export const tags = sqliteTable(
     // Maintained by idea_tags triggers so discovery never needs COUNT(*).
     ideaCount: integer("idea_count").notNull().default(0),
 
+    // Public-only count safe to expose through anonymous tag discovery.
+    publicIdeaCount: integer("public_idea_count").notNull().default(0),
+
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .notNull()
       .default(sql`(unixepoch() * 1000)`),
@@ -242,6 +274,11 @@ export const tags = sqliteTable(
     uniqueIndex("tags_name_lower_unique").on(sql`lower(${table.name})`),
     index("tags_idea_count_name_key_idx").on(
       desc(table.ideaCount),
+      table.nameKey,
+      table.name,
+    ),
+    index("tags_public_idea_count_name_key_idx").on(
+      desc(table.publicIdeaCount),
       table.nameKey,
       table.name,
     ),

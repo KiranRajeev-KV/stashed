@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { ideaStatusValues } from "../db/schema.js";
+import { ideaStatusValues, ideaVisibilityValues } from "../db/schema.js";
 
 const MAX_CONTENT_LENGTH = 200_000;
 const MAX_TAGS = 20;
@@ -50,6 +50,7 @@ export const createIdeaSchema = z
     title: titleSchema,
     content: contentSchema,
     status: z.enum(ideaStatusValues).optional(),
+    visibility: z.enum(ideaVisibilityValues).optional(),
     tags: tagsSchema.optional(),
   })
   .strict();
@@ -59,6 +60,7 @@ export const updateIdeaSchema = z
     title: titleSchema.optional(),
     content: contentSchema.optional(),
     status: z.enum(ideaStatusValues).optional(),
+    visibility: z.enum(ideaVisibilityValues).optional(),
     tags: tagsSchema.optional(),
   })
   .strict()

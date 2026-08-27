@@ -99,7 +99,14 @@ export function IdeaDetail() {
       <header className="mt-5 border-b border-border pb-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           {isOwner ? (
-            <IdeaStatusEditor idea={idea} />
+            <div className="flex items-center gap-2">
+              <IdeaStatusEditor idea={idea} />
+              {idea.visibility !== "PUBLIC" ? (
+                <span className="idea-status" data-status="DRAFT">
+                  {idea.visibility === "UNLISTED" ? "Unlisted" : "Private"}
+                </span>
+              ) : null}
+            </div>
           ) : (
             <span className="idea-status" data-status={idea.status}>
               {IDEA_STATUS_LABELS[idea.status]}

@@ -8,11 +8,14 @@ import { TagSelector } from "../tags/tag-selector.js";
 import { IDEA_STATUSES } from "./idea-status.js";
 import { StatusSelect } from "./status-select.js";
 
+const IDEA_VISIBILITIES = ["PUBLIC", "UNLISTED", "PRIVATE"] as const;
+
 const ideaFormSchema = z
   .object({
     title: z.string().trim().min(1, "Give the idea a title.").max(200),
     content: z.string().max(200_000),
     status: z.enum(IDEA_STATUSES),
+    visibility: z.enum(IDEA_VISIBILITIES),
     tags: z.array(z.string().trim().min(1).max(50)).max(20),
     tagDraft: z.string().trim().max(50, "Tags can be up to 50 characters."),
   })
@@ -96,6 +99,7 @@ export function IdeaForm({
         title: value.title.trim(),
         content: value.content,
         status: value.status,
+        visibility: value.visibility,
         tags: normalizeTags(value.tags, value.tagDraft),
       }),
   });
@@ -170,6 +174,40 @@ export function IdeaForm({
               size="form"
               value={field.state.value}
             />
+          )}
+        </form.Field>
+
+        <form.Field name="visibility">
+          {(field) => (
+            <label className="idea-form-field">
+              <span className="idea-form-label">Visibility</span>
+              <select
+                name={field.name}
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(event) =>
+                  field.handleChange(
+                    event.currentTarget
+                      .value as (typeof IDEA_VISIBILITIES)[number],
+                  )
+                }
+              >
+                <option value="PUBLIC">Public — listed for everyone</option>
+                <option value="UNLISTED">
+                  Unlisted — anyone with the link
+                </option>
+                <option value="PRIVATE">Private — only you</option>
+              </select>
+              <span className="idea-form-field-foot">
+                <span>
+                  {field.state.value === "PUBLIC"
+                    ? "Shown in the public feed and search."
+                    : field.state.value === "UNLISTED"
+                      ? "Hidden from feeds and search, but its URL works for anyone."
+                      : "Hidden from everyone except you."}
+                </span>
+              </span>
+            </label>
           )}
         </form.Field>
       </div>

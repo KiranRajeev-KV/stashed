@@ -19,7 +19,7 @@ import type {
 } from "../ideas/schemas.js";
 import { markdownToPlainText } from "../ideas/markdown.js";
 import type { Database } from "./client.js";
-import type { IdeaStatus } from "./schema.js";
+import type { IdeaStatus, IdeaVisibility } from "./schema.js";
 import { ideaTags, ideas, tags, userIdentities, users } from "./schema.js";
 
 const GITHUB_PROVIDER = "github";
@@ -42,6 +42,7 @@ export type IdeaRecord = {
   title: string;
   content: string;
   status: IdeaStatus;
+  visibility: IdeaVisibility;
   author: IdeaAuthorRecord;
   createdAt: Date;
   updatedAt: Date;
@@ -58,6 +59,7 @@ export type IdeaSearchRecord = Omit<IdeaRecord, "content" | "rowId"> & {
 type ListIdeasInput = {
   status?: IdeaStatus;
   tagIds?: string[];
+  viewerId?: string;
   sort: IdeaSort;
   cursor?: { timestamp: number; rowId: number };
   limit: number;
@@ -67,6 +69,7 @@ type SearchRow = {
   id: string;
   title: string;
   status: IdeaStatus;
+  visibility: IdeaVisibility;
   authorId: string;
   authorDisplayName: string;
   authorUsername: string | null;
@@ -82,6 +85,7 @@ function ideaBaseSelection() {
     id: ideas.id,
     title: ideas.title,
     status: ideas.status,
+    visibility: ideas.visibility,
     authorId: users.id,
     authorDisplayName: users.displayName,
     authorUsername: userIdentities.providerUsername,
@@ -122,6 +126,7 @@ function toIdeaRecord(row: {
   title: string;
   content: string;
   status: IdeaStatus;
+  visibility: IdeaVisibility;
   authorId: string;
   authorDisplayName: string;
   authorUsername: string | null;
@@ -135,6 +140,7 @@ function toIdeaRecord(row: {
     title: row.title,
     content: row.content,
     status: row.status,
+    visibility: row.visibility,
     author: {
       id: row.authorId,
       displayName: row.authorDisplayName,
@@ -174,11 +180,28 @@ function withListAuthor(db: Database) {
     );
 }
 
+function listVisibilityFilter(viewerId?: string) {
+  return viewerId
+    ? or(eq(ideas.visibility, "PUBLIC"), eq(ideas.authorId, viewerId))
+    : eq(ideas.visibility, "PUBLIC");
+}
+
+function detailVisibilityFilter(viewerId?: string) {
+  return viewerId
+    ? or(
+        inArray(ideas.visibility, ["PUBLIC", "UNLISTED"]),
+        eq(ideas.authorId, viewerId),
+      )
+    : inArray(ideas.visibility, ["PUBLIC", "UNLISTED"]);
+}
+
 export async function listIdeaRecords(
   db: Database,
   input: ListIdeasInput,
 ): Promise<IdeaListRecord[]> {
   const filters = [];
+
+  filters.push(listVisibilityFilter(input.viewerId));
 
   if (input.status) {
     filters.push(eq(ideas.status, input.status));
@@ -227,6 +250,7 @@ export async function listIdeaRecords(
     title: row.title,
     contentPlain: row.contentPlain,
     status: row.status,
+    visibility: row.visibility,
     author: {
       id: row.authorId,
       displayName: row.authorDisplayName,
@@ -241,8 +265,11 @@ export async function listIdeaRecords(
 export async function getIdeaRecord(
   db: Database,
   ideaId: string,
+  viewerId?: string,
 ): Promise<IdeaRecord | undefined> {
-  const row = await withAuthor(db).where(eq(ideas.id, ideaId)).get();
+  const row = await withAuthor(db)
+    .where(and(eq(ideas.id, ideaId), detailVisibilityFilter(viewerId)))
+    .get();
   return row ? toIdeaRecord(row) : undefined;
 }
 
@@ -348,6 +375,7 @@ export async function createIdeaRecord(
     content: input.content,
     contentPlain: markdownToPlainText(input.content),
     status: input.status ?? "DRAFT",
+    visibility: input.visibility ?? "PUBLIC",
     authorId,
     createdAt: now,
     updatedAt: now,
@@ -377,6 +405,7 @@ export async function updateIdeaRecord(
     content?: string;
     contentPlain?: string;
     status?: IdeaStatus;
+    visibility?: IdeaVisibility;
     updatedAt: Date;
   } = { updatedAt: now };
 
@@ -386,6 +415,7 @@ export async function updateIdeaRecord(
     values.contentPlain = markdownToPlainText(input.content);
   }
   if (input.status !== undefined) values.status = input.status;
+  if (input.visibility !== undefined) values.visibility = input.visibility;
 
   const updateIdea = db.update(ideas).set(values).where(eq(ideas.id, ideaId));
 
@@ -435,6 +465,7 @@ export async function searchIdeaRecords(
     status?: IdeaStatus;
     sort?: SearchIdeaSort;
     tagIds?: string[];
+    viewerId?: string;
     limit: number;
     offset: number;
   },
@@ -442,6 +473,20 @@ export async function searchIdeaRecords(
   const bindings: (number | string)[] = [toSafeFtsQuery(input.query)];
   const nextPlaceholder = () => `?${bindings.length + 1}`;
   const filters = ["ideas_fts MATCH ?1"];
+
+  if (input.viewerId) {
+    const publicPlaceholder = nextPlaceholder();
+    bindings.push("PUBLIC");
+    const authorPlaceholder = nextPlaceholder();
+    bindings.push(input.viewerId);
+    filters.push(
+      `(i.visibility = ${publicPlaceholder} OR i.author_id = ${authorPlaceholder})`,
+    );
+  } else {
+    const publicPlaceholder = nextPlaceholder();
+    bindings.push("PUBLIC");
+    filters.push(`i.visibility = ${publicPlaceholder}`);
+  }
 
   if (input.status) {
     filters.push(`i.status = ${nextPlaceholder()}`);
@@ -473,6 +518,7 @@ export async function searchIdeaRecords(
         i.id AS id,
         i.title AS title,
         i.status AS status,
+        i.visibility AS visibility,
         u.id AS authorId,
         u.display_name AS authorDisplayName,
         ui.provider_username AS authorUsername,
@@ -503,6 +549,7 @@ export async function searchIdeaRecords(
     id: row.id,
     title: row.title,
     status: row.status,
+    visibility: row.visibility,
     author: {
       id: row.authorId,
       displayName: row.authorDisplayName,

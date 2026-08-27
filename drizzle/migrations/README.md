@@ -76,6 +76,23 @@ In particular, SQLite schema changes sometimes require table recreation,
 which silently drops virtual tables and triggers. Treat FTS verification as
 a mandatory step for every migration touching `ideas`.
 
+### `0004_small_blazing_skull.sql`: idea visibility
+
+This migration adds `ideas.visibility` with a `PUBLIC` default, so existing
+ideas retain their previous public behavior. It also adds `tags.public_idea_count`
+and triggers that keep anonymous tag discovery limited to tags on public ideas.
+No separate data migration is required. Verify the public count locally or
+remotely with:
+
+```sql
+SELECT t.id, t.public_idea_count, count(it.idea_id) AS actual_count
+FROM tags AS t
+LEFT JOIN idea_tags AS it ON it.tag_id = t.id
+LEFT JOIN ideas AS i ON i.id = it.idea_id AND i.visibility = 'PUBLIC'
+GROUP BY t.id
+HAVING t.public_idea_count != count(i.id);
+```
+
 ### Verify
 
 ```sql
