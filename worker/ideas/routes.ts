@@ -2,7 +2,7 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono, type Context } from "hono";
 
 import { apiError } from "../api/errors.js";
-import { requireSession } from "../middleware/session.js";
+import { loadOptionalSession, requireSession } from "../middleware/session.js";
 import type { AppEnv } from "../types.js";
 import {
   createIdeaSchema,
@@ -27,15 +27,35 @@ const validationHook = (result: { success: boolean }, c: Context) => {
 };
 
 export const ideasRoutes = new Hono<AppEnv>()
+  .use("*", loadOptionalSession)
+  .use("*", async (c, next) => {
+    c.header("Cache-Control", "private, no-store");
+    c.header("Vary", "Cookie");
+    await next();
+  })
   .get(
     "/",
     zValidator("query", listIdeasQuerySchema, validationHook),
-    async (c) => c.json(await listIdeas(c.get("db"), c.req.valid("query"))),
+    async (c) =>
+      c.json(
+        await listIdeas(
+          c.get("db"),
+          c.req.valid("query"),
+          c.get("sessionUserId"),
+        ),
+      ),
   )
   .get(
     "/:id",
     zValidator("param", ideaIdParamSchema, validationHook),
-    async (c) => c.json(await getIdea(c.get("db"), c.req.valid("param").id)),
+    async (c) =>
+      c.json(
+        await getIdea(
+          c.get("db"),
+          c.req.valid("param").id,
+          c.get("sessionUserId"),
+        ),
+      ),
   )
   .post(
     "/",
@@ -79,10 +99,23 @@ export const ideasRoutes = new Hono<AppEnv>()
     },
   );
 
-export const searchRoutes = new Hono<AppEnv>().get(
-  "/",
-  zValidator("query", searchIdeasQuerySchema, validationHook),
-  async (c) => {
-    return c.json(await searchIdeas(c.get("db"), c.req.valid("query")));
-  },
-);
+export const searchRoutes = new Hono<AppEnv>()
+  .use("*", loadOptionalSession)
+  .use("*", async (c, next) => {
+    c.header("Cache-Control", "private, no-store");
+    c.header("Vary", "Cookie");
+    await next();
+  })
+  .get(
+    "/",
+    zValidator("query", searchIdeasQuerySchema, validationHook),
+    async (c) => {
+      return c.json(
+        await searchIdeas(
+          c.get("db"),
+          c.req.valid("query"),
+          c.get("sessionUserId"),
+        ),
+      );
+    },
+  );

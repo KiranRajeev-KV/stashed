@@ -30,7 +30,7 @@ function IdeaFormHeader({ mode }: { mode: "create" | "edit" }) {
       </h1>
       <p className="mt-4 max-w-2xl text-prose text-muted-foreground">
         {mode === "create"
-          ? "Capture enough context to recognize the thought later. Everyone signed in to this Stashed instance will be able to discover it."
+          ? "Capture enough context to recognize the thought later. Choose whether it is public, unlisted, or private."
           : "Return to your idea, sharpen the details, and make the next revision useful to the group."}
       </p>
     </header>
@@ -159,6 +159,7 @@ export function CreateIdeaPage() {
           title: "",
           content: "",
           status: "DRAFT",
+          visibility: "PUBLIC",
           tags: [],
         }}
         submissionError={mutation.error?.message}
@@ -231,6 +232,7 @@ export function EditIdeaPage() {
           title: idea.title,
           content: idea.content,
           status: idea.status,
+          visibility: idea.visibility,
           tags: idea.tags.map((tag) => tag.name),
         }}
         submissionError={mutation.error?.message}

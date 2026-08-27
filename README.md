@@ -8,8 +8,9 @@ Stashed is a self-hosted, shared idea archive designed for small groups. Members
 can save their own ideas, discover what others are thinking, and return to
 useful thoughts later.
 
-Each signed-in member can read the shared archive. Authors retain control of
-their own ideas and are the only members who can edit or delete them.
+Anyone can read public ideas. Authors can also keep ideas unlisted (available
+only by URL) or private (available only to themselves), and are the only
+members who can edit or delete their ideas.
 
 Stashed is a full-stack web app: the React frontend and Hono API run together
 on a single Cloudflare Worker, backed by Cloudflare D1 and Drizzle ORM.
@@ -19,7 +20,8 @@ on a single Cloudflare Worker, backed by Cloudflare D1 and Drizzle ORM.
 ## Current Features
 
 - GitHub authentication and registration
-- A shared idea feed, ordered by recently updated ideas
+- Public, unlisted, and private idea visibility
+- A shared public idea feed, ordered by recently updated ideas
 - Author-owned idea creation, editing, and deletion
 - Idea statuses for tracking how thoughts develop
 - Searchable tags created as ideas are saved

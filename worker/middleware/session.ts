@@ -4,6 +4,12 @@ import { apiError } from "../api/errors.js";
 import { clearSessionCookie, getSessionUserId } from "../auth/cookies.js";
 import type { AppEnv } from "../types.js";
 
+export const loadOptionalSession = createMiddleware<AppEnv>(async (c, next) => {
+  const userId = await getSessionUserId(c);
+  if (userId) c.set("sessionUserId", userId);
+  await next();
+});
+
 export const requireSession = createMiddleware<AppEnv>(async (c, next) => {
   const userId = await getSessionUserId(c);
   if (!userId) {

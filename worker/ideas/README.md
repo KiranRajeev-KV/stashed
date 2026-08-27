@@ -1,8 +1,8 @@
 # Ideas API
 
-The Ideas API is an authenticated Hono API backed by Cloudflare D1 and
-Drizzle ORM. All authenticated users can read ideas, while only an idea's
-author can update or delete it.
+The Ideas API is a Hono API backed by Cloudflare D1 and Drizzle ORM. Public
+ideas are readable by anyone; authors can additionally read their own unlisted
+and private ideas. Only an idea's author can update or delete it.
 
 ## Structure
 
@@ -26,7 +26,20 @@ the database middleware. They do not create global database state.
 | `DELETE` | `/api/ideas/:id` | Permanently delete an idea owned by the user   |
 | `GET`    | `/api/search`    | Search and filter ideas through the FTS5 index |
 
-Every endpoint requires a valid Stashed session cookie.
+Create, update, and delete endpoints require a valid Stashed session cookie.
+Read endpoints use a session when present to include the author's own ideas.
+
+## Visibility
+
+Ideas have one of three visibility values:
+
+- `PUBLIC` is listed in feeds, search, and tag discovery, and is readable by anyone.
+- `UNLISTED` is omitted from feeds, search, and tag discovery, but is readable by anyone who knows its direct URL.
+- `PRIVATE` is readable only by its author.
+
+For feeds and search, anonymous visitors and non-authors receive only public
+ideas. An author receives all of their own ideas alongside public ideas. A
+direct request for a private idea by anyone else returns `IDEA_NOT_FOUND`.
 
 ## List ideas
 
@@ -56,6 +69,7 @@ Sort accepts `UPDATED_DESC` (default), `CREATED_DESC`, `UPDATED_ASC`, or
       "title": "Build a search page",
       "excerpt": "Add filters and keyboard navigation…",
       "status": "DRAFT",
+      "visibility": "PUBLIC",
       "author": {
         "id": "c856838e-9e07-460e-ac93-ef2279082e97",
         "displayName": "KiranRajeev-KV",
@@ -82,15 +96,16 @@ Create an idea with:
   "title": "Build a search page",
   "content": "Add filters and keyboard navigation.",
   "status": "DRAFT",
+  "visibility": "UNLISTED",
   "tags": ["frontend", "search"]
 }
 ```
 
-`status` and `tags` are optional when creating an idea. A missing status uses
-`DRAFT`. The API obtains `author_id` exclusively from the authenticated
-session; it is not accepted in request JSON.
+`status`, `visibility`, and `tags` are optional when creating an idea. Missing
+values use `DRAFT` and `PUBLIC`. The API obtains `author_id` exclusively from
+the authenticated session; it is not accepted in request JSON.
 
-PATCH requests may contain `title`, `content`, `status`, or `tags`:
+PATCH requests may contain `title`, `content`, `status`, `visibility`, or `tags`:
 
 - An omitted field remains unchanged.
 - Omitted `tags` preserve the existing tag set.
@@ -115,8 +130,8 @@ database.
 ## Search
 
 `GET /api/search` requires `q` and accepts `status`, repeated `tagId`, `sort`,
-`limit`, and `offset`. It applies status and tag filters in the same way as the
-ideas list endpoint. `sort` defaults to `UPDATED_DESC` and also accepts
+`limit`, and `offset`. It applies status, tag, and visibility rules in the same
+way as the ideas list endpoint. `sort` defaults to `UPDATED_DESC` and also accepts
 `BEST_MATCH` for weighted FTS relevance:
 
 ```text
@@ -151,6 +166,7 @@ Current input limits are:
 - Tag name: 1–50 trimmed characters
 - List/search limit: 1–50
 - Search offset: 0–10,000
+- Visibility: `PUBLIC`, `UNLISTED`, or `PRIVATE`
 - Public idea and tag IDs: UUIDs
 
 API errors use one shape:
@@ -205,6 +221,7 @@ await fetch("/api/ideas", {
   body: JSON.stringify({
     title: "Test idea",
     content: "Test content",
+    visibility: "PRIVATE",
     tags: ["test"],
   }),
 }).then((response) => response.json());

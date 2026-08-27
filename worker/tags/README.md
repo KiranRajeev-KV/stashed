@@ -1,7 +1,7 @@
 # Tags API
 
-The Tags API provides authenticated, read-only tag discovery. Tags are still
-created and resolved only through the Ideas API.
+The Tags API provides public, read-only tag discovery. Tags are still created
+and resolved only through the Ideas API.
 
 ## Structure
 
@@ -15,7 +15,7 @@ the database middleware.
 
 ## Endpoint
 
-`GET /api/tags` returns tags currently attached to at least one idea.
+`GET /api/tags` returns tags currently attached to at least one public idea.
 
 Examples:
 
@@ -57,9 +57,11 @@ ascending. An additional stored-name comparison makes ordering deterministic
 when names have the same lowercase representation. This ordering is preserved
 when prefix search and pagination are used.
 
-The database query reads the materialized `tags.idea_count` value, maintained by
-`idea_tags` insert and delete triggers. It filters to `idea_count > 0` and uses
-the `tags_idea_count_name_key_idx` index for its popularity-first order.
+The database query reads the materialized `tags.public_idea_count` value,
+maintained by `idea_tags` and idea-visibility triggers. It filters to
+`public_idea_count > 0` and uses the `tags_public_idea_count_name_key_idx`
+index for its popularity-first order. This avoids exposing tags that occur only
+on unlisted or private ideas.
 Consequently:
 
 - tags with no idea relationships remain stored but are not returned;
@@ -72,17 +74,5 @@ that extra row is not returned. Prefix matching uses the stored `name_key`
 column with an escaped `LIKE` prefix. Both `name_key` and the database's
 `UNIQUE(lower(name))` constraint retain SQLite's ASCII-only case-folding
 limitation.
-
-The endpoint requires a valid Stashed session cookie. Unauthenticated requests
-use the standard API error response:
-
-```json
-{
-  "error": {
-    "code": "UNAUTHORIZED",
-    "message": "Authentication required"
-  }
-}
-```
 
 There are intentionally no tag create, update, or delete endpoints.

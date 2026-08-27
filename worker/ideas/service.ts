@@ -79,6 +79,7 @@ function serializeIdea(idea: IdeaRecord, tags: IdeaTagRecord[]) {
     title: idea.title,
     content: idea.content,
     status: idea.status,
+    visibility: idea.visibility,
     author: idea.author,
     tags: tags.map(serializeTag),
     createdAt: idea.createdAt.toISOString(),
@@ -92,6 +93,7 @@ function serializeIdeaListItem(idea: IdeaListRecord, tags: IdeaTagRecord[]) {
     title: idea.title,
     excerpt: excerptFromPlainText(idea.contentPlain),
     status: idea.status,
+    visibility: idea.visibility,
     author: idea.author,
     tags: tags.map(serializeTag),
     createdAt: idea.createdAt.toISOString(),
@@ -105,6 +107,7 @@ function serializeSearchResult(idea: IdeaSearchRecord, tags: IdeaTagRecord[]) {
     title: idea.title,
     excerpt: excerptFromPlainText(idea.excerpt),
     status: idea.status,
+    visibility: idea.visibility,
     author: idea.author,
     tags: tags.map(serializeTag),
     createdAt: idea.createdAt.toISOString(),
@@ -122,12 +125,17 @@ async function requireIdeaAuthor(db: Database, ideaId: string, userId: string) {
   }
 }
 
-export async function listIdeas(db: Database, input: ListIdeasInput) {
+export async function listIdeas(
+  db: Database,
+  input: ListIdeasInput,
+  viewerId?: string,
+) {
   const sort = input.sort ?? "UPDATED_DESC";
   const cursor = input.cursor ? decodeCursor(input.cursor, sort) : undefined;
   const records = await listIdeaRecords(db, {
     status: input.status,
     tagIds: input.tagId,
+    viewerId,
     sort,
     cursor,
     limit: input.limit + 1,
@@ -156,8 +164,8 @@ export async function listIdeas(db: Database, input: ListIdeasInput) {
   };
 }
 
-export async function getIdea(db: Database, ideaId: string) {
-  const idea = await getIdeaRecord(db, ideaId);
+export async function getIdea(db: Database, ideaId: string, viewerId?: string) {
+  const idea = await getIdeaRecord(db, ideaId, viewerId);
   if (!idea) {
     throw new ApiError(404, "IDEA_NOT_FOUND", "Idea not found");
   }
@@ -174,7 +182,7 @@ export async function createIdea(
     ...input,
     content: normalizeEditorContent(input.content),
   });
-  return getIdea(db, ideaId);
+  return getIdea(db, ideaId, userId);
 }
 
 export async function updateIdea(
@@ -190,7 +198,7 @@ export async function updateIdea(
       ? {}
       : { content: normalizeEditorContent(input.content) }),
   });
-  return getIdea(db, ideaId);
+  return getIdea(db, ideaId, userId);
 }
 
 export async function deleteIdea(db: Database, ideaId: string, userId: string) {
@@ -210,12 +218,14 @@ export async function searchIdeas(
     limit: number;
     offset: number;
   },
+  viewerId?: string,
 ) {
   const records = await searchIdeaRecords(db, {
     query: input.q,
     status: input.status,
     sort: input.sort,
     tagIds: input.tagId,
+    viewerId,
     limit: input.limit,
     offset: input.offset,
   });
