@@ -75,6 +75,44 @@ function normalizeTags(tags: string[], draft: string) {
   return [...uniqueTags.values()];
 }
 
+type IdeaFormActionButtonsProps = {
+  canSubmit: boolean;
+  isSubmitting: boolean;
+  mode: IdeaFormProps["mode"];
+  onCancel: () => void;
+};
+
+function IdeaFormActionButtons({
+  canSubmit,
+  isSubmitting,
+  mode,
+  onCancel,
+}: IdeaFormActionButtonsProps) {
+  return (
+    <>
+      <button type="button" className="idea-form-cancel" onClick={onCancel}>
+        Cancel
+      </button>
+      <button
+        type="submit"
+        className="idea-form-submit"
+        disabled={!canSubmit || isSubmitting}
+      >
+        {isSubmitting ? (
+          <LoaderCircle aria-hidden="true" className="idea-form-spinner" />
+        ) : null}
+        {isSubmitting
+          ? mode === "create"
+            ? "Saving idea…"
+            : "Saving revision…"
+          : mode === "create"
+            ? "Create idea"
+            : "Save changes"}
+      </button>
+    </>
+  );
+}
+
 export function IdeaForm({
   initialValues,
   mode,
@@ -284,36 +322,51 @@ export function IdeaForm({
         }}
       </form.Field>
 
-      <div className="idea-form-actions">
-        <button type="button" className="idea-form-cancel" onClick={onCancel}>
-          Cancel
-        </button>
-        <form.Subscribe
-          selector={(state) => [state.canSubmit, state.isSubmitting]}
-        >
-          {([canSubmit, isSubmitting]) => (
-            <button
-              type="submit"
-              className="idea-form-submit"
-              disabled={!canSubmit || isSubmitting}
-            >
-              {isSubmitting ? (
-                <LoaderCircle
-                  aria-hidden="true"
-                  className="idea-form-spinner"
-                />
-              ) : null}
-              {isSubmitting
-                ? mode === "create"
-                  ? "Saving idea…"
-                  : "Saving revision…"
-                : mode === "create"
-                  ? "Create idea"
-                  : "Save changes"}
-            </button>
-          )}
-        </form.Subscribe>
-      </div>
+      <form.Subscribe
+        selector={(state) => [
+          state.isDirty,
+          state.canSubmit,
+          state.isSubmitting,
+        ]}
+      >
+        {([isDirty, canSubmit, isSubmitting]) => (
+          <>
+            <div className="idea-form-actions" hidden={isDirty}>
+              <IdeaFormActionButtons
+                canSubmit={canSubmit}
+                isSubmitting={isSubmitting}
+                mode={mode}
+                onCancel={onCancel}
+              />
+            </div>
+
+            {isDirty ? (
+              <div
+                className="idea-form-action-tray"
+                role="region"
+                aria-label="Unsaved idea changes"
+              >
+                <div className="idea-form-action-tray-content">
+                  <p
+                    className="idea-form-action-tray-status"
+                    aria-live="polite"
+                  >
+                    Unsaved changes
+                  </p>
+                  <div className="idea-form-tray-actions">
+                    <IdeaFormActionButtons
+                      canSubmit={canSubmit}
+                      isSubmitting={isSubmitting}
+                      mode={mode}
+                      onCancel={onCancel}
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </>
+        )}
+      </form.Subscribe>
 
       {submissionError ? (
         <p className="idea-form-submit-error" role="alert">
