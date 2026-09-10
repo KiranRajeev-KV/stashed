@@ -45,13 +45,14 @@ direct request for a private idea by anyone else returns `IDEA_NOT_FOUND`.
 
 `GET /api/ideas` accepts these query parameters:
 
-| Parameter | Behavior                                         |
-| --------- | ------------------------------------------------ |
-| `status`  | Filter by one of the configured idea statuses    |
-| `sort`    | Order results; defaults to `UPDATED_DESC`        |
-| `tagId`   | Filter by one or more tag UUIDs (repeat the key) |
-| `cursor`  | Continue after an opaque pagination cursor       |
-| `limit`   | Page size; defaults to `20` and is at most `50`  |
+| Parameter    | Behavior                                         |
+| ------------ | ------------------------------------------------ |
+| `status`     | Filter by one of the configured idea statuses    |
+| `visibility` | Filter by `PUBLIC`, `UNLISTED`, or `PRIVATE`     |
+| `sort`       | Order results; defaults to `UPDATED_DESC`        |
+| `tagId`      | Filter by one or more tag UUIDs (repeat the key) |
+| `cursor`     | Continue after an opaque pagination cursor       |
+| `limit`      | Page size; defaults to `20` and is at most `50`  |
 
 Multiple `tagId` values use AND matching: an idea is included only when it has
 every selected tag. A single `tagId` remains supported for backwards
@@ -129,13 +130,13 @@ database.
 
 ## Search
 
-`GET /api/search` requires `q` and accepts `status`, repeated `tagId`, `sort`,
-`limit`, and `offset`. It applies status, tag, and visibility rules in the same
-way as the ideas list endpoint. `sort` defaults to `UPDATED_DESC` and also accepts
-`BEST_MATCH` for weighted FTS relevance:
+`GET /api/search` requires `q` and accepts `status`, `visibility`, repeated
+`tagId`, `sort`, `limit`, and `offset`. It applies status, tag, and visibility
+rules in the same way as the ideas list endpoint. `sort` defaults to
+`UPDATED_DESC` and also accepts `BEST_MATCH` for weighted FTS relevance:
 
 ```text
-GET /api/search?q=cloudflare+d1&status=ACTIVE&sort=BEST_MATCH&limit=20&offset=0
+GET /api/search?q=cloudflare+d1&status=ACTIVE&visibility=PUBLIC&sort=BEST_MATCH&limit=20&offset=0
 ```
 
 Search uses the custom `ideas_fts` FTS5 table and joins matches back through

@@ -28,6 +28,7 @@ export type UpdateIdeaInput = InferRequestType<
 
 export type IdeaListFilters = {
   status?: IdeaStatus;
+  visibility?: IdeaListItem["visibility"];
   sort?: IdeaSort;
   tagIds?: string[];
 };
@@ -43,6 +44,7 @@ export function ideasQueryKey(filters: IdeaListFilters) {
     "ideas",
     {
       status: filters.status,
+      visibility: filters.visibility,
       sort: filters.sort,
       tagIds,
       limit: IDEAS_PAGE_SIZE,
@@ -65,6 +67,7 @@ export function ideasInfiniteQueryOptions(
     queryFn: ({ pageParam }) =>
       listIdeas({
         status: filters.status,
+        visibility: filters.visibility,
         sort: filters.sort,
         tagId: tagIds,
         cursor: pageParam ?? undefined,

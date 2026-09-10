@@ -30,6 +30,7 @@ export const ideaIdParamSchema = z.object({
 
 export const listIdeasQuerySchema = z.object({
   status: z.enum(ideaStatusValues).optional(),
+  visibility: z.enum(ideaVisibilityValues).optional(),
   sort: z.enum(ideaSortValues).optional(),
   tagId: z
     .union([
@@ -71,6 +72,7 @@ export const updateIdeaSchema = z
 export const searchIdeasQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),
   status: z.enum(ideaStatusValues).optional(),
+  visibility: z.enum(ideaVisibilityValues).optional(),
   sort: z.enum(searchIdeaSortValues).optional(),
   tagId: z
     .union([

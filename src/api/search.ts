@@ -22,6 +22,7 @@ export type SearchIdeaSort = Exclude<SearchIdeasQuery["sort"], undefined>;
 export type SearchIdeasFilters = {
   q: string;
   status?: SearchIdeasQuery["status"];
+  visibility?: SearchIdeasQuery["visibility"];
   sort?: SearchIdeaSort;
   tagIds?: string[];
 };
@@ -38,6 +39,7 @@ export function searchQueryKey(filters: SearchIdeasFilters) {
     {
       q: filters.q,
       status: filters.status,
+      visibility: filters.visibility,
       sort: filters.sort,
       tagIds,
       limit: SEARCH_PAGE_SIZE,
@@ -58,6 +60,7 @@ export function searchInfiniteQueryOptions(filters: SearchIdeasFilters) {
       searchIdeas({
         q: filters.q,
         status: filters.status,
+        visibility: filters.visibility,
         sort: filters.sort,
         tagId: tagIds,
         limit: SEARCH_PAGE_SIZE,
