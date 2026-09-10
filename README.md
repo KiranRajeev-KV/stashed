@@ -61,10 +61,10 @@ pnpm db:local
 pnpm dev
 ```
 
-Open http://localhost:5173. Confirm the server is up with:
+Open http://127.0.0.1:5173. Confirm the server is up with:
 
 ```sh
-curl http://localhost:5173/api/health
+curl http://127.0.0.1:5173/api/health
 # {"ok":true,"app":"Stashed"}
 ```
 
@@ -74,7 +74,7 @@ Run `just` to list every recipe. The ones you'll use most:
 
 | Command            | What it does                                              |
 | ------------------ | --------------------------------------------------------- |
-| `just dev`         | Start the dev server (SPA + Worker) at localhost:5173     |
+| `just dev`         | Start the dev server (SPA + Worker) at 127.0.0.1:5173     |
 | `just build`       | Type-check + production build                             |
 | `just check`       | lint + format-check + typecheck + build (pre-commit gate) |
 | `just deploy`      | Build, then deploy to Cloudflare                          |
@@ -132,8 +132,8 @@ pnpm db:remote
 pnpm run deploy
 ```
 
-Add this exact GitHub App callback URL alongside the existing localhost
-callback:
+Keep the local callback (`http://127.0.0.1:5173/api/auth/github/callback`) and
+add this exact production callback to the GitHub App:
 
 ```text
 https://stashed.kiranrajeevkv.workers.dev/api/auth/github/callback
