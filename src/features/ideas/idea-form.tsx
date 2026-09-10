@@ -234,7 +234,9 @@ export function IdeaForm({
               labelClassName="idea-form-label"
               name={field.name}
               onBlur={field.handleBlur}
-              onValueChange={field.handleChange}
+              onValueChange={(visibility) => {
+                if (visibility) field.handleChange(visibility);
+              }}
               value={field.state.value}
             />
           )}

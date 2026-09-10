@@ -16,19 +16,27 @@ const optionClass =
   "group grid min-h-11 w-full cursor-pointer grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-2 rounded-control px-3 py-2 text-sm text-foreground outline-none select-none data-[highlighted]:bg-surface-muted";
 const indicatorClass =
   "invisible grid place-items-center text-primary group-data-[selected]:visible [&_svg]:size-4";
+const ALL_VISIBILITIES = "ALL";
 
 type VisibilitySelectProps = {
+  allowAll?: boolean;
+  allLabel?: string;
   className?: string;
   description?: React.ReactNode;
   label: string;
   labelClassName?: string;
   name?: string;
   onBlur?: () => void;
-  onValueChange: (visibility: IdeaVisibility) => void;
-  value: IdeaVisibility;
+  onValueChange: (visibility?: IdeaVisibility) => void;
+  optionLabels?: Record<IdeaVisibility, string>;
+  size?: "filter" | "form";
+  value?: IdeaVisibility;
+  valueLabels?: Record<IdeaVisibility, string>;
 };
 
 export function VisibilitySelect({
+  allowAll = false,
+  allLabel = "Every visibility",
   className,
   description,
   label,
@@ -36,26 +44,39 @@ export function VisibilitySelect({
   name,
   onBlur,
   onValueChange,
+  optionLabels = IDEA_VISIBILITY_OPTION_LABELS,
+  size = "form",
   value,
+  valueLabels = IDEA_VISIBILITY_LABELS,
 }: VisibilitySelectProps) {
   const descriptionId = React.useId();
+  const selectedValue = value ?? ALL_VISIBILITIES;
+  const sizeClass = size === "form" ? "min-h-12 px-4" : "min-h-11 px-3";
 
   return (
     <Select.Root
       name={name}
-      value={value}
-      onValueChange={(nextValue) => onValueChange(nextValue as IdeaVisibility)}
+      value={selectedValue}
+      onValueChange={(nextValue) =>
+        onValueChange(
+          allowAll && nextValue === ALL_VISIBILITIES
+            ? undefined
+            : (nextValue as IdeaVisibility),
+        )
+      }
     >
       <div className={className}>
         <Select.Label className={labelClassName}>{label}</Select.Label>
         <Select.Trigger
-          className={triggerClass}
+          className={`${triggerClass} ${sizeClass}`}
           aria-describedby={description ? descriptionId : undefined}
           onBlur={onBlur}
         >
           <span className="flex min-w-0 items-center gap-2">
-            <VisibilityIcon visibility={value} className="size-4 shrink-0" />
-            <Select.Value>{IDEA_VISIBILITY_LABELS[value]}</Select.Value>
+            {value ? (
+              <VisibilityIcon visibility={value} className="size-4 shrink-0" />
+            ) : null}
+            <Select.Value>{value ? valueLabels[value] : allLabel}</Select.Value>
           </span>
           <Select.Icon className="grid shrink-0 place-items-center text-muted-foreground">
             <ChevronsUpDown className="size-4" aria-hidden="true" />
@@ -68,11 +89,21 @@ export function VisibilitySelect({
         <Select.Positioner
           align="start"
           alignItemWithTrigger={false}
-          className="z-50 w-max min-w-(--anchor-width) max-w-[calc(100vw-2rem)] outline-none"
+          className="z-[70] w-max min-w-(--anchor-width) max-w-[calc(100vw-2rem)] outline-none"
           sideOffset={6}
         >
           <Select.Popup className="flex max-h-[min(24rem,var(--available-height))] w-full min-w-0 flex-col overflow-hidden rounded-card border border-border-strong bg-surface-elevated text-foreground shadow-overlay">
             <Select.List className="max-h-[min(24rem,var(--available-height))] w-full overflow-y-auto p-1 outline-none">
+              {allowAll ? (
+                <Select.Item value={ALL_VISIBILITIES} className={optionClass}>
+                  <Select.ItemIndicator keepMounted className={indicatorClass}>
+                    <Check aria-hidden="true" />
+                  </Select.ItemIndicator>
+                  <Select.ItemText className="min-w-0 whitespace-nowrap">
+                    {allLabel}
+                  </Select.ItemText>
+                </Select.Item>
+              ) : null}
               {IDEA_VISIBILITIES.map((visibility) => (
                 <Select.Item
                   key={visibility}
@@ -87,7 +118,7 @@ export function VisibilitySelect({
                       visibility={visibility}
                       className="size-4 shrink-0 text-muted-foreground"
                     />
-                    {IDEA_VISIBILITY_OPTION_LABELS[visibility]}
+                    {optionLabels[visibility]}
                   </Select.ItemText>
                 </Select.Item>
               ))}

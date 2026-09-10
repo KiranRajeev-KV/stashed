@@ -12,7 +12,8 @@ import {
   type SearchIdeaSort,
 } from "../../api/search.js";
 import { IdeaCard } from "./idea-card.js";
-import { IdeaFilters } from "./idea-filters.js";
+import { IdeaFilters, type IdeaFilterValues } from "./idea-filters.js";
+import type { IdeaVisibility } from "./idea-visibility.js";
 import {
   IdeasEmptyState,
   IdeasErrorState,
@@ -34,6 +35,7 @@ export function IdeasFeed() {
   const browseSort = search.sort === "BEST_MATCH" ? undefined : search.sort;
   const filters = {
     status: search.status,
+    visibility: search.visibility,
     sort: browseSort,
     tagIds: search.tag,
   };
@@ -44,13 +46,16 @@ export function IdeasFeed() {
     searchInfiniteQueryOptions({
       q: query,
       status: search.status,
+      visibility: search.visibility,
       sort: search.sort,
       tagIds: search.tag,
     }),
   );
   const ideas = ideasQuery.data?.pages.flatMap((page) => page.ideas) ?? [];
   const results = searchQuery.data?.pages.flatMap((page) => page.results) ?? [];
-  const isFiltered = Boolean(search.status || search.tag?.length);
+  const isFiltered = Boolean(
+    search.status || search.visibility || search.tag?.length,
+  );
   const ideaTags = [
     ...new Map(
       ideas.flatMap((idea) => idea.tags).map((tag) => [tag.id, tag]),
@@ -60,6 +65,7 @@ export function IdeasFeed() {
   const updateFilters = (next: {
     q?: string;
     status?: IdeaStatus;
+    visibility?: IdeaVisibility;
     sort?: IdeaSort | SearchIdeaSort;
     tag?: string[];
   }) =>
@@ -67,6 +73,7 @@ export function IdeasFeed() {
       search: {
         q: next.q,
         status: next.status,
+        visibility: next.visibility,
         sort: next.sort,
         tag: next.tag,
       },
@@ -77,8 +84,18 @@ export function IdeasFeed() {
     updateFilters({
       q: nextQuery,
       status: search.status,
+      visibility: search.visibility,
       sort: nextQuery ? search.sort : browseSort,
       tag: search.tag,
+    });
+
+  const updateFacets = (next: IdeaFilterValues) =>
+    updateFilters({
+      q: query || undefined,
+      status: next.status,
+      visibility: next.visibility,
+      sort: query ? search.sort : browseSort,
+      tag: next.tagIds,
     });
 
   return (
@@ -119,36 +136,23 @@ export function IdeasFeed() {
 
       <IdeaFilters
         ideaTags={ideaTags}
+        isSignedIn={Boolean(currentUserQuery.data)}
         query={query}
         status={search.status}
+        visibility={search.visibility}
         sort={query ? search.sort : browseSort}
         tagIds={search.tag}
         onQueryChange={updateQuery}
-        onStatusChange={(status) =>
-          updateFilters({
-            q: query || undefined,
-            status,
-            sort: query ? search.sort : browseSort,
-            tag: search.tag,
-          })
-        }
+        onFiltersChange={updateFacets}
         onSortChange={(sort) =>
           updateFilters({
             q: query || undefined,
             status: search.status,
+            visibility: search.visibility,
             sort,
             tag: search.tag,
           })
         }
-        onTagsChange={(tag) =>
-          updateFilters({
-            q: query || undefined,
-            status: search.status,
-            sort: query ? search.sort : browseSort,
-            tag,
-          })
-        }
-        onClear={() => updateFilters({})}
       />
 
       {query ? (
@@ -180,7 +184,7 @@ export function IdeasFeed() {
           isFetchNextPageError={ideasQuery.isFetchNextPageError}
           onRetry={() => ideasQuery.refetch()}
           onFetchNextPage={() => ideasQuery.fetchNextPage()}
-          onClearFilters={() => updateFilters({})}
+          onClearFilters={() => updateFacets({})}
         />
       )}
     </section>
