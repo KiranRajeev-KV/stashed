@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { IdeaListItem } from "../../api/ideas.js";
 import { IDEA_STATUS_LABELS } from "./idea-status.js";
 import { IdeaStatusEditor } from "./idea-status-editor.js";
+import { VisibilityIcon } from "./visibility-icon.js";
 
 type IdeaCardProps = {
   idea: IdeaListItem;
@@ -69,6 +70,10 @@ export function IdeaCard({
               <IdeaStatusEditor idea={idea} />
               {idea.visibility !== "PUBLIC" ? (
                 <span className="idea-status" data-status="DRAFT">
+                  <VisibilityIcon
+                    visibility={idea.visibility}
+                    className="mr-1 size-3.5 shrink-0"
+                  />
                   {idea.visibility === "UNLISTED" ? "Unlisted" : "Private"}
                 </span>
               ) : null}

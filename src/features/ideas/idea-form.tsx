@@ -6,9 +6,9 @@ import type { CreateIdeaInput } from "../../api/ideas.js";
 import { TechnicalMarkdownEditor } from "../markdown/technical-markdown-editor.js";
 import { TagSelector } from "../tags/tag-selector.js";
 import { IDEA_STATUSES } from "./idea-status.js";
+import { IDEA_VISIBILITIES } from "./idea-visibility.js";
 import { StatusSelect } from "./status-select.js";
-
-const IDEA_VISIBILITIES = ["PUBLIC", "UNLISTED", "PRIVATE"] as const;
+import { VisibilitySelect } from "./visibility-select.js";
 
 const ideaFormSchema = z
   .object({
@@ -179,35 +179,26 @@ export function IdeaForm({
 
         <form.Field name="visibility">
           {(field) => (
-            <label className="idea-form-field">
-              <span className="idea-form-label">Visibility</span>
-              <select
-                name={field.name}
-                value={field.state.value}
-                onBlur={field.handleBlur}
-                onChange={(event) =>
-                  field.handleChange(
-                    event.currentTarget
-                      .value as (typeof IDEA_VISIBILITIES)[number],
-                  )
-                }
-              >
-                <option value="PUBLIC">Public — listed for everyone</option>
-                <option value="UNLISTED">
-                  Unlisted — anyone with the link
-                </option>
-                <option value="PRIVATE">Private — only you</option>
-              </select>
-              <span className="idea-form-field-foot">
-                <span>
-                  {field.state.value === "PUBLIC"
-                    ? "Shown in the public feed and search."
-                    : field.state.value === "UNLISTED"
-                      ? "Hidden from feeds and search, but its URL works for anyone."
-                      : "Hidden from everyone except you."}
+            <VisibilitySelect
+              className="idea-form-field"
+              description={
+                <span className="idea-form-field-foot">
+                  <span>
+                    {field.state.value === "PUBLIC"
+                      ? "Shown in the public feed and search."
+                      : field.state.value === "UNLISTED"
+                        ? "Hidden from feeds and search, but its URL works for anyone."
+                        : "Hidden from everyone except you."}
+                  </span>
                 </span>
-              </span>
-            </label>
+              }
+              label="Visibility"
+              labelClassName="idea-form-label"
+              name={field.name}
+              onBlur={field.handleBlur}
+              onValueChange={field.handleChange}
+              value={field.state.value}
+            />
           )}
         </form.Field>
       </div>

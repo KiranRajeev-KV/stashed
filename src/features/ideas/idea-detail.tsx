@@ -19,6 +19,7 @@ import {
 import { DeleteIdeaDialog } from "./delete-idea-dialog.js";
 import { IDEA_STATUS_LABELS } from "./idea-status.js";
 import { IdeaStatusEditor } from "./idea-status-editor.js";
+import { VisibilityIcon } from "./visibility-icon.js";
 
 const routeApi = getRouteApi("/ideas/$ideaId");
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -103,6 +104,10 @@ export function IdeaDetail() {
               <IdeaStatusEditor idea={idea} />
               {idea.visibility !== "PUBLIC" ? (
                 <span className="idea-status" data-status="DRAFT">
+                  <VisibilityIcon
+                    visibility={idea.visibility}
+                    className="mr-1 size-3.5 shrink-0"
+                  />
                   {idea.visibility === "UNLISTED" ? "Unlisted" : "Private"}
                 </span>
               ) : null}
