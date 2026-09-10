@@ -481,7 +481,7 @@ function AppliedFilters({
             }}
             aria-label={`Remove ${label} tag filter`}
           >
-            <span className="max-w-56 truncate">Tag: {label}</span>
+            <span className="max-w-56 truncate">{label}</span>
             <X className="size-5 rounded-full p-1" aria-hidden="true" />
           </button>
         );
@@ -592,13 +592,7 @@ export function IdeaFilters({
         />
       </div>
 
-      <div
-        className={`mt-5 hidden items-start gap-4 lg:grid ${
-          isSignedIn
-            ? "lg:grid-cols-[minmax(0,12rem)_minmax(0,14rem)_minmax(0,1fr)_minmax(0,14rem)]"
-            : "lg:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_minmax(0,14rem)]"
-        }`}
-      >
+      <div className="mt-5 hidden items-start gap-4 lg:grid lg:grid-cols-[repeat(3,minmax(0,14rem))_minmax(0,1fr)_minmax(0,14rem)]">
         <StatusSelect
           allowAll
           className={filterFieldClass}
@@ -632,7 +626,7 @@ export function IdeaFilters({
             onFiltersChange({ ...filters, tagIds: nextTagIds })
           }
         />
-        <div className="min-w-0 border-l border-border pl-4">
+        <div className="min-w-0 border-l border-border pl-4 lg:col-start-5">
           <SortSelect
             className={filterFieldClass}
             labelClassName={filterLabelClass}
