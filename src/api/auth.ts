@@ -5,16 +5,13 @@ import { ApiClientError, apiClient, apiRequest } from "./client.js";
 
 const getCurrentUserRequest = apiClient.api.auth.me.$get;
 
-export type CurrentUserResponse = InferResponseType<
-  typeof getCurrentUserRequest,
-  200
->;
+type CurrentUserResponse = InferResponseType<typeof getCurrentUserRequest, 200>;
 export type CurrentUser = CurrentUserResponse["user"];
 
 export const githubLoginPath = apiClient.api.auth.github.$path();
 export const currentUserQueryKey = ["auth", "me"] as const;
 
-export function getCurrentUser() {
+function getCurrentUser() {
   return apiRequest(() => parseResponse(getCurrentUserRequest()));
 }
 

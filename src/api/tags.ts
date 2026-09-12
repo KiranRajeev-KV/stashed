@@ -10,10 +10,10 @@ import { apiClient, apiRequest } from "./client.js";
 const listTagsRequest = apiClient.api.tags.$get;
 
 export type ListTagsQuery = InferRequestType<typeof listTagsRequest>["query"];
-export type TagsPage = InferResponseType<typeof listTagsRequest, 200>;
+type TagsPage = InferResponseType<typeof listTagsRequest, 200>;
 export type Tag = TagsPage["tags"][number];
 
-export function tagsQueryKey(query: ListTagsQuery = {}) {
+function tagsQueryKey(query: ListTagsQuery = {}) {
   return [
     "tags",
     {
@@ -33,6 +33,6 @@ export function tagsQueryOptions(query: ListTagsQuery = {}) {
   });
 }
 
-export function listTags(query: ListTagsQuery = {}) {
+function listTags(query: ListTagsQuery = {}) {
   return apiRequest(() => parseResponse(listTagsRequest({ query })));
 }

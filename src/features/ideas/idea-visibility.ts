@@ -9,9 +9,3 @@ export const IDEA_VISIBILITY_LABELS: Record<IdeaVisibility, string> = {
   UNLISTED: "Unlisted",
   PRIVATE: "Private",
 };
-
-export const IDEA_VISIBILITY_OPTION_LABELS: Record<IdeaVisibility, string> = {
-  PUBLIC: "Public — listed for everyone",
-  UNLISTED: "Unlisted — anyone with the link",
-  PRIVATE: "Private — only you",
-};

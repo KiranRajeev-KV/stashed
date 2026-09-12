@@ -12,10 +12,7 @@ const searchIdeasRequest = apiClient.api.search.$get;
 export type SearchIdeasQuery = InferRequestType<
   typeof searchIdeasRequest
 >["query"];
-export type SearchResultsPage = InferResponseType<
-  typeof searchIdeasRequest,
-  200
->;
+type SearchResultsPage = InferResponseType<typeof searchIdeasRequest, 200>;
 export type SearchResult = SearchResultsPage["results"][number];
 export type SearchIdeaSort = Exclude<SearchIdeasQuery["sort"], undefined>;
 
@@ -27,9 +24,9 @@ export type SearchIdeasFilters = {
   tagIds?: string[];
 };
 
-export const SEARCH_PAGE_SIZE = "20";
+const SEARCH_PAGE_SIZE = "20";
 
-export function searchQueryKey(filters: SearchIdeasFilters) {
+function searchQueryKey(filters: SearchIdeasFilters) {
   const tagIds = filters.tagIds
     ? [...new Set(filters.tagIds)].sort()
     : undefined;
@@ -79,6 +76,6 @@ export function searchInfiniteQueryOptions(filters: SearchIdeasFilters) {
   });
 }
 
-export function searchIdeas(query: SearchIdeasQuery) {
+function searchIdeas(query: SearchIdeasQuery) {
   return apiRequest(() => parseResponse(searchIdeasRequest({ query })));
 }

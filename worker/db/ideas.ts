@@ -24,7 +24,7 @@ import { ideaTags, ideas, tags, userIdentities, users } from "./schema.js";
 
 const GITHUB_PROVIDER = "github";
 
-export type IdeaAuthorRecord = {
+type IdeaAuthorRecord = {
   id: string;
   displayName: string;
   username: string | null;

@@ -6,7 +6,7 @@ const MAX_CONTENT_LENGTH = 200_000;
 const MAX_TAGS = 20;
 const MAX_TAG_FILTERS = 20;
 
-export const ideaSortValues = [
+const ideaSortValues = [
   "UPDATED_DESC",
   "CREATED_DESC",
   "UPDATED_ASC",
@@ -15,7 +15,7 @@ export const ideaSortValues = [
 
 export type IdeaSort = (typeof ideaSortValues)[number];
 
-export const searchIdeaSortValues = [...ideaSortValues, "BEST_MATCH"] as const;
+const searchIdeaSortValues = [...ideaSortValues, "BEST_MATCH"] as const;
 
 export type SearchIdeaSort = (typeof searchIdeaSortValues)[number];
 

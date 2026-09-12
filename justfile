@@ -36,8 +36,12 @@ format:
 format-check:
     pnpm format:check
 
+# Find unused files, exports, and dependencies in all and production code
+knip:
+    pnpm knip:all
+
 # Run all quality checks before committing
-check: lint format-check typecheck
+check: lint format-check typecheck knip
     pnpm build
 
 # Regenerate wrangler types -> worker-configuration.d.ts

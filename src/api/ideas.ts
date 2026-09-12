@@ -13,11 +13,11 @@ const createIdeaRequest = apiClient.api.ideas.$post;
 const updateIdeaRequest = apiClient.api.ideas[":id"].$patch;
 
 export type ListIdeasQuery = InferRequestType<typeof listIdeasRequest>["query"];
-export type IdeasPage = InferResponseType<typeof listIdeasRequest, 200>;
+type IdeasPage = InferResponseType<typeof listIdeasRequest, 200>;
 export type IdeaListItem = IdeasPage["ideas"][number];
 export type IdeaStatus = IdeaListItem["status"];
 export type IdeaSort = Exclude<ListIdeasQuery["sort"], undefined>;
-export type IdeaResponse = InferResponseType<typeof getIdeaRequest, 200>;
+type IdeaResponse = InferResponseType<typeof getIdeaRequest, 200>;
 export type Idea = IdeaResponse["idea"];
 export type CreateIdeaInput = InferRequestType<
   typeof createIdeaRequest
@@ -33,9 +33,9 @@ export type IdeaListFilters = {
   tagIds?: string[];
 };
 
-export const IDEAS_PAGE_SIZE = "20";
+const IDEAS_PAGE_SIZE = "20";
 
-export function ideasQueryKey(filters: IdeaListFilters) {
+function ideasQueryKey(filters: IdeaListFilters) {
   const tagIds = filters.tagIds
     ? [...new Set(filters.tagIds)].sort()
     : undefined;
@@ -94,11 +94,11 @@ export function ideaQueryOptions(id: string) {
   });
 }
 
-export function listIdeas(query: ListIdeasQuery = {}) {
+function listIdeas(query: ListIdeasQuery = {}) {
   return apiRequest(() => parseResponse(listIdeasRequest({ query })));
 }
 
-export function getIdea(id: string) {
+function getIdea(id: string) {
   return apiRequest(() =>
     parseResponse(
       getIdeaRequest({
