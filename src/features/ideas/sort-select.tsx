@@ -1,28 +1,12 @@
-import { Select } from "@base-ui/react/select";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Select } from "../../components/ui/select.js";
+import { ChevronDown as ChevronsUpDown } from "lucide-react";
 
-import type { IdeaSort } from "../../api/ideas.js";
-import type { SearchIdeaSort } from "../../api/search.js";
-
-type SortValue = IdeaSort | SearchIdeaSort;
-
-const SORT_OPTIONS: { label: string; value: SortValue }[] = [
-  { value: "UPDATED_DESC", label: "Recently updated" },
-  { value: "CREATED_DESC", label: "Recently created" },
-  { value: "UPDATED_ASC", label: "Least recently updated" },
-  { value: "CREATED_ASC", label: "Oldest created" },
-];
-const BEST_MATCH_OPTION = {
-  value: "BEST_MATCH" as const,
-  label: "Best match",
-};
+import { getSortOptions, type SortValue } from "./idea-sort.js";
 
 const triggerClass =
   "flex min-h-11 w-full min-w-0 cursor-pointer items-center justify-between gap-3 rounded-control border border-border bg-surface px-3 text-left text-sm text-foreground transition-colors duration-(--duration-fast) hover:border-border-strong hover:bg-surface-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[popup-open]:border-border-strong data-[popup-open]:bg-surface-elevated";
 const optionClass =
-  "group grid min-h-11 w-full cursor-pointer grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-2 rounded-control px-3 py-2 text-sm text-foreground outline-none select-none data-[highlighted]:bg-surface-muted";
-const indicatorClass =
-  "invisible grid place-items-center text-primary group-data-[selected]:visible [&_svg]:size-4";
+  "group grid min-h-11 w-full cursor-pointer grid-cols-1 items-center gap-2 rounded-control px-3 py-2 text-sm text-foreground outline-none select-none data-[highlighted]:bg-surface-muted";
 
 type SortSelectProps = {
   className?: string;
@@ -40,9 +24,7 @@ export function SortSelect({
   value,
 }: SortSelectProps) {
   const selectedValue = value ?? "UPDATED_DESC";
-  const options = includeBestMatch
-    ? [BEST_MATCH_OPTION, ...SORT_OPTIONS]
-    : SORT_OPTIONS;
+  const options = getSortOptions(includeBestMatch);
 
   return (
     <Select.Root
@@ -67,23 +49,26 @@ export function SortSelect({
 
       <Select.Portal>
         <Select.Positioner
-          align="start"
+          align="end"
           alignItemWithTrigger={false}
-          className="z-50 w-(--anchor-width) outline-none"
+          collisionAvoidance={{
+            align: "shift",
+            fallbackAxisSide: "none",
+            side: "flip",
+          }}
+          collisionPadding={16}
+          className="z-[70] w-max min-w-(--anchor-width) max-w-[calc(100vw-2rem)] outline-none"
           sideOffset={6}
         >
-          <Select.Popup className="flex max-h-[min(24rem,var(--available-height))] w-full min-w-0 flex-col overflow-hidden rounded-card border border-border-strong bg-surface-elevated text-foreground shadow-overlay">
-            <Select.List className="w-full max-h-[min(24rem,var(--available-height))] overflow-y-auto p-1 outline-none">
+          <Select.Popup className="flex max-h-[min(24rem,var(--available-height))] w-full min-w-0 flex-col overflow-x-hidden rounded-card border border-border-strong bg-surface-elevated text-foreground shadow-overlay">
+            <Select.List className="w-full max-h-[min(24rem,var(--available-height))] overflow-x-hidden overflow-y-auto p-1 outline-none">
               {options.map((option) => (
                 <Select.Item
                   key={option.value}
                   value={option.value}
                   className={optionClass}
                 >
-                  <Select.ItemIndicator keepMounted className={indicatorClass}>
-                    <Check aria-hidden="true" />
-                  </Select.ItemIndicator>
-                  <Select.ItemText className="min-w-0 whitespace-nowrap">
+                  <Select.ItemText className="min-w-0 whitespace-normal leading-5">
                     {option.label}
                   </Select.ItemText>
                 </Select.Item>

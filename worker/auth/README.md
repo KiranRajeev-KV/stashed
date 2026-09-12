@@ -12,10 +12,10 @@ Open **GitHub → Settings → Developer settings → GitHub Apps → New GitHub
 and configure it as follows:
 
 - **GitHub App name:** any globally unique name, such as `Stashed (your-name)`
-- **Homepage URL:** `http://localhost:5173` for local setup; use the production
+- **Homepage URL:** `http://127.0.0.1:5173` for local setup; use the production
   origin once it exists
 - **Callback URL:**
-  `http://localhost:5173/api/auth/github/callback`
+  `http://127.0.0.1:5173/api/auth/github/callback`
 - **Callback wildcard matching:** disabled
 - **Request user authorization (OAuth) during installation:** disabled
 - **Enable Device Flow:** disabled
@@ -30,16 +30,19 @@ authorize a GitHub App without installing it, so this identity-only flow does
 not require installation or a GitHub App private key.
 
 After creating the app, copy its **Client ID** (not its App ID) and generate a
-new client secret. When a production origin is available, add this second exact
-callback URL to the same GitHub App:
+new client secret. GitHub Apps accept up to ten callback URLs. Add both the
+local callback above and the production callback to the same app:
 
 ```text
 https://your-production-origin.example/api/auth/github/callback
 ```
 
-GitHub Apps support multiple callback URLs. Keep wildcard matching disabled.
-The Worker derives the callback from the origin receiving the login request, so
-no production domain is hardcoded in the application.
+Keep wildcard matching disabled. The Worker derives the callback from the origin
+receiving the login request, so every development origin must be registered.
+For the standard local workflow, always open `http://127.0.0.1:5173` (not
+`localhost`) and keep Vite on that port. If you need another local origin or a
+preview URL, add its exact `/api/auth/github/callback` URL as another GitHub App
+callback before signing in.
 
 ## Configure local secrets
 
@@ -52,6 +55,8 @@ openssl rand -base64 32
 
 Put the GitHub App Client ID, client secret, and generated random value into
 `.env`. Use the same local origin and port as the registered callback URL.
+The local credentials may be the same GitHub App credentials as production,
+but use a distinct `SESSION_SECRET`.
 
 ## Run locally
 
@@ -60,7 +65,7 @@ pnpm db:local
 pnpm dev
 ```
 
-Open <http://localhost:5173/api/auth/github> in a browser. After GitHub
+Open <http://127.0.0.1:5173/api/auth/github> in a browser. After GitHub
 authorization, Stashed redirects to `/ideas`. The auth endpoints are:
 
 | Method | Endpoint                    | Behavior                         |

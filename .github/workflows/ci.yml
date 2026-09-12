@@ -42,5 +42,8 @@ jobs:
       - name: Check formatting
         run: pnpm format:check
 
+      - name: Check unused code and dependencies
+        run: pnpm knip:all
+
       - name: Build
         run: pnpm build

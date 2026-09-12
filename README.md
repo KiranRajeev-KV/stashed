@@ -39,7 +39,7 @@ on a single Cloudflare Worker, backed by Cloudflare D1 and Drizzle ORM.
 - **Frontend:** React 19, Vite, TypeScript, Tailwind CSS v4, TanStack Router, TanStack Query, TanStack Form, Plate
 - **Backend:** Hono on Cloudflare Workers (serves the SPA and the API from one Worker)
 - **Database:** Cloudflare D1 + Drizzle ORM
-- **Tooling:** pnpm, just, Oxlint, Prettier, Wrangler
+- **Tooling:** pnpm, just, Oxlint, Knip, Prettier, Wrangler
 
 ## Architecture Decisions
 
@@ -61,10 +61,10 @@ pnpm db:local
 pnpm dev
 ```
 
-Open http://localhost:5173. Confirm the server is up with:
+Open http://127.0.0.1:5173. Confirm the server is up with:
 
 ```sh
-curl http://localhost:5173/api/health
+curl http://127.0.0.1:5173/api/health
 # {"ok":true,"app":"Stashed"}
 ```
 
@@ -74,14 +74,20 @@ Run `just` to list every recipe. The ones you'll use most:
 
 | Command            | What it does                                              |
 | ------------------ | --------------------------------------------------------- |
-| `just dev`         | Start the dev server (SPA + Worker) at localhost:5173     |
+| `just dev`         | Start the dev server (SPA + Worker) at 127.0.0.1:5173     |
 | `just build`       | Type-check + production build                             |
 | `just check`       | lint + format-check + typecheck + build (pre-commit gate) |
+| `just knip`        | Find unused code/dependencies in all and production code  |
 | `just deploy`      | Build, then deploy to Cloudflare                          |
 | `just db-generate` | Generate Drizzle migrations from the schema               |
 | `just db-local`    | Apply migrations to the local D1 database                 |
 | `just db-remote`   | Apply migrations to the remote D1 database                |
 | `just clean`       | Remove build artifacts (dist, .wrangler, tsbuildinfo)     |
+
+Knip runs in both comprehensive and production modes. Its project patterns in
+`knip.json` mark the React and Worker trees as shipped code while keeping local
+maintenance scripts in the comprehensive pass. Configuration hints fail the
+command so new entry-point gaps are fixed rather than silently ignored.
 
 ## Production deployment
 
@@ -132,8 +138,8 @@ pnpm db:remote
 pnpm run deploy
 ```
 
-Add this exact GitHub App callback URL alongside the existing localhost
-callback:
+Keep the local callback (`http://127.0.0.1:5173/api/auth/github/callback`) and
+add this exact production callback to the GitHub App:
 
 ```text
 https://stashed.kiranrajeevkv.workers.dev/api/auth/github/callback

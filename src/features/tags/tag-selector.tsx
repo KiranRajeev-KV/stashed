@@ -1,3 +1,14 @@
+import {
+  twTagSelector,
+  twTagSelectorCount,
+  twTagSelectorCreate,
+  twTagSelectorInputRow,
+  twTagSelectorLoader,
+  twTagSelectorMenu,
+  twTagSelectorMessage,
+  twTagSelectorOption,
+  twTagToken,
+} from "../../styles/selects-styles.js";
 import * as React from "react";
 import { LoaderCircle, Plus, RotateCcw, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -148,7 +159,7 @@ export function TagSelector({
   return (
     <div
       ref={rootRef}
-      className="tag-selector"
+      className={twTagSelector}
       data-invalid={invalid || undefined}
       onBlur={(event) => {
         if (!rootRef.current?.contains(event.relatedTarget)) {
@@ -158,9 +169,9 @@ export function TagSelector({
         }
       }}
     >
-      <div className="tag-selector-input-row">
+      <div className={twTagSelectorInputRow}>
         {tags.map((tag) => (
-          <span key={tagKey(tag)} className="tag-token">
+          <span key={tagKey(tag)} className={twTagToken}>
             <span>{tag}</span>
             <button
               type="button"
@@ -204,16 +215,16 @@ export function TagSelector({
 
         {tagsQuery.isFetching ? (
           <LoaderCircle
-            className="tag-selector-loader"
+            className={twTagSelectorLoader}
             aria-label="Loading tag suggestions"
           />
         ) : null}
       </div>
 
       {open && !atLimit ? (
-        <div className="tag-selector-menu" id={listboxId} role="listbox">
+        <div className={twTagSelectorMenu} id={listboxId} role="listbox">
           {tagsQuery.isError ? (
-            <div className="tag-selector-message" role="status">
+            <div className={twTagSelectorMessage} role="status">
               <span>
                 Suggestions unavailable. You can still create this tag.
               </span>
@@ -225,7 +236,7 @@ export function TagSelector({
           ) : null}
 
           {!tagsQuery.isError && tagsQuery.isPending ? (
-            <p className="tag-selector-message" role="status">
+            <p className={twTagSelectorMessage} role="status">
               Looking through tags…
             </p>
           ) : null}
@@ -233,7 +244,7 @@ export function TagSelector({
           {!tagsQuery.isError &&
           !tagsQuery.isPending &&
           options.length === 0 ? (
-            <p className="tag-selector-message">
+            <p className={twTagSelectorMessage}>
               {normalizedDraft
                 ? "No matching tags. Press Enter to create it."
                 : "No tags have been used yet."}
@@ -247,14 +258,14 @@ export function TagSelector({
               type="button"
               role="option"
               aria-selected={index === activeIndex}
-              className="tag-selector-option"
+              className={twTagSelectorOption}
               onMouseDown={(event) => event.preventDefault()}
               onMouseEnter={() => setActiveIndex(index)}
               onClick={() => addTag(option.name)}
             >
               <span>{option.name}</span>
               {option.kind === "create" ? (
-                <span className="tag-selector-create">
+                <span className={twTagSelectorCreate}>
                   <Plus aria-hidden="true" />
                   Create
                 </span>
@@ -264,7 +275,7 @@ export function TagSelector({
         </div>
       ) : null}
 
-      <p className="tag-selector-count" aria-live="polite">
+      <p className={twTagSelectorCount} aria-live="polite">
         {tags.length}/{maxTags} tags
       </p>
     </div>

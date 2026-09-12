@@ -1,4 +1,18 @@
+import { PageState } from "../../components/states/page-state.js";
+import { Button } from "../../components/ui/button.js";
+import { buttonStyles } from "../../components/ui/button-variants.js";
+import { twAnimatePulse } from "../../styles/common-styles.js";
+import {
+  twIdeaReader,
+  twIdeaReaderContent,
+  twIdeaReaderDocument,
+  twIdeaReaderHeading,
+  twIdeaReaderLayout,
+  twIdeaReaderSidebar,
+  twIdeaReaderToolbar,
+} from "../../styles/idea-page-styles.js";
 import { Link } from "@tanstack/react-router";
+import { FileQuestion, RefreshCw } from "lucide-react";
 
 export function IdeaDetailSkeleton() {
   return (
@@ -6,21 +20,32 @@ export function IdeaDetailSkeleton() {
       aria-label="Loading idea"
       aria-live="polite"
       role="status"
-      className="animate-pulse motion-reduce:animate-none"
+      className={`${twIdeaReader} ${twAnimatePulse} motion-reduce:animate-none`}
     >
-      <div className="h-4 w-28 rounded-full bg-surface-muted" />
-      <div className="mt-8 max-w-3xl space-y-3">
-        <div className="h-10 w-11/12 rounded-control bg-surface-muted sm:h-12" />
-        <div className="h-10 w-3/5 rounded-control bg-surface-muted sm:h-12" />
+      <div className={twIdeaReaderToolbar} aria-hidden="true">
+        <div className="h-11 w-28 rounded-control bg-surface-muted" />
+        <div className="h-11 w-24 rounded-control bg-surface-muted" />
       </div>
-      <div className="mt-7 h-10 w-64 max-w-full rounded-control bg-surface-muted" />
-      <div className="idea-detail-sheet mt-10 min-h-96">
-        <div className="idea-detail-margin" />
-        <div className="idea-detail-paper space-y-4">
-          <div className="h-4 w-full rounded-full bg-surface-muted" />
-          <div className="h-4 w-11/12 rounded-full bg-surface-muted" />
-          <div className="h-4 w-4/5 rounded-full bg-surface-muted" />
-          <div className="h-4 w-9/12 rounded-full bg-surface-muted" />
+      <div className={twIdeaReaderLayout} aria-hidden="true">
+        <div className={twIdeaReaderDocument}>
+          <div className={`${twIdeaReaderHeading} space-y-4`}>
+            <div className="h-3 w-16 rounded bg-surface-muted" />
+            <div className="h-12 w-11/12 rounded-control bg-surface-muted" />
+            <div className="h-12 w-3/5 rounded-control bg-surface-muted" />
+            <div className="h-8 w-44 rounded-control bg-surface-muted" />
+          </div>
+          <div className={`${twIdeaReaderContent} space-y-4`}>
+            <div className="h-4 w-full rounded bg-surface-muted" />
+            <div className="h-4 w-11/12 rounded bg-surface-muted" />
+            <div className="h-4 w-4/5 rounded bg-surface-muted" />
+            <div className="h-4 w-9/12 rounded bg-surface-muted" />
+          </div>
+        </div>
+        <div className={`${twIdeaReaderSidebar} space-y-5`}>
+          <div className="h-4 w-16 rounded bg-surface-muted" />
+          <div className="h-8 w-full rounded bg-surface-muted" />
+          <div className="h-8 w-full rounded bg-surface-muted" />
+          <div className="h-8 w-full rounded bg-surface-muted" />
         </div>
       </div>
     </div>
@@ -34,57 +59,41 @@ type IdeaDetailErrorProps = {
 
 export function IdeaDetailError({ message, onRetry }: IdeaDetailErrorProps) {
   return (
-    <section
-      className="border-l-2 border-danger bg-danger/5 px-5 py-8 sm:px-8"
+    <PageState
       role="alert"
-    >
-      <p className="font-mono text-label uppercase text-danger">
-        Idea unavailable
-      </p>
-      <h1 className="mt-3 text-page-title font-semibold">
-        This idea could not be opened.
-      </h1>
-      <p className="mt-4 max-w-xl text-prose text-muted-foreground">
-        {message || "Stashed could not reach the ideas service."}
-      </p>
-      <div className="mt-7 flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={onRetry}
-          className="min-h-11 rounded-control bg-primary px-5 font-medium text-primary-foreground transition-colors duration-(--duration-fast) hover:bg-primary/90"
-        >
-          Try again
-        </button>
-        <Link
-          to="/ideas"
-          className="inline-flex min-h-11 items-center rounded-control border border-border-strong bg-surface px-5 font-medium hover:bg-surface-muted"
-        >
-          Back to ideas
-        </Link>
-      </div>
-    </section>
+      label="Idea unavailable"
+      icon={<RefreshCw />}
+      title="This idea could not be opened."
+      description={
+        message ||
+        "Stashed could not reach the ideas service. Please try again."
+      }
+      actions={
+        <>
+          <Button variant="primary" onClick={onRetry}>
+            Try again
+          </Button>
+          <Link to="/ideas" className={buttonStyles({ variant: "ghost" })}>
+            Back to ideas
+          </Link>
+        </>
+      }
+    />
   );
 }
 
 export function IdeaNotFound() {
   return (
-    <section className="border-l-2 border-accent px-5 py-8 sm:px-8">
-      <p className="font-mono text-label uppercase text-accent">
-        404 / Misfiled
-      </p>
-      <h1 className="mt-3 text-page-title font-semibold">
-        That idea is not in the shared archive.
-      </h1>
-      <p className="mt-4 max-w-xl text-prose text-muted-foreground">
-        It may have been deleted, or the address may no longer point to a saved
-        idea.
-      </p>
-      <Link
-        to="/ideas"
-        className="mt-7 inline-flex min-h-11 items-center rounded-control bg-primary px-5 font-medium text-primary-foreground hover:bg-primary/90"
-      >
-        Return to ideas
-      </Link>
-    </section>
+    <PageState
+      label="Idea unavailable"
+      icon={<FileQuestion />}
+      title="This idea isn’t available."
+      description="It may be private, deleted, or the link may be incorrect."
+      actions={
+        <Link to="/ideas" className={buttonStyles({ variant: "primary" })}>
+          Back to ideas
+        </Link>
+      }
+    />
   );
 }

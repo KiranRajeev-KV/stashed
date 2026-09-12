@@ -1,9 +1,19 @@
+import { buttonStyles } from "../../components/ui/button-variants.js";
+import { twAnimatePulse } from "../../styles/common-styles.js";
+import {
+  twArchiveCardGrid,
+  twIdeaCard,
+  twIdeaCardContent,
+  twIdeaCardMargin,
+  twSearchEmptyIcon,
+  twSearchEmptyState,
+} from "../../styles/archive-styles.js";
 import { SearchX } from "lucide-react";
 
 export function SearchNoResultsState({ query }: { query: string }) {
   return (
-    <section className="search-empty-state">
-      <SearchX aria-hidden="true" className="search-empty-icon" />
+    <section className={twSearchEmptyState}>
+      <SearchX aria-hidden="true" className={twSearchEmptyIcon} />
       <p className="font-mono text-label uppercase text-accent">No match</p>
       <h2 className="mt-3 text-2xl font-semibold tracking-tight">
         Nothing surfaced for “{query}”.
@@ -40,7 +50,7 @@ export function SearchErrorState({
       <button
         type="button"
         onClick={onRetry}
-        className="mt-5 min-h-11 rounded-control bg-primary px-5 font-medium text-primary-foreground transition-colors duration-(--duration-fast) hover:bg-primary/90"
+        className={buttonStyles({ variant: "primary", className: "mt-5" })}
       >
         Try again
       </button>
@@ -51,7 +61,7 @@ export function SearchErrorState({
 export function SearchResultsSkeleton() {
   return (
     <div
-      className="grid gap-4"
+      className={twArchiveCardGrid}
       aria-label="Searching ideas"
       aria-live="polite"
       role="status"
@@ -59,10 +69,10 @@ export function SearchResultsSkeleton() {
       {Array.from({ length: 4 }, (_, index) => (
         <div
           key={index}
-          className="idea-card min-h-72 animate-pulse motion-reduce:animate-none"
+          className={`${twIdeaCard} min-h-72 ${twAnimatePulse} motion-reduce:animate-none`}
         >
-          <div className="idea-card-margin" />
-          <div className="idea-card-content">
+          <div className={twIdeaCardMargin} />
+          <div className={twIdeaCardContent}>
             <div className="h-6 w-20 rounded-full bg-surface-muted" />
             <div className="mt-5 h-7 w-4/5 rounded-control bg-surface-muted" />
             <div className="mt-6 space-y-2">

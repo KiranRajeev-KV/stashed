@@ -24,7 +24,7 @@ import { ideaTags, ideas, tags, userIdentities, users } from "./schema.js";
 
 const GITHUB_PROVIDER = "github";
 
-export type IdeaAuthorRecord = {
+type IdeaAuthorRecord = {
   id: string;
   displayName: string;
   username: string | null;
@@ -58,6 +58,7 @@ export type IdeaSearchRecord = Omit<IdeaRecord, "content" | "rowId"> & {
 
 type ListIdeasInput = {
   status?: IdeaStatus;
+  visibility?: IdeaVisibility;
   tagIds?: string[];
   viewerId?: string;
   sort: IdeaSort;
@@ -205,6 +206,9 @@ export async function listIdeaRecords(
 
   if (input.status) {
     filters.push(eq(ideas.status, input.status));
+  }
+  if (input.visibility) {
+    filters.push(eq(ideas.visibility, input.visibility));
   }
   const sortByUpdatedAt = input.sort.startsWith("UPDATED");
   const ascending = input.sort.endsWith("ASC");
@@ -463,6 +467,7 @@ export async function searchIdeaRecords(
   input: {
     query: string;
     status?: IdeaStatus;
+    visibility?: IdeaVisibility;
     sort?: SearchIdeaSort;
     tagIds?: string[];
     viewerId?: string;
@@ -491,6 +496,10 @@ export async function searchIdeaRecords(
   if (input.status) {
     filters.push(`i.status = ${nextPlaceholder()}`);
     bindings.push(input.status);
+  }
+  if (input.visibility) {
+    filters.push(`i.visibility = ${nextPlaceholder()}`);
+    bindings.push(input.visibility);
   }
   for (const tagId of input.tagIds ?? []) {
     filters.push(`EXISTS (

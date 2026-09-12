@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { IdeasFeed } from "../../features/ideas/ideas-feed.js";
 import { IDEA_STATUSES } from "../../features/ideas/idea-status.js";
+import { IDEA_VISIBILITIES } from "../../features/ideas/idea-visibility.js";
 
 const tagSearchSchema = z
   .union([z.string().uuid(), z.array(z.string().uuid()).max(20)])
@@ -12,6 +13,7 @@ const tagSearchSchema = z
 const ideasSearchSchema = z.object({
   q: z.string().trim().min(1).max(200).optional().catch(undefined),
   status: z.enum(IDEA_STATUSES).optional().catch(undefined),
+  visibility: z.enum(IDEA_VISIBILITIES).optional().catch(undefined),
   sort: z
     .enum([
       "UPDATED_DESC",

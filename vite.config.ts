@@ -17,5 +17,11 @@ export default defineConfig({
     cloudflare(),
     tailwindcss(),
   ],
-  server: { host: "127.0.0.1" },
+  // Keep the OAuth callback origin stable. GitHub requires the redirect URI to
+  // exactly match one of the URLs configured for the GitHub App.
+  server: {
+    host: "127.0.0.1",
+    port: 5173,
+    strictPort: true,
+  },
 });

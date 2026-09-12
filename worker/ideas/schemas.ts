@@ -6,7 +6,7 @@ const MAX_CONTENT_LENGTH = 200_000;
 const MAX_TAGS = 20;
 const MAX_TAG_FILTERS = 20;
 
-export const ideaSortValues = [
+const ideaSortValues = [
   "UPDATED_DESC",
   "CREATED_DESC",
   "UPDATED_ASC",
@@ -15,7 +15,7 @@ export const ideaSortValues = [
 
 export type IdeaSort = (typeof ideaSortValues)[number];
 
-export const searchIdeaSortValues = [...ideaSortValues, "BEST_MATCH"] as const;
+const searchIdeaSortValues = [...ideaSortValues, "BEST_MATCH"] as const;
 
 export type SearchIdeaSort = (typeof searchIdeaSortValues)[number];
 
@@ -30,6 +30,7 @@ export const ideaIdParamSchema = z.object({
 
 export const listIdeasQuerySchema = z.object({
   status: z.enum(ideaStatusValues).optional(),
+  visibility: z.enum(ideaVisibilityValues).optional(),
   sort: z.enum(ideaSortValues).optional(),
   tagId: z
     .union([
@@ -71,6 +72,7 @@ export const updateIdeaSchema = z
 export const searchIdeasQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),
   status: z.enum(ideaStatusValues).optional(),
+  visibility: z.enum(ideaVisibilityValues).optional(),
   sort: z.enum(searchIdeaSortValues).optional(),
   tagId: z
     .union([

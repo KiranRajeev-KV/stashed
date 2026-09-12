@@ -12,23 +12,21 @@ const searchIdeasRequest = apiClient.api.search.$get;
 export type SearchIdeasQuery = InferRequestType<
   typeof searchIdeasRequest
 >["query"];
-export type SearchResultsPage = InferResponseType<
-  typeof searchIdeasRequest,
-  200
->;
+type SearchResultsPage = InferResponseType<typeof searchIdeasRequest, 200>;
 export type SearchResult = SearchResultsPage["results"][number];
 export type SearchIdeaSort = Exclude<SearchIdeasQuery["sort"], undefined>;
 
 export type SearchIdeasFilters = {
   q: string;
   status?: SearchIdeasQuery["status"];
+  visibility?: SearchIdeasQuery["visibility"];
   sort?: SearchIdeaSort;
   tagIds?: string[];
 };
 
-export const SEARCH_PAGE_SIZE = "20";
+const SEARCH_PAGE_SIZE = "20";
 
-export function searchQueryKey(filters: SearchIdeasFilters) {
+function searchQueryKey(filters: SearchIdeasFilters) {
   const tagIds = filters.tagIds
     ? [...new Set(filters.tagIds)].sort()
     : undefined;
@@ -38,6 +36,7 @@ export function searchQueryKey(filters: SearchIdeasFilters) {
     {
       q: filters.q,
       status: filters.status,
+      visibility: filters.visibility,
       sort: filters.sort,
       tagIds,
       limit: SEARCH_PAGE_SIZE,
@@ -58,6 +57,7 @@ export function searchInfiniteQueryOptions(filters: SearchIdeasFilters) {
       searchIdeas({
         q: filters.q,
         status: filters.status,
+        visibility: filters.visibility,
         sort: filters.sort,
         tagId: tagIds,
         limit: SEARCH_PAGE_SIZE,
@@ -76,6 +76,6 @@ export function searchInfiniteQueryOptions(filters: SearchIdeasFilters) {
   });
 }
 
-export function searchIdeas(query: SearchIdeasQuery) {
+function searchIdeas(query: SearchIdeasQuery) {
   return apiRequest(() => parseResponse(searchIdeasRequest({ query })));
 }

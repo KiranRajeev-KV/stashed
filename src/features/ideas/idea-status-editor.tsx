@@ -1,6 +1,10 @@
+import {
+  twIdeaStatusEditor,
+  twIdeaStatusTrigger,
+} from "../../styles/archive-styles.js";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as React from "react";
-import { toast } from "sonner";
+import { ActionFeedback } from "../../components/ui/action-feedback.js";
 
 import {
   ideaQueryKey,
@@ -8,7 +12,6 @@ import {
   type IdeaStatus,
   updateIdea,
 } from "../../api/ideas.js";
-import { IDEA_STATUS_LABELS } from "./idea-status.js";
 import { StatusSelect } from "./status-select.js";
 
 type IdeaStatusEditorProps = {
@@ -27,13 +30,9 @@ export function IdeaStatusEditor({ idea }: IdeaStatusEditorProps) {
         queryClient.invalidateQueries({ queryKey: ["ideas"] }),
         queryClient.invalidateQueries({ queryKey: ["search"] }),
       ]);
-      toast.success("Status updated", {
-        description: `Marked as ${IDEA_STATUS_LABELS[updatedIdea.status]}.`,
-      });
     },
-    onError: (error) => {
+    onError: () => {
       setSelectedStatus(idea.status);
-      toast.error("Failed to update status", { description: error.message });
     },
   });
 
@@ -49,7 +48,7 @@ export function IdeaStatusEditor({ idea }: IdeaStatusEditorProps) {
   }
 
   return (
-    <div className="idea-status-editor">
+    <div className={twIdeaStatusEditor}>
       <StatusSelect
         className="min-w-0"
         disabled={mutation.isPending}
@@ -58,14 +57,28 @@ export function IdeaStatusEditor({ idea }: IdeaStatusEditorProps) {
         label="Change status"
         labelClassName="sr-only"
         onValueChange={handleStatusChange}
-        triggerClassName="idea-status-trigger"
+        triggerClassName={twIdeaStatusTrigger}
         triggerDataStatus={selectedStatus}
         variant="badge"
         value={selectedStatus}
+        description={
+          <ActionFeedback
+            state={
+              mutation.isError
+                ? "error"
+                : mutation.isPending
+                  ? "pending"
+                  : "idle"
+            }
+          >
+            {mutation.isPending
+              ? "Updating status…"
+              : mutation.isError
+                ? `Status wasn’t changed. ${mutation.error.message} Choose a status to try again.`
+                : null}
+          </ActionFeedback>
+        }
       />
-      <span className="sr-only" aria-live="polite">
-        {mutation.isPending ? "Updating status" : ""}
-      </span>
     </div>
   );
 }

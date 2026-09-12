@@ -1,3 +1,10 @@
+import {
+  twMarkdownCodeBlock,
+  twMarkdownCodeLanguage,
+  twMarkdownTaskCheckbox,
+  twMarkdownTaskComplete,
+  twMarkdownTaskList,
+} from "../../styles/markdown-styles.js";
 import type { TCodeBlockElement, TLinkElement, TListElement } from "platejs";
 import { getLinkAttributes } from "@platejs/link";
 import { isOrderedList } from "@platejs/list";
@@ -73,7 +80,7 @@ function BlockList(props: PlateElementProps) {
     <List
       className={
         isTaskList
-          ? "markdown-block-list markdown-task-list"
+          ? `markdown-block-list ${twMarkdownTaskList}`
           : "markdown-block-list"
       }
       style={isTaskList ? undefined : { listStyleType }}
@@ -83,7 +90,7 @@ function BlockList(props: PlateElementProps) {
       <li
         className={
           isTaskList && props.element.checked
-            ? "markdown-task-complete"
+            ? twMarkdownTaskComplete
             : undefined
         }
       >
@@ -121,7 +128,7 @@ function TaskListMarker(props: PlateElementProps) {
 
   return (
     <label
-      className="markdown-task-checkbox"
+      className={twMarkdownTaskCheckbox}
       contentEditable={false}
       suppressContentEditableWarning
     >
@@ -149,9 +156,9 @@ export function CodeBlockElement(props: PlateElementProps<TCodeBlockElement>) {
 
   return (
     <PlateElement {...props}>
-      <div className="markdown-code-block">
+      <div className={twMarkdownCodeBlock}>
         {language ? (
-          <span className="markdown-code-language" contentEditable={false}>
+          <span className={twMarkdownCodeLanguage} contentEditable={false}>
             {language}
           </span>
         ) : null}

@@ -1,9 +1,17 @@
+import {
+  twIdeaCard,
+  twIdeaCardContent,
+  twIdeaStatus,
+} from "../../styles/archive-styles.js";
+import { IdeaTagLink } from "./idea-page-ui.js";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { ArrowUpRight } from "lucide-react";
 
 import type { IdeaListItem } from "../../api/ideas.js";
 import { IDEA_STATUS_LABELS } from "./idea-status.js";
 import { IdeaStatusEditor } from "./idea-status-editor.js";
+import { IdeaVisibilityEditor } from "./idea-visibility-editor.js";
 
 type IdeaCardProps = {
   idea: IdeaListItem;
@@ -57,79 +65,70 @@ export function IdeaCard({
   const isOwner = currentUserId === idea.author.id;
 
   return (
-    <article className="idea-card group">
-      <div className="idea-card-margin" aria-hidden="true">
-        <span>{IDEA_STATUS_LABELS[idea.status].slice(0, 1)}</span>
-      </div>
-
-      <div className="idea-card-content flex h-full flex-col">
+    <article className={`${twIdeaCard} group`} data-idea-status={idea.status}>
+      <div className={`${twIdeaCardContent} flex h-full flex-col`}>
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           {isOwner ? (
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
               <IdeaStatusEditor idea={idea} />
-              {idea.visibility !== "PUBLIC" ? (
-                <span className="idea-status" data-status="DRAFT">
-                  {idea.visibility === "UNLISTED" ? "Unlisted" : "Private"}
-                </span>
-              ) : null}
+              <IdeaVisibilityEditor idea={idea} />
             </div>
           ) : (
-            <span className="idea-status" data-status={idea.status}>
+            <span className={twIdeaStatus} data-status={idea.status}>
               {IDEA_STATUS_LABELS[idea.status]}
             </span>
           )}
           <time
             dateTime={timestamp}
             title={new Date(timestamp).toLocaleString()}
-            className="font-mono text-xs text-muted-foreground"
+            className="font-sans text-caption text-muted-foreground"
           >
             {updated ? "Revised" : "Saved"}{" "}
             {dateFormatter.format(new Date(timestamp))}
           </time>
         </div>
 
-        <h2 className="mt-4 text-xl font-semibold leading-snug tracking-tight sm:text-2xl">
+        <h2 className="mt-[19px] font-display text-card-title font-normal">
           <Link
             to="/ideas/$ideaId"
             params={{ ideaId: idea.id }}
-            className="idea-card-link text-foreground decoration-1 underline-offset-4 group-hover:text-primary group-hover:underline"
+            className="text-foreground decoration-border-strong decoration-1 underline-offset-4 hover:underline"
           >
             {title ?? idea.title}
           </Link>
         </h2>
 
         {(excerpt ?? idea.excerpt) ? (
-          <p className="mt-3 line-clamp-3 text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
+          <p className="mt-2.5 line-clamp-3 text-ui leading-6 text-muted-foreground">
             {excerpt ?? idea.excerpt}
           </p>
         ) : null}
 
         {idea.tags.length > 0 ? (
-          <ul className="mt-5 flex flex-wrap gap-2" aria-label="Tags">
+          <ul className="mt-[17px] flex flex-wrap gap-1.75" aria-label="Tags">
             {idea.tags.map((tag) => (
               <li key={tag.id} className="min-w-0 max-w-full">
-                <Link
-                  to="/ideas"
-                  search={{ tag: tag.id }}
-                  className="inline-flex min-h-8 max-w-full items-center rounded-full border border-border bg-surface-muted px-3 font-mono text-xs text-muted-foreground transition-colors duration-(--duration-fast) hover:border-border-strong hover:text-foreground"
-                >
-                  <span className="truncate">{tag.name}</span>
-                </Link>
+                <IdeaTagLink tag={tag} />
               </li>
             ))}
           </ul>
         ) : null}
 
-        <footer className="mt-auto pt-5 text-sm text-muted-foreground">
-          <div className="flex items-center justify-between gap-4 border-t border-border pt-4">
+        <footer className="pt-5 text-caption text-muted-foreground">
+          <div className="-mx-6.5 flex items-center justify-between gap-4 border-t border-border bg-foreground/2 px-6.5 py-2.25 max-md:-mx-5 max-md:px-5">
             <IdeaAuthor idea={idea} />
             <Link
               to="/ideas/$ideaId"
               params={{ ideaId: idea.id }}
-              className="shrink-0 font-medium text-primary underline-offset-4 hover:underline"
+              className="inline-flex min-h-9.5 shrink-0 items-center justify-center gap-2 rounded-sm font-medium text-muted-foreground transition-[color,transform] duration-200 hover:translate-x-0.5 hover:text-foreground motion-reduce:transform-none motion-reduce:transition-none"
               aria-label={`Open ${idea.title}`}
             >
-              Read idea <span aria-hidden="true">→</span>
+              Open idea
+              <ArrowUpRight
+                size={15}
+                className="inline-block size-4.5"
+                aria-hidden="true"
+              />
             </Link>
           </div>
         </footer>

@@ -1,3 +1,8 @@
+import { PageState } from "../../components/states/page-state.js";
+import { Button } from "../../components/ui/button.js";
+import { FileQuestion, RefreshCw, LockKeyhole } from "lucide-react";
+import { buttonStyles } from "../../components/ui/button-variants.js";
+import { twAnimatePulse } from "../../styles/common-styles.js";
 import {
   type QueryClient,
   useMutation,
@@ -14,45 +19,74 @@ import {
   ideaQueryOptions,
   updateIdea,
 } from "../../api/ideas.js";
-import { IdeaForm, type IdeaFormSubmission } from "./idea-form.js";
+import { Component, lazy, Suspense, type ComponentProps } from "react";
+import type { IdeaFormSubmission } from "./idea-form.js";
+
+const loadIdeaForm = () =>
+  lazy(() =>
+    import("./idea-form.js").then((module) => ({ default: module.IdeaForm })),
+  );
+
+class IdeaForm extends Component<
+  ComponentProps<ReturnType<typeof loadIdeaForm>>
+> {
+  state = { failed: false, Form: loadIdeaForm() };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  render() {
+    if (this.state.failed) {
+      return (
+        <IdeaFormLoadError
+          message="The editor couldn’t load. Check your connection and try again."
+          onRetry={() => this.setState({ failed: false, Form: loadIdeaForm() })}
+        />
+      );
+    }
+    const Form = this.state.Form;
+    return (
+      <Suspense fallback={<IdeaFormSkeleton />}>
+        <Form {...this.props} />
+      </Suspense>
+    );
+  }
+}
 
 const editRouteApi = getRouteApi("/_authenticated/ideas/$ideaId/edit");
 const authenticatedRouteApi = getRouteApi("/_authenticated");
-
-function IdeaFormHeader({ mode }: { mode: "create" | "edit" }) {
-  return (
-    <header className="idea-form-page-header">
-      <p className="font-mono text-label uppercase text-accent">
-        {mode === "create" ? "New contribution" : "Revision"}
-      </p>
-      <h1 className="mt-3 text-page-title font-semibold">
-        {mode === "create" ? "Save an idea" : "Edit your idea"}
-      </h1>
-      <p className="mt-4 max-w-2xl text-prose text-muted-foreground">
-        {mode === "create"
-          ? "Capture enough context to recognize the thought later. Choose whether it is public, unlisted, or private."
-          : "Return to your idea, sharpen the details, and make the next revision useful to the group."}
-      </p>
-    </header>
-  );
-}
 
 function IdeaFormSkeleton() {
   return (
     <section
       aria-label="Loading idea editor"
       aria-busy="true"
-      aria-live="polite"
       role="status"
+      className={`${twAnimatePulse} motion-reduce:animate-none`}
     >
-      <div className="h-3 w-24 animate-pulse rounded bg-surface-muted" />
-      <div className="mt-4 h-12 w-64 max-w-full animate-pulse rounded bg-surface-muted" />
-      <div className="mt-10 grid gap-5 sm:grid-cols-[minmax(0,1fr)_14rem]">
-        <div className="h-24 animate-pulse rounded-card bg-surface-muted" />
-        <div className="h-24 animate-pulse rounded-card bg-surface-muted" />
+      <div
+        className="flex justify-between border-b border-border/70 py-4"
+        aria-hidden="true"
+      >
+        <div className="h-11 w-32 rounded-control bg-surface-muted" />
+        <div className="h-11 w-28 rounded-control bg-surface-muted" />
       </div>
-      <div className="mt-6 h-16 animate-pulse rounded-card bg-surface-muted" />
-      <div className="mt-6 h-96 animate-pulse rounded-surface bg-surface-muted" />
+      <div
+        className="grid gap-10 pt-9 lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-12"
+        aria-hidden="true"
+      >
+        <div className="space-y-8">
+          <div className="h-24 w-4/5 rounded-control bg-surface-muted" />
+          <div className="h-96 rounded-card bg-surface-muted" />
+        </div>
+        <div className="space-y-6">
+          <div className="h-4 w-16 rounded bg-surface-muted" />
+          <div className="h-16 rounded-control bg-surface-muted" />
+          <div className="h-16 rounded-control bg-surface-muted" />
+          <div className="h-16 rounded-control bg-surface-muted" />
+        </div>
+      </div>
     </section>
   );
 }
@@ -67,58 +101,56 @@ function IdeaFormLoadError({
   onRetry: () => void;
 }) {
   return (
-    <section className="idea-empty-state" role="alert">
-      <p className="font-mono text-label uppercase text-accent">
-        {notFound ? "Missing page" : "Page unavailable"}
-      </p>
-      <h1 className="mt-3 text-2xl font-semibold">
-        {notFound
+    <PageState
+      role="alert"
+      label={notFound ? "Idea unavailable" : "Editor unavailable"}
+      icon={notFound ? <FileQuestion /> : <RefreshCw />}
+      title={
+        notFound
           ? "This idea could not be found."
-          : "The editor could not be opened."}
-      </h1>
-      <p className="mt-3 max-w-xl text-muted-foreground">{message}</p>
-      <div className="mt-6 flex flex-wrap gap-3">
-        {!notFound ? (
-          <button
-            type="button"
-            onClick={onRetry}
-            className="min-h-11 rounded-control bg-primary px-4 font-medium text-primary-foreground"
+          : "The editor could not be opened."
+      }
+      description={
+        message || "Please try again, or return to the ideas archive."
+      }
+      actions={
+        <>
+          {!notFound ? (
+            <Button variant="primary" onClick={onRetry}>
+              Try again
+            </Button>
+          ) : null}
+          <Link
+            to="/ideas"
+            className={buttonStyles({
+              variant: notFound ? "primary" : "ghost",
+            })}
           >
-            Retry
-          </button>
-        ) : null}
-        <Link
-          to="/ideas"
-          className="inline-flex min-h-11 items-center rounded-control border border-border-strong px-4 font-medium"
-        >
-          Back to ideas
-        </Link>
-      </div>
-    </section>
+            Back to ideas
+          </Link>
+        </>
+      }
+    />
   );
 }
 
 function IdeaEditForbidden({ ideaId }: { ideaId: string }) {
   return (
-    <section className="idea-empty-state" role="alert">
-      <p className="font-mono text-label uppercase text-accent">
-        Read-only page
-      </p>
-      <h1 className="mt-3 text-2xl font-semibold">
-        Only the author can revise this idea.
-      </h1>
-      <p className="mt-3 max-w-xl text-muted-foreground">
-        You can still read the complete idea and see future revisions from its
-        author.
-      </p>
-      <Link
-        to="/ideas/$ideaId"
-        params={{ ideaId }}
-        className="mt-6 inline-flex min-h-11 items-center rounded-control border border-border-strong px-4 font-medium"
-      >
-        View idea
-      </Link>
-    </section>
+    <PageState
+      label="Read-only idea"
+      icon={<LockKeyhole />}
+      title="Only the author can revise this idea."
+      description="You can still read the complete idea and see future revisions from its author."
+      actions={
+        <Link
+          to="/ideas/$ideaId"
+          params={{ ideaId }}
+          className={buttonStyles({ variant: "primary" })}
+        >
+          View idea
+        </Link>
+      }
+    />
   );
 }
 
@@ -145,14 +177,10 @@ export function CreateIdeaPage() {
         replace: true,
       });
     },
-    onError: (error) => {
-      toast.error("Failed to create idea", { description: error.message });
-    },
   });
 
   return (
     <section>
-      <IdeaFormHeader mode="create" />
       <IdeaForm
         mode="create"
         initialValues={{
@@ -197,9 +225,6 @@ export function EditIdeaPage() {
         replace: true,
       });
     },
-    onError: (error) => {
-      toast.error("Failed to update idea", { description: error.message });
-    },
   });
 
   if (ideaQuery.isPending) return <IdeaFormSkeleton />;
@@ -225,7 +250,6 @@ export function EditIdeaPage() {
 
   return (
     <section>
-      <IdeaFormHeader mode="edit" />
       <IdeaForm
         mode="edit"
         initialValues={{

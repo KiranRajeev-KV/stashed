@@ -16,7 +16,7 @@ import {
   type IdeaTagRecord,
 } from "../db/ideas.js";
 import type { Database } from "../db/client.js";
-import type { IdeaStatus } from "../db/schema.js";
+import type { IdeaStatus, IdeaVisibility } from "../db/schema.js";
 import type {
   CreateIdeaInput,
   IdeaSort,
@@ -34,6 +34,7 @@ const cursorSchema = z.object({
 
 type ListIdeasInput = {
   status?: IdeaStatus;
+  visibility?: IdeaVisibility;
   tagId?: string[];
   sort?: IdeaSort;
   cursor?: string;
@@ -134,6 +135,7 @@ export async function listIdeas(
   const cursor = input.cursor ? decodeCursor(input.cursor, sort) : undefined;
   const records = await listIdeaRecords(db, {
     status: input.status,
+    visibility: input.visibility,
     tagIds: input.tagId,
     viewerId,
     sort,
@@ -213,6 +215,7 @@ export async function searchIdeas(
   input: {
     q: string;
     status?: IdeaStatus;
+    visibility?: IdeaVisibility;
     sort?: SearchIdeaSort;
     tagId?: string[];
     limit: number;
@@ -223,6 +226,7 @@ export async function searchIdeas(
   const records = await searchIdeaRecords(db, {
     query: input.q,
     status: input.status,
+    visibility: input.visibility,
     sort: input.sort,
     tagIds: input.tagId,
     viewerId,
