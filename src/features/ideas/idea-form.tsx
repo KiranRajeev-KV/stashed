@@ -1,5 +1,9 @@
+import { ActionFeedback } from "../../components/ui/action-feedback.js";
+import { Button } from "../../components/ui/button.js";
+import { twIdeaTitleInput } from "../../styles/idea-page-styles.js";
+import { IdeaPageToolbar } from "./idea-page-ui.js";
 import { revalidateLogic, useForm } from "@tanstack/react-form";
-import { LoaderCircle } from "lucide-react";
+import { Check } from "lucide-react";
 import { z } from "zod";
 
 import type { CreateIdeaInput } from "../../api/ideas.js";
@@ -90,25 +94,24 @@ function IdeaFormActionButtons({
 }: IdeaFormActionButtonsProps) {
   return (
     <>
-      <button type="button" className="idea-form-cancel" onClick={onCancel}>
-        Cancel
-      </button>
-      <button
-        type="submit"
-        className="idea-form-submit"
-        disabled={!canSubmit || isSubmitting}
+      <Button
+        type="button"
+        disabled={isSubmitting}
+        variant="ghost"
+        onClick={onCancel}
       >
-        {isSubmitting ? (
-          <LoaderCircle aria-hidden="true" className="idea-form-spinner" />
-        ) : null}
-        {isSubmitting
-          ? mode === "create"
-            ? "Saving idea…"
-            : "Saving revision…"
-          : mode === "create"
-            ? "Create idea"
-            : "Save changes"}
-      </button>
+        Cancel
+      </Button>
+      <Button
+        type="submit"
+        variant="primary"
+        disabled={!canSubmit || isSubmitting}
+        loading={isSubmitting}
+        loadingLabel={mode === "create" ? "Saving idea…" : "Saving revision…"}
+      >
+        <Check size={16} aria-hidden="true" />
+        {mode === "create" ? "Create idea" : "Save changes"}
+      </Button>
     </>
   );
 }
@@ -146,7 +149,7 @@ export function IdeaForm({
 
   return (
     <form
-      className="idea-form"
+      className="min-w-0 pb-12"
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
@@ -154,176 +157,9 @@ export function IdeaForm({
         void form.handleSubmit();
       }}
     >
-      <div className="idea-form-metadata">
-        <form.Field name="title">
-          {(field) => {
-            const error = firstError(field.state.meta.errors);
-            return (
-              <label className="idea-form-field">
-                <span className="idea-form-label">Title</span>
-                <input
-                  name={field.name}
-                  value={field.state.value}
-                  maxLength={200}
-                  autoFocus={mode === "create"}
-                  aria-invalid={Boolean(error)}
-                  aria-describedby={error ? `${field.name}-error` : undefined}
-                  placeholder="A concise name for the idea"
-                  onBlur={field.handleBlur}
-                  onChange={(event) =>
-                    field.handleChange(event.currentTarget.value)
-                  }
-                />
-                <span className="idea-form-field-foot">
-                  {error ? (
-                    <span
-                      id={`${field.name}-error`}
-                      className="idea-form-error"
-                      role="alert"
-                    >
-                      {error}
-                    </span>
-                  ) : (
-                    <span>Make it recognizable to you and the group.</span>
-                  )}
-                  <span>{field.state.value.length}/200</span>
-                </span>
-              </label>
-            );
-          }}
-        </form.Field>
-
-        <form.Field name="status">
-          {(field) => (
-            <StatusSelect
-              className="idea-form-field idea-form-status-field"
-              description={
-                <span className="idea-form-field-foot">
-                  <span>Where this thought sits in its lifecycle.</span>
-                </span>
-              }
-              label="Status"
-              labelClassName="idea-form-label"
-              name={field.name}
-              onBlur={field.handleBlur}
-              onValueChange={(status) => {
-                if (status) field.handleChange(status);
-              }}
-              size="form"
-              value={field.state.value}
-            />
-          )}
-        </form.Field>
-
-        <form.Field name="visibility">
-          {(field) => (
-            <VisibilitySelect
-              className="idea-form-field"
-              description={
-                <span className="idea-form-field-foot">
-                  <span>
-                    {field.state.value === "PUBLIC"
-                      ? "Shown in the public feed and search."
-                      : field.state.value === "UNLISTED"
-                        ? "Hidden from feeds and search, but its URL works for anyone."
-                        : "Hidden from everyone except you."}
-                  </span>
-                </span>
-              }
-              label="Visibility"
-              labelClassName="idea-form-label"
-              name={field.name}
-              onBlur={field.handleBlur}
-              onValueChange={(visibility) => {
-                if (visibility) field.handleChange(visibility);
-              }}
-              value={field.state.value}
-            />
-          )}
-        </form.Field>
-      </div>
-
-      <form.Field name="tags">
-        {(tagsField) => (
-          <form.Field name="tagDraft">
-            {(draftField) => {
-              const error =
-                firstError(tagsField.state.meta.errors) ??
-                firstError(draftField.state.meta.errors);
-              return (
-                <div className="idea-form-field">
-                  <label htmlFor="idea-tags" className="idea-form-label">
-                    Tags
-                  </label>
-                  <TagSelector
-                    inputId="idea-tags"
-                    tags={tagsField.state.value}
-                    draft={draftField.state.value}
-                    invalid={Boolean(error)}
-                    describedBy={error ? "idea-tags-error" : tagDescriptionId}
-                    onBlur={() => {
-                      tagsField.handleBlur();
-                      draftField.handleBlur();
-                    }}
-                    onChange={tagsField.handleChange}
-                    onDraftChange={draftField.handleChange}
-                  />
-                  {error ? (
-                    <p
-                      id="idea-tags-error"
-                      className="idea-form-error"
-                      role="alert"
-                    >
-                      {error}
-                    </p>
-                  ) : (
-                    <p id={tagDescriptionId} className="idea-form-guidance">
-                      Search existing tags, or type a new one and press Enter or
-                      comma.
-                    </p>
-                  )}
-                </div>
-              );
-            }}
-          </form.Field>
-        )}
-      </form.Field>
-
-      <form.Field name="content">
-        {(field) => {
-          const error = firstError(field.state.meta.errors);
-          return (
-            <div className="idea-form-field">
-              <div className="idea-form-editor-heading">
-                <span className="idea-form-label">Content</span>
-                <p id={contentDescriptionId}>
-                  Optional. Markdown is stored underneath, so formatting remains
-                  portable.
-                </p>
-              </div>
-              <TechnicalMarkdownEditor
-                initialMarkdown={initialValues.content}
-                invalid={Boolean(error)}
-                describedBy={
-                  error ? `${field.name}-error` : contentDescriptionId
-                }
-                onBlur={field.handleBlur}
-                onChange={field.handleChange}
-              />
-              {error ? (
-                <p
-                  id={`${field.name}-error`}
-                  className="idea-form-error"
-                  role="alert"
-                >
-                  {error}
-                </p>
-              ) : null}
-            </div>
-          );
-        }}
-      </form.Field>
-
+      <h1 className="sr-only">
+        {mode === "create" ? "New idea" : "Edit idea"}
+      </h1>
       <form.Subscribe
         selector={(state) => [
           state.isDirty,
@@ -332,49 +168,231 @@ export function IdeaForm({
         ]}
       >
         {([isDirty, canSubmit, isSubmitting]) => (
-          <>
-            <div className="idea-form-actions" hidden={isDirty}>
+          <IdeaPageToolbar
+            title={mode === "create" ? "New idea" : "Edit idea"}
+            onBack={onCancel}
+            backLabel={mode === "create" ? "Ideas" : "Idea"}
+            disabled={isSubmitting}
+            sticky
+            status={
+              isSubmitting
+                ? "Saving…"
+                : isDirty
+                  ? "Unsaved changes"
+                  : mode === "edit"
+                    ? "No changes yet"
+                    : ""
+            }
+            actions={
               <IdeaFormActionButtons
                 canSubmit={canSubmit}
                 isSubmitting={isSubmitting}
                 mode={mode}
                 onCancel={onCancel}
               />
-            </div>
-
-            {isDirty ? (
-              <div
-                className="idea-form-action-tray"
-                role="region"
-                aria-label="Unsaved idea changes"
-              >
-                <div className="idea-form-action-tray-content">
-                  <p
-                    className="idea-form-action-tray-status"
-                    aria-live="polite"
-                  >
-                    Unsaved changes
-                  </p>
-                  <div className="idea-form-tray-actions">
-                    <IdeaFormActionButtons
-                      canSubmit={canSubmit}
-                      isSubmitting={isSubmitting}
-                      mode={mode}
-                      onCancel={onCancel}
-                    />
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </>
+            }
+          />
         )}
       </form.Subscribe>
+      <ActionFeedback
+        state={submissionError ? "error" : "idle"}
+        className={submissionError ? "mt-5" : ""}
+      >
+        {submissionError
+          ? `Couldn’t save your idea. ${submissionError} Your draft is still here. Try saving again.`
+          : null}
+      </ActionFeedback>
+      <div className="grid min-w-0 items-start gap-10 pt-9 lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-12">
+        <div className="grid min-w-0 gap-8">
+          <form.Field name="title">
+            {(field) => {
+              const error = firstError(field.state.meta.errors);
+              return (
+                <label className="grid min-w-0 gap-2">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Title
+                  </span>
+                  <textarea
+                    rows={2}
+                    className={`${twIdeaTitleInput} min-h-24 w-full scroll-mt-60 resize-y rounded-control border-0 bg-transparent p-0 text-idea-title text-foreground outline-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring/40 [field-sizing:content]`}
+                    onKeyDown={(event) => {
+                      if (
+                        event.key === "Enter" &&
+                        !event.nativeEvent.isComposing
+                      )
+                        event.preventDefault();
+                    }}
+                    name={field.name}
+                    value={field.state.value}
+                    maxLength={200}
+                    required
+                    autoFocus={mode === "create"}
+                    aria-invalid={Boolean(error)}
+                    aria-describedby={error ? `${field.name}-error` : undefined}
+                    placeholder="Give your idea a title…"
+                    onBlur={field.handleBlur}
+                    onChange={(event) =>
+                      field.handleChange(event.currentTarget.value)
+                    }
+                  />
+                  <span className="flex justify-between gap-3 text-caption leading-relaxed text-muted-foreground">
+                    {error ? (
+                      <span
+                        id={`${field.name}-error`}
+                        className="text-xs text-danger"
+                        role="alert"
+                      >
+                        {error}
+                      </span>
+                    ) : (
+                      <span>Required</span>
+                    )}
+                    <span>{field.state.value.length}/200</span>
+                  </span>
+                </label>
+              );
+            }}
+          </form.Field>
 
-      {submissionError ? (
-        <p className="idea-form-submit-error" role="alert">
-          {submissionError} Your draft is still here.
-        </p>
-      ) : null}
+          <form.Field name="content">
+            {(field) => {
+              const error = firstError(field.state.meta.errors);
+              return (
+                <div className="grid min-w-0 gap-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-caption text-muted-foreground">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Notes
+                    </span>
+                    <p id={contentDescriptionId}>
+                      Optional · Add context, links, or a checklist.
+                    </p>
+                  </div>
+                  <TechnicalMarkdownEditor
+                    initialMarkdown={initialValues.content}
+                    invalid={Boolean(error)}
+                    describedBy={
+                      error ? `${field.name}-error` : contentDescriptionId
+                    }
+                    onBlur={field.handleBlur}
+                    onChange={field.handleChange}
+                  />
+                  {error ? (
+                    <p
+                      id={`${field.name}-error`}
+                      className="text-xs text-danger"
+                      role="alert"
+                    >
+                      {error}
+                    </p>
+                  ) : null}
+                </div>
+              );
+            }}
+          </form.Field>
+        </div>
+        <aside
+          aria-label="Idea settings"
+          className="grid min-w-0 items-start gap-6 border-t border-border/70 pt-6 sm:grid-cols-2 lg:sticky lg:top-40 lg:grid-cols-1 lg:border-t-0 lg:border-l lg:pt-1 lg:pl-6"
+        >
+          <h2 className="col-span-full text-sm font-medium">Details</h2>
+          <form.Field name="status">
+            {(field) => (
+              <StatusSelect
+                className="grid min-w-0 gap-2"
+                label="Status"
+                labelClassName="text-xs font-medium text-muted-foreground"
+                name={field.name}
+                onBlur={field.handleBlur}
+                onValueChange={(status) => {
+                  if (status) field.handleChange(status);
+                }}
+                size="form"
+                value={field.state.value}
+              />
+            )}
+          </form.Field>
+
+          <form.Field name="visibility">
+            {(field) => (
+              <VisibilitySelect
+                className="grid min-w-0 gap-2"
+                description={
+                  <span className="flex justify-between gap-3 text-caption leading-relaxed text-muted-foreground">
+                    <span>
+                      {field.state.value === "PUBLIC"
+                        ? "Shown in the public feed and search."
+                        : field.state.value === "UNLISTED"
+                          ? "Hidden from feeds and search, but its URL works for anyone."
+                          : "Hidden from everyone except you."}
+                    </span>
+                  </span>
+                }
+                label="Visibility"
+                labelClassName="text-xs font-medium text-muted-foreground"
+                name={field.name}
+                onBlur={field.handleBlur}
+                onValueChange={(visibility) => {
+                  if (visibility) field.handleChange(visibility);
+                }}
+                value={field.state.value}
+              />
+            )}
+          </form.Field>
+
+          <form.Field name="tags">
+            {(tagsField) => (
+              <form.Field name="tagDraft">
+                {(draftField) => {
+                  const error =
+                    firstError(tagsField.state.meta.errors) ??
+                    firstError(draftField.state.meta.errors);
+                  return (
+                    <div className="col-span-full grid min-w-0 gap-2">
+                      <label
+                        htmlFor="idea-tags"
+                        className="text-xs font-medium text-muted-foreground"
+                      >
+                        Tags
+                      </label>
+                      <TagSelector
+                        inputId="idea-tags"
+                        tags={tagsField.state.value}
+                        draft={draftField.state.value}
+                        invalid={Boolean(error)}
+                        describedBy={
+                          error ? "idea-tags-error" : tagDescriptionId
+                        }
+                        onBlur={() => {
+                          tagsField.handleBlur();
+                          draftField.handleBlur();
+                        }}
+                        onChange={tagsField.handleChange}
+                        onDraftChange={draftField.handleChange}
+                      />
+                      {error ? (
+                        <p
+                          id="idea-tags-error"
+                          className="text-xs text-danger"
+                          role="alert"
+                        >
+                          {error}
+                        </p>
+                      ) : (
+                        <p
+                          id={tagDescriptionId}
+                          className="text-caption leading-relaxed text-muted-foreground"
+                        >
+                          Find a tag or press Enter to add one.
+                        </p>
+                      )}
+                    </div>
+                  );
+                }}
+              </form.Field>
+            )}
+          </form.Field>
+        </aside>
+      </div>
     </form>
   );
 }

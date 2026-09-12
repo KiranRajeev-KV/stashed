@@ -1,9 +1,20 @@
+import { buttonStyles } from "../../components/ui/button-variants.js";
+import { twAnimatePulse } from "../../styles/common-styles.js";
+import {
+  twArchiveCardGrid,
+  twArchiveStateIcon,
+  twIdeaCard,
+  twIdeaCardContent,
+  twIdeaCardMargin,
+  twIdeaEmptyState,
+} from "../../styles/archive-styles.js";
 import { Link } from "@tanstack/react-router";
+import { Lightbulb, ListFilter } from "lucide-react";
 
 export function IdeasFeedSkeleton() {
   return (
     <div
-      className="grid gap-4 md:grid-cols-2"
+      className={twArchiveCardGrid}
       aria-label="Loading ideas"
       aria-live="polite"
       role="status"
@@ -11,10 +22,10 @@ export function IdeasFeedSkeleton() {
       {Array.from({ length: 4 }, (_, index) => (
         <div
           key={index}
-          className="idea-card min-h-72 animate-pulse motion-reduce:animate-none"
+          className={`${twIdeaCard} min-h-72 ${twAnimatePulse} motion-reduce:animate-none`}
         >
-          <div className="idea-card-margin" />
-          <div className="idea-card-content">
+          <div className={twIdeaCardMargin} />
+          <div className={twIdeaCardContent}>
             <div className="h-6 w-20 rounded-full bg-surface-muted" />
             <div className="mt-5 h-7 w-4/5 rounded-control bg-surface-muted" />
             <div className="mt-3 h-7 w-3/5 rounded-control bg-surface-muted" />
@@ -53,7 +64,7 @@ export function IdeasErrorState({ message, onRetry }: IdeasErrorStateProps) {
       <button
         type="button"
         onClick={onRetry}
-        className="mt-5 min-h-11 rounded-control bg-primary px-5 font-medium text-primary-foreground transition-colors duration-(--duration-fast) hover:bg-primary/90"
+        className={buttonStyles({ variant: "primary", className: "mt-5" })}
       >
         Try again
       </button>
@@ -72,7 +83,8 @@ export function IdeasEmptyState({
 }: IdeasEmptyStateProps) {
   if (filtered) {
     return (
-      <section className="idea-empty-state">
+      <section className={twIdeaEmptyState}>
+        <ListFilter className={twArchiveStateIcon} aria-hidden="true" />
         <p className="font-mono text-label uppercase text-accent">No match</p>
         <h2 className="mt-3 text-2xl font-semibold tracking-tight">
           No ideas match these filters.
@@ -84,7 +96,7 @@ export function IdeasEmptyState({
         <button
           type="button"
           onClick={onClearFilters}
-          className="mt-6 min-h-11 rounded-control border border-border-strong bg-surface px-5 font-medium transition-colors duration-(--duration-fast) hover:bg-surface-muted"
+          className={buttonStyles({ variant: "secondary", className: "mt-6" })}
         >
           Clear filters
         </button>
@@ -93,12 +105,13 @@ export function IdeasEmptyState({
   }
 
   return (
-    <section className="idea-empty-state">
+    <section className={twIdeaEmptyState}>
+      <Lightbulb className={twArchiveStateIcon} aria-hidden="true" />
       <p className="font-mono text-label uppercase text-accent">
         Nothing saved yet
       </p>
       <h2 className="mt-3 text-2xl font-semibold tracking-tight">
-        The shared archive is ready for its first idea.
+        Every collection starts with a little spark.
       </h2>
       <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
         Save enough of a thought to make it recognizable. You—or someone else in
@@ -106,7 +119,7 @@ export function IdeasEmptyState({
       </p>
       <Link
         to="/ideas/new"
-        className="mt-6 inline-flex min-h-11 items-center rounded-control bg-primary px-5 font-medium text-primary-foreground transition-colors duration-(--duration-fast) hover:bg-primary/90"
+        className={buttonStyles({ variant: "primary", className: "mt-6" })}
       >
         Create your first idea
       </Link>

@@ -1,3 +1,8 @@
+import {
+  twStashedToast,
+  twStashedToastClose,
+  twStashedToastDescription,
+} from "../../styles/common-styles.js";
 import * as React from "react";
 import { Toaster } from "sonner";
 
@@ -29,10 +34,10 @@ export function AppToaster() {
       visibleToasts={3}
       toastOptions={{
         classNames: {
-          toast: "stashed-toast",
+          toast: twStashedToast,
           title: "stashed-toast-title",
-          description: "stashed-toast-description",
-          closeButton: "stashed-toast-close",
+          description: twStashedToastDescription,
+          closeButton: twStashedToastClose,
         },
       }}
     />

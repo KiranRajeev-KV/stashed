@@ -1,21 +1,19 @@
-import { Select } from "@base-ui/react/select";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Select } from "../../components/ui/select.js";
+import { ChevronDown as ChevronsUpDown } from "lucide-react";
 import * as React from "react";
 
 import {
   IDEA_VISIBILITIES,
   IDEA_VISIBILITY_LABELS,
-  IDEA_VISIBILITY_OPTION_LABELS,
   type IdeaVisibility,
 } from "./idea-visibility.js";
 import { VisibilityIcon } from "./visibility-icon.js";
+import { twIdeaVisibilityTrigger } from "../../styles/selects-styles.js";
 
 const triggerClass =
-  "flex min-h-12 w-full min-w-0 cursor-pointer items-center justify-between gap-3 rounded-control border border-border bg-surface px-4 text-left text-sm text-foreground transition-colors duration-(--duration-fast) hover:border-border-strong hover:bg-surface-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[popup-open]:border-border-strong data-[popup-open]:bg-surface-elevated";
+  "flex min-h-11 w-full min-w-0 cursor-pointer items-center justify-between gap-3 rounded-control border border-border bg-surface px-4 text-left text-sm text-foreground transition-colors duration-(--duration-fast) hover:border-border-strong hover:bg-surface-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[popup-open]:border-border-strong data-[popup-open]:bg-surface-elevated";
 const optionClass =
-  "group grid min-h-11 w-full cursor-pointer grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-2 rounded-control px-3 py-2 text-sm text-foreground outline-none select-none data-[highlighted]:bg-surface-muted";
-const indicatorClass =
-  "invisible grid place-items-center text-primary group-data-[selected]:visible [&_svg]:size-4";
+  "group grid min-h-11 w-full cursor-pointer grid-cols-1 items-center gap-2 rounded-control px-3 py-2 text-sm text-foreground outline-none select-none data-[highlighted]:bg-surface-muted";
 const ALL_VISIBILITIES = "ALL";
 
 type VisibilitySelectProps = {
@@ -23,6 +21,8 @@ type VisibilitySelectProps = {
   allLabel?: string;
   className?: string;
   description?: React.ReactNode;
+  disabled?: boolean;
+  variant?: "default" | "inline";
   label: string;
   labelClassName?: string;
   name?: string;
@@ -39,23 +39,26 @@ export function VisibilitySelect({
   allLabel = "Every visibility",
   className,
   description,
+  disabled,
+  variant = "default",
   label,
   labelClassName,
   name,
   onBlur,
   onValueChange,
-  optionLabels = IDEA_VISIBILITY_OPTION_LABELS,
+  optionLabels = IDEA_VISIBILITY_LABELS,
   size = "form",
   value,
   valueLabels = IDEA_VISIBILITY_LABELS,
 }: VisibilitySelectProps) {
   const descriptionId = React.useId();
   const selectedValue = value ?? ALL_VISIBILITIES;
-  const sizeClass = size === "form" ? "min-h-12 px-4" : "min-h-11 px-3";
+  const sizeClass = size === "form" ? "min-h-11 px-4" : "min-h-11 px-3";
 
   return (
     <Select.Root
       name={name}
+      disabled={disabled}
       value={selectedValue}
       onValueChange={(nextValue) =>
         onValueChange(
@@ -68,7 +71,11 @@ export function VisibilitySelect({
       <div className={className}>
         <Select.Label className={labelClassName}>{label}</Select.Label>
         <Select.Trigger
-          className={`${triggerClass} ${sizeClass}`}
+          className={
+            variant === "inline"
+              ? twIdeaVisibilityTrigger
+              : `${triggerClass} ${sizeClass}`
+          }
           aria-describedby={description ? descriptionId : undefined}
           onBlur={onBlur}
         >
@@ -96,9 +103,6 @@ export function VisibilitySelect({
             <Select.List className="max-h-[min(24rem,var(--available-height))] w-full overflow-y-auto p-1 outline-none">
               {allowAll ? (
                 <Select.Item value={ALL_VISIBILITIES} className={optionClass}>
-                  <Select.ItemIndicator keepMounted className={indicatorClass}>
-                    <Check aria-hidden="true" />
-                  </Select.ItemIndicator>
                   <Select.ItemText className="min-w-0 whitespace-nowrap">
                     {allLabel}
                   </Select.ItemText>
@@ -110,9 +114,6 @@ export function VisibilitySelect({
                   value={visibility}
                   className={optionClass}
                 >
-                  <Select.ItemIndicator keepMounted className={indicatorClass}>
-                    <Check aria-hidden="true" />
-                  </Select.ItemIndicator>
                   <Select.ItemText className="flex min-w-0 items-center gap-2 whitespace-nowrap">
                     <VisibilityIcon
                       visibility={visibility}

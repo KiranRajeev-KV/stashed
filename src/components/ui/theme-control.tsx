@@ -1,5 +1,7 @@
 import * as React from "react";
 import { Moon, Sun } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { Select } from "./select.js";
 
 import {
   getThemePreference,
@@ -75,23 +77,44 @@ export function ThemeControl({ variant = "segmented" }: ThemeControlProps) {
 
   if (variant === "select") {
     return (
-      <label className="relative inline-flex min-h-10 items-center">
-        <span className="sr-only">Appearance</span>
-        <select
-          value={preference}
-          onChange={(event) =>
-            chooseTheme(event.currentTarget.value as ThemePreference)
-          }
-          className="min-h-10 cursor-pointer rounded-control border border-border bg-surface px-3 pr-8 text-sm font-medium text-foreground"
-          aria-label="Appearance"
-        >
-          {themePreferences.map((theme) => (
-            <option key={theme} value={theme}>
-              {themeLabels[theme]}
-            </option>
-          ))}
-        </select>
-      </label>
+      <Select.Root
+        value={preference}
+        onValueChange={(value) => {
+          if (value) chooseTheme(value);
+        }}
+      >
+        <div className="inline-flex">
+          <Select.Label className="sr-only">Appearance</Select.Label>
+          <Select.Trigger className="flex min-h-11 items-center gap-3 px-3">
+            <Select.Value>{themeLabels[preference]}</Select.Value>
+            <Select.Icon>
+              <ChevronDown size={14} />
+            </Select.Icon>
+          </Select.Trigger>
+        </div>
+        <Select.Portal>
+          <Select.Positioner
+            sideOffset={6}
+            alignItemWithTrigger={false}
+            className="z-[70] min-w-40 max-w-[calc(100vw-2rem)]"
+          >
+            <Select.Popup>
+              <Select.List className="p-1">
+                {themePreferences.map((theme) => (
+                  <Select.Item
+                    key={theme}
+                    value={theme}
+                    className="group grid grid-cols-[1rem_1fr] items-center"
+                  >
+                    {theme === "light" ? <Sun size={14} /> : <Moon size={14} />}
+                    <Select.ItemText>{themeLabels[theme]}</Select.ItemText>
+                  </Select.Item>
+                ))}
+              </Select.List>
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>
     );
   }
 

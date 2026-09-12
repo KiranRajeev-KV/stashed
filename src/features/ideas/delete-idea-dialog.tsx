@@ -1,7 +1,19 @@
+import { ActionFeedback } from "../../components/ui/action-feedback.js";
+import { Button } from "../../components/ui/button.js";
+import {
+  twDeleteDialogActions,
+  twDeleteDialogContent,
+  twDeleteDialogDescription,
+  twDeleteDialogIdeaTitle,
+  twDeleteDialogOverlay,
+  twDeleteDialogTitle,
+  twUiDialogBackdrop,
+  twUiDialogPanel,
+} from "../../styles/dialogs-styles.js";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { LoaderCircle, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 
@@ -36,9 +48,6 @@ export function DeleteIdeaDialog({ ideaId, ideaTitle }: DeleteIdeaDialogProps) {
       toast.success("Idea deleted");
       await navigate({ to: "/ideas", replace: true });
     },
-    onError: (error) => {
-      toast.error("Failed to delete idea", { description: error.message });
-    },
   });
 
   function handleOpenChange(nextOpen: boolean) {
@@ -51,62 +60,68 @@ export function DeleteIdeaDialog({ ideaId, ideaTitle }: DeleteIdeaDialogProps) {
   return (
     <AlertDialog.Root open={open} onOpenChange={handleOpenChange}>
       <AlertDialog.Trigger asChild>
-        <button type="button" className="idea-delete-trigger">
+        <Button variant="ghost">
           <Trash2 aria-hidden="true" size={16} strokeWidth={1.8} />
           Delete idea
-        </button>
+        </Button>
       </AlertDialog.Trigger>
 
       <AlertDialog.Portal>
-        <AlertDialog.Overlay className="delete-dialog-overlay" />
+        <AlertDialog.Overlay
+          className={`${twDeleteDialogOverlay} ${twUiDialogBackdrop}`}
+        />
         <AlertDialog.Content
-          className="delete-dialog-content"
+          className={`${twDeleteDialogContent} ${twUiDialogPanel}`}
           onEscapeKeyDown={(event) => {
             if (mutation.isPending) event.preventDefault();
           }}
         >
-          <p className="delete-dialog-kicker">Permanent action</p>
-          <AlertDialog.Title className="delete-dialog-title">
+          <AlertDialog.Title className={twDeleteDialogTitle}>
             Delete this idea?
           </AlertDialog.Title>
-          <AlertDialog.Description className="delete-dialog-description">
-            <span className="delete-dialog-idea-title">“{ideaTitle}”</span>
+          <AlertDialog.Description className={twDeleteDialogDescription}>
+            <span className={twDeleteDialogIdeaTitle}>“{ideaTitle}”</span>
             <span>This permanently deletes the idea and cannot be undone.</span>
           </AlertDialog.Description>
 
-          {mutation.isError ? (
-            <p className="delete-dialog-error" role="alert">
-              {mutation.error.message} The idea has not been deleted.
-            </p>
-          ) : null}
+          <ActionFeedback
+            state={
+              mutation.isError
+                ? "error"
+                : mutation.isPending
+                  ? "pending"
+                  : "idle"
+            }
+            className="mt-4"
+          >
+            {mutation.isError
+              ? `Couldn’t delete this idea. ${mutation.error.message} Nothing was deleted. Try again or cancel.`
+              : mutation.isPending
+                ? "Deleting idea…"
+                : null}
+          </ActionFeedback>
 
-          <div className="delete-dialog-actions">
+          <div className={twDeleteDialogActions}>
             <AlertDialog.Cancel asChild>
-              <button
+              <Button
                 type="button"
-                className="delete-dialog-cancel"
+                variant="secondary"
                 disabled={mutation.isPending}
               >
                 Cancel
-              </button>
+              </Button>
             </AlertDialog.Cancel>
-            <button
+            <Button
               type="button"
-              className="delete-dialog-confirm"
+              variant="destructive"
+              loading={mutation.isPending}
+              loadingLabel="Deleting…"
               disabled={mutation.isPending}
               onClick={() => mutation.mutate()}
             >
-              {mutation.isPending ? (
-                <LoaderCircle
-                  aria-hidden="true"
-                  className="delete-dialog-spinner"
-                  size={17}
-                />
-              ) : (
-                <Trash2 aria-hidden="true" size={17} strokeWidth={1.8} />
-              )}
-              {mutation.isPending ? "Deleting…" : "Delete idea"}
-            </button>
+              <Trash2 aria-hidden="true" size={16} strokeWidth={1.8} />
+              Delete idea
+            </Button>
           </div>
         </AlertDialog.Content>
       </AlertDialog.Portal>

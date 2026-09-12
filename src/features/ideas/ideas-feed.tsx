@@ -1,5 +1,16 @@
+import { ActionFeedback } from "../../components/ui/action-feedback.js";
+import { Button } from "../../components/ui/button.js";
+import { buttonStyles } from "../../components/ui/button-variants.js";
+import {
+  twArchiveFeed,
+  twArchiveIntro,
+  twArchiveIntroDescription,
+  twArchivePagination,
+  twArchiveResultsLabel,
+} from "../../styles/archive-styles.js";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi } from "@tanstack/react-router";
+import { ArrowUpRight } from "lucide-react";
 
 import { currentUserQueryOptions, githubLoginPath } from "../../api/auth.js";
 import {
@@ -11,7 +22,9 @@ import {
   searchInfiniteQueryOptions,
   type SearchIdeaSort,
 } from "../../api/search.js";
+import type { SearchResult } from "../../api/search.js";
 import { IdeaCard } from "./idea-card.js";
+import { IdeaGrid } from "./idea-grid.js";
 import { IdeaFilters, type IdeaFilterValues } from "./idea-filters.js";
 import type { IdeaVisibility } from "./idea-visibility.js";
 import {
@@ -99,37 +112,30 @@ export function IdeasFeed() {
     });
 
   return (
-    <section>
-      <header className="grid gap-6 border-b border-border pb-7 sm:pb-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+    <section className={twArchiveFeed}>
+      <header className={twArchiveIntro}>
         <div>
-          <p className="font-mono text-label uppercase text-accent">
-            Shared archive
-          </p>
-          <h1 className="mt-3 text-page-title font-semibold">Ideas</h1>
-          <p className="mt-4 max-w-2xl text-prose text-muted-foreground">
-            Ideas saved by this group—ready to discover, revisit, and develop
-            over time.
+          <h1>
+            Ideas<span className="text-accent">.</span>
+          </h1>
+          <p className={twArchiveIntroDescription}>
+            A place for your next good thought.
           </p>
         </div>
         {currentUserQuery.data ? (
           <Link
             to="/ideas/new"
-            className="inline-flex min-h-11 w-fit items-center rounded-control bg-primary px-5 font-medium text-primary-foreground transition-colors duration-(--duration-fast) hover:bg-primary/90 lg:mb-1"
+            className={buttonStyles({ variant: "primary" })}
           >
-            New idea{" "}
-            <span className="ml-2" aria-hidden="true">
-              ＋
-            </span>
+            Stash an idea <ArrowUpRight size={17} aria-hidden="true" />
           </Link>
         ) : (
           <a
             href={githubLoginPath}
-            className="inline-flex min-h-11 w-fit items-center rounded-control bg-primary px-5 font-medium text-primary-foreground transition-colors duration-(--duration-fast) hover:bg-primary/90 lg:mb-1"
+            className={buttonStyles({ variant: "primary" })}
           >
             Sign in to contribute
-            <span className="ml-2" aria-hidden="true">
-              →
-            </span>
+            <ArrowUpRight size={17} aria-hidden="true" />
           </a>
         )}
       </header>
@@ -207,7 +213,7 @@ function SearchResults({
 }: {
   currentUserId?: string;
   query: string;
-  results: import("../../api/search.js").SearchResult[];
+  results: SearchResult[];
   errorMessage: string;
   hasNextPage: boolean;
   isError: boolean;
@@ -242,7 +248,7 @@ function SearchResults({
             </p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <IdeaGrid>
             {results.map((result) => (
               <IdeaCard
                 key={result.id}
@@ -250,7 +256,7 @@ function SearchResults({
                 idea={result}
               />
             ))}
-          </div>
+          </IdeaGrid>
 
           <LoadMore
             hasNextPage={hasNextPage}
@@ -311,7 +317,13 @@ function BrowseResults({
 
       {ideas.length > 0 ? (
         <>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className={twArchiveResultsLabel} role="status">
+            <span>
+              {ideas.length} {ideas.length === 1 ? "idea" : "ideas"}
+              {hasNextPage ? " loaded" : " to explore"}
+            </span>
+          </div>
+          <IdeaGrid>
             {ideas.map((idea) => (
               <IdeaCard
                 key={idea.id}
@@ -319,7 +331,7 @@ function BrowseResults({
                 idea={idea}
               />
             ))}
-          </div>
+          </IdeaGrid>
 
           <LoadMore
             hasNextPage={hasNextPage}
@@ -357,34 +369,42 @@ function LoadMore({
   retryLabel: string;
 }) {
   return (
-    <div className="mt-8 flex flex-col items-center gap-3 border-t border-border pt-7">
-      {hasNextPage ? (
-        <button
+    <div
+      className={`${twArchivePagination} mt-8 flex flex-col items-center gap-3 border-t border-border pt-7`}
+    >
+      {hasNextPage || isFetchNextPageError ? (
+        <Button
           type="button"
           onClick={onFetchNextPage}
           disabled={isFetchingNextPage}
-          className="min-h-11 rounded-control border border-border-strong bg-surface px-6 font-medium transition-colors duration-(--duration-fast) hover:bg-surface-muted disabled:cursor-wait disabled:opacity-60"
+          loading={isFetchingNextPage}
+          loadingLabel={loadingLabel}
+          variant="secondary"
         >
-          {isFetchingNextPage ? loadingLabel : loadLabel}
-        </button>
+          {isFetchNextPageError ? retryLabel : loadLabel}
+        </Button>
       ) : (
         <p className="font-mono text-xs text-muted-foreground">
-          — End of results —
+          You've reached the end. Another idea is always beginning.
         </p>
       )}
 
-      {isFetchNextPageError ? (
-        <div className="text-center" role="alert">
-          <p className="text-sm text-danger">{errorMessage}</p>
-          <button
-            type="button"
-            onClick={onFetchNextPage}
-            className="mt-2 min-h-10 px-3 text-sm font-medium text-primary underline-offset-4 hover:underline"
-          >
-            {retryLabel}
-          </button>
-        </div>
-      ) : null}
+      <ActionFeedback
+        state={
+          isFetchingNextPage
+            ? "pending"
+            : isFetchNextPageError
+              ? "error"
+              : "idle"
+        }
+        className="text-center"
+      >
+        {isFetchingNextPage
+          ? loadingLabel
+          : isFetchNextPageError
+            ? `${errorMessage} Your loaded results are still here. Try again.`
+            : null}
+      </ActionFeedback>
     </div>
   );
 }

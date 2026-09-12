@@ -1,9 +1,22 @@
+import {
+  twIdeaEditor,
+  twIdeaEditorContent,
+  twIdeaEditorLinkActions,
+  twIdeaEditorLinkError,
+  twIdeaEditorLinkField,
+  twIdeaEditorLinkRow,
+  twIdeaEditorTool,
+  twIdeaEditorToolGroup,
+  twIdeaEditorToolbar,
+  twIdeaEditorToolbarShell,
+  twMarkdownContent,
+} from "../../styles/markdown-styles.js";
 import * as React from "react";
-import { Select } from "@base-ui/react/select";
+import { Select } from "../../components/ui/select.js";
 import {
   Bold,
   Check,
-  ChevronsUpDown,
+  ChevronDown as ChevronsUpDown,
   Code2,
   FileCode2,
   Italic,
@@ -78,7 +91,7 @@ function ToolbarButton({
   return (
     <button
       type="button"
-      className="idea-editor-tool"
+      className={twIdeaEditorTool}
       aria-label={label}
       aria-pressed={pressed}
       title={label}
@@ -127,14 +140,8 @@ function BlockStyleSelect({
                 <Select.Item
                   key={blockType}
                   value={blockType}
-                  className="group grid min-h-11 w-full cursor-pointer grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-2 rounded-control px-3 py-2 text-sm text-foreground outline-none select-none data-[highlighted]:bg-surface-muted"
+                  className="group grid min-h-11 w-full cursor-pointer grid-cols-1 items-center gap-2 rounded-control px-3 py-2 text-sm text-foreground outline-none select-none data-[highlighted]:bg-surface-muted"
                 >
-                  <Select.ItemIndicator
-                    keepMounted
-                    className="invisible grid place-items-center text-primary group-data-[selected]:visible [&_svg]:size-4"
-                  >
-                    <Check aria-hidden="true" />
-                  </Select.ItemIndicator>
                   <Select.ItemText className="min-w-0 whitespace-nowrap">
                     {BLOCK_LABELS[blockType]}
                   </Select.ItemText>
@@ -220,9 +227,9 @@ function EditorToolbar() {
   }
 
   return (
-    <div className="idea-editor-toolbar-shell">
+    <div className={`${twIdeaEditorToolbarShell} border-border/70 bg-surface`}>
       <div
-        className="idea-editor-toolbar"
+        className={twIdeaEditorToolbar}
         role="toolbar"
         aria-label="Formatting tools"
       >
@@ -242,7 +249,7 @@ function EditorToolbar() {
         />
 
         <span
-          className="idea-editor-tool-group"
+          className={twIdeaEditorToolGroup}
           role="group"
           aria-label="Text styles"
         >
@@ -280,11 +287,7 @@ function EditorToolbar() {
           </ToolbarButton>
         </span>
 
-        <span
-          className="idea-editor-tool-group"
-          role="group"
-          aria-label="Lists"
-        >
+        <span className={twIdeaEditorToolGroup} role="group" aria-label="Lists">
           <ToolbarButton
             label="Bulleted list"
             pressed={listStyleType === KEYS.ul}
@@ -317,7 +320,7 @@ function EditorToolbar() {
         </span>
 
         <span
-          className="idea-editor-tool-group"
+          className={twIdeaEditorToolGroup}
           role="group"
           aria-label="Insert"
         >
@@ -340,7 +343,7 @@ function EditorToolbar() {
 
       {linkOpen ? (
         <div
-          className="idea-editor-link-row"
+          className={twIdeaEditorLinkRow}
           role="group"
           aria-label="Edit link"
           onKeyDown={(event) => {
@@ -350,7 +353,7 @@ function EditorToolbar() {
             }
           }}
         >
-          <div className="idea-editor-link-field">
+          <div className={twIdeaEditorLinkField}>
             <label htmlFor="idea-editor-link-url">URL</label>
             <input
               ref={urlInputRef}
@@ -359,9 +362,7 @@ function EditorToolbar() {
               inputMode="url"
               value={linkUrl}
               aria-invalid={Boolean(linkError)}
-              aria-describedby={
-                linkError ? "idea-editor-link-error" : undefined
-              }
+              aria-describedby={linkError ? twIdeaEditorLinkError : undefined}
               placeholder="https://example.com"
               onChange={(event) => {
                 setLinkUrl(event.currentTarget.value);
@@ -375,7 +376,7 @@ function EditorToolbar() {
               }}
             />
           </div>
-          <div className="idea-editor-link-field">
+          <div className={twIdeaEditorLinkField}>
             <label htmlFor="idea-editor-link-text">Text</label>
             <input
               id="idea-editor-link-text"
@@ -390,7 +391,7 @@ function EditorToolbar() {
               }}
             />
           </div>
-          <div className="idea-editor-link-actions">
+          <div className={twIdeaEditorLinkActions}>
             <button
               type="button"
               aria-label="Apply link"
@@ -420,8 +421,8 @@ function EditorToolbar() {
           </div>
           {linkError ? (
             <p
-              id="idea-editor-link-error"
-              className="idea-editor-link-error"
+              id={twIdeaEditorLinkError}
+              className={twIdeaEditorLinkError}
               role="alert"
             >
               {linkError}
@@ -454,7 +455,10 @@ export function TechnicalMarkdownEditor({
   );
 
   return (
-    <div className="idea-editor" data-invalid={invalid || undefined}>
+    <div
+      className={`${twIdeaEditor} rounded-card border-border/70 bg-surface shadow-none focus-within:shadow-none focus-within:border-border-strong`}
+      data-invalid={invalid || undefined}
+    >
       <Plate
         editor={editor}
         onValueChange={({ value }) =>
@@ -467,7 +471,7 @@ export function TechnicalMarkdownEditor({
       >
         <EditorToolbar />
         <PlateContent
-          className="idea-editor-content markdown-content"
+          className={`${twIdeaEditorContent} ${twMarkdownContent} min-h-[min(52vh,32rem)] bg-none px-5 py-6 leading-7 sm:px-7 sm:py-8`}
           aria-label="Idea content"
           aria-describedby={describedBy}
           aria-invalid={invalid}

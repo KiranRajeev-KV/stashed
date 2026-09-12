@@ -1,9 +1,19 @@
-import { Combobox } from "@base-ui/react/combobox";
+import { buttonStyles } from "../../components/ui/button-variants.js";
+import { twArchiveFilters } from "../../styles/archive-styles.js";
+import {
+  twUiDialogBackdrop,
+  twUiDialogSheet,
+} from "../../styles/dialogs-styles.js";
+import {
+  twUiSelectSheet,
+  twUiSelectTrigger,
+} from "../../styles/selects-styles.js";
+import { Combobox } from "../../components/ui/select.js";
 import { Drawer } from "@base-ui/react/drawer";
 import { useQuery } from "@tanstack/react-query";
 import {
   Check,
-  ChevronsUpDown,
+  ChevronDown as ChevronsUpDown,
   ListFilter,
   LoaderCircle,
   RotateCcw,
@@ -309,7 +319,9 @@ function MobileFilterDrawer({
 
   return (
     <Drawer.Root open={open} onOpenChange={handleOpenChange}>
-      <Drawer.Trigger className="flex min-h-14 min-w-0 items-center gap-3 rounded-control border border-border-strong bg-surface px-3 text-left text-foreground transition-colors duration-(--duration-fast) hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+      <Drawer.Trigger
+        className={`${twUiSelectTrigger} flex min-h-14 min-w-0 items-center gap-3 rounded-control border border-border-strong bg-surface px-3 text-left text-foreground transition-colors duration-(--duration-fast) hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring`}
+      >
         <ListFilter className="size-4 shrink-0" aria-hidden="true" />
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-medium leading-5">Filters</span>
@@ -328,9 +340,13 @@ function MobileFilterDrawer({
 
       <Drawer.VirtualKeyboardProvider>
         <Drawer.Portal>
-          <Drawer.Backdrop className="fixed inset-0 z-50 bg-foreground/35 opacity-100 backdrop-blur-[2px] transition-opacity duration-(--duration-standard) data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 motion-reduce:transition-none" />
+          <Drawer.Backdrop
+            className={`${twUiDialogBackdrop} fixed inset-0 z-50 bg-foreground/35 opacity-100 backdrop-blur-[2px] transition-opacity duration-(--duration-standard) data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 motion-reduce:transition-none`}
+          />
           <Drawer.Viewport className="fixed inset-0 z-50 flex items-end justify-center">
-            <Drawer.Popup className="flex max-h-[min(88dvh,52rem)] w-full translate-y-[var(--drawer-swipe-movement-y)] flex-col overflow-hidden rounded-t-[1rem] border border-b-0 border-border-strong bg-surface-elevated text-foreground shadow-overlay transition-transform duration-(--duration-slow) ease-emphasized data-[ending-style]:translate-y-full data-[starting-style]:translate-y-full data-[swiping]:select-none motion-reduce:transition-none sm:max-w-xl">
+            <Drawer.Popup
+              className={`${twUiDialogSheet} ${twUiSelectSheet} flex max-h-[min(88dvh,52rem)] w-full translate-y-[var(--drawer-swipe-movement-y)] flex-col overflow-hidden rounded-t-[1rem] border border-b-0 border-border-strong bg-surface-elevated text-foreground shadow-overlay transition-transform duration-(--duration-slow) ease-emphasized data-[ending-style]:translate-y-full data-[starting-style]:translate-y-full data-[swiping]:select-none motion-reduce:transition-none sm:max-w-xl`}
+            >
               <div className="grid shrink-0 gap-4 border-b border-border px-4 pb-4 pt-2 sm:px-6">
                 <div
                   className="mx-auto h-1 w-11 rounded-full bg-border-strong"
@@ -394,14 +410,14 @@ function MobileFilterDrawer({
               <div className="grid shrink-0 grid-cols-[auto_minmax(0,1fr)] gap-3 border-t border-border bg-surface px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 sm:px-6">
                 <button
                   type="button"
-                  className="min-h-11 rounded-control px-3 text-sm font-medium text-muted-foreground transition-colors duration-(--duration-fast) hover:bg-surface-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  className={buttonStyles({ variant: "ghost" })}
                   onClick={() => setDraft({})}
                 >
                   Clear
                 </button>
                 <button
                   type="button"
-                  className="min-h-11 rounded-control bg-primary px-5 font-medium text-primary-foreground transition-colors duration-(--duration-fast) hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  className={buttonStyles({ variant: "primary" })}
                   onClick={applyFilters}
                 >
                   View results
@@ -446,7 +462,7 @@ function AppliedFilters({
           onClick={() => onChange({ ...filters, status: undefined })}
           aria-label={`Remove ${IDEA_STATUS_LABELS[filters.status]} status filter`}
         >
-          <span>Status: {IDEA_STATUS_LABELS[filters.status]}</span>
+          <span>{IDEA_STATUS_LABELS[filters.status]}</span>
           <X className="size-5 rounded-full p-1" aria-hidden="true" />
         </button>
       ) : null}
@@ -461,7 +477,7 @@ function AppliedFilters({
             visibility={filters.visibility}
             className="size-3.5 shrink-0 text-muted-foreground"
           />
-          <span>Visibility: {visibilityFilterLabels[filters.visibility]}</span>
+          <span>{visibilityFilterLabels[filters.visibility]}</span>
           <X className="size-5 rounded-full p-1" aria-hidden="true" />
         </button>
       ) : null}
@@ -481,7 +497,9 @@ function AppliedFilters({
             }}
             aria-label={`Remove ${label} tag filter`}
           >
-            <span className="max-w-56 truncate">{label}</span>
+            <span className="min-w-0 max-w-56 wrap-anywhere text-left">
+              {label}
+            </span>
             <X className="size-5 rounded-full p-1" aria-hidden="true" />
           </button>
         );
@@ -536,7 +554,7 @@ export function IdeaFilters({
   }, [draftQuery, onQueryChange, query]);
 
   return (
-    <div className="mt-6">
+    <div className={twArchiveFilters}>
       <div
         className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-card border border-border-strong bg-surface-elevated p-2 shadow-raised transition-[border-color,box-shadow] duration-(--duration-fast) focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30"
         role="search"
@@ -560,7 +578,7 @@ export function IdeaFilters({
           maxLength={200}
           autoComplete="off"
           aria-describedby="idea-search-guidance"
-          placeholder="Search titles and content"
+          placeholder="Find that thought… search titles and content"
           className="min-h-11 min-w-0 border-0 bg-transparent text-foreground outline-none placeholder:text-muted-foreground/80 [&::-webkit-search-cancel-button]:hidden"
         />
         {draftQuery ? (

@@ -1,6 +1,28 @@
+import { ActionFeedback } from "../../components/ui/action-feedback.js";
+import { CopyLinkButton } from "../../components/ui/copy-link-button.js";
+import { buttonStyles } from "../../components/ui/button-variants.js";
+import {
+  twIdeaReader,
+  twIdeaReaderAuthor,
+  twIdeaReaderAvatar,
+  twIdeaReaderContent,
+  twIdeaReaderDocument,
+  twIdeaReaderEmpty,
+  twIdeaReaderHeading,
+  twIdeaReaderKicker,
+  twIdeaReaderLayout,
+  twIdeaReaderManage,
+  twIdeaReaderProperties,
+  twIdeaReaderSidebar,
+  twIdeaReaderStatus,
+  twIdeaReaderTags,
+  twIdeaReaderUsername,
+  twIdeaReaderVisibility,
+} from "../../styles/idea-page-styles.js";
+import { IdeaPageToolbar, IdeaTagLink } from "./idea-page-ui.js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi } from "@tanstack/react-router";
-import { toast } from "sonner";
+import { FileText, Pencil } from "lucide-react";
 
 import { currentUserQueryOptions } from "../../api/auth.js";
 import { ApiClientError } from "../../api/client.js";
@@ -20,11 +42,13 @@ import { DeleteIdeaDialog } from "./delete-idea-dialog.js";
 import { IDEA_STATUS_LABELS } from "./idea-status.js";
 import { IdeaStatusEditor } from "./idea-status-editor.js";
 import { VisibilityIcon } from "./visibility-icon.js";
+import { IdeaVisibilityEditor } from "./idea-visibility-editor.js";
+
+import { IDEA_VISIBILITY_LABELS } from "./idea-visibility.js";
 
 const routeApi = getRouteApi("/ideas/$ideaId");
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
-  dateStyle: "long",
-  timeStyle: "short",
+  dateStyle: "medium",
 });
 
 export function IdeaDetail() {
@@ -44,11 +68,10 @@ export function IdeaDetail() {
 
       return { previousIdea };
     },
-    onError: (error, _content, context) => {
+    onError: (_error, _content, context) => {
       if (context?.previousIdea) {
         queryClient.setQueryData(ideaQueryKey(ideaId), context.previousIdea);
       }
-      toast.error("Failed to update checklist", { description: error.message });
     },
     onSuccess: ({ idea }) => {
       queryClient.setQueryData(ideaQueryKey(idea.id), idea);
@@ -88,150 +111,183 @@ export function IdeaDetail() {
     idea.author.displayName.trim().slice(0, 2).toUpperCase() || "ST";
 
   return (
-    <article>
-      <Link
-        to="/ideas"
-        className="inline-flex min-h-10 items-center font-mono text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-      >
-        <span aria-hidden="true">←</span>
-        <span className="ml-2">Shared archive</span>
-      </Link>
-
-      <header className="mt-5 border-b border-border pb-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          {isOwner ? (
-            <div className="flex items-center gap-2">
-              <IdeaStatusEditor idea={idea} />
-              {idea.visibility !== "PUBLIC" ? (
-                <span className="idea-status" data-status="DRAFT">
-                  <VisibilityIcon
-                    visibility={idea.visibility}
-                    className="mr-1 size-3.5 shrink-0"
-                  />
-                  {idea.visibility === "UNLISTED" ? "Unlisted" : "Private"}
-                </span>
-              ) : null}
-            </div>
-          ) : (
-            <span className="idea-status" data-status={idea.status}>
-              {IDEA_STATUS_LABELS[idea.status]}
-            </span>
-          )}
-
-          {isOwner ? (
-            <div className="idea-detail-actions">
+    <article className={twIdeaReader}>
+      <IdeaPageToolbar
+        title={idea.title}
+        actions={
+          <>
+            <CopyLinkButton
+              key={idea.id}
+              isPrivate={idea.visibility === "PRIVATE"}
+            />
+            {isOwner ? (
               <Link
                 to="/ideas/$ideaId/edit"
                 params={{ ideaId: idea.id }}
-                className="inline-flex min-h-11 items-center rounded-control border border-border-strong bg-surface px-4 text-sm font-medium transition-colors duration-(--duration-fast) hover:bg-surface-muted"
+                className={buttonStyles({ variant: "primary" })}
               >
+                <Pencil size={14} aria-hidden="true" />
                 Edit idea
               </Link>
-              <DeleteIdeaDialog ideaId={idea.id} ideaTitle={idea.title} />
-            </div>
-          ) : null}
-        </div>
+            ) : null}
+          </>
+        }
+      />
 
-        <h1 className="mt-5 max-w-4xl text-page-title font-semibold wrap-anywhere">
-          {idea.title}
-        </h1>
-
-        <div className="mt-6 flex flex-col gap-4 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-3">
-            {idea.author.avatarUrl ? (
-              <img
-                src={idea.author.avatarUrl}
-                alt=""
-                width="36"
-                height="36"
-                className="size-9 shrink-0 rounded-full border border-border object-cover"
-              />
-            ) : (
-              <span
-                aria-hidden="true"
-                className="grid size-9 shrink-0 place-items-center rounded-full bg-surface-muted font-mono text-xs font-medium"
-              >
-                {authorInitials}
-              </span>
-            )}
-            <span className="min-w-0">
-              <span className="block truncate font-medium text-foreground">
-                {idea.author.displayName}
-              </span>
-              {idea.author.username ? (
-                <span className="block truncate font-mono text-xs">
+      <div className={twIdeaReaderLayout}>
+        <div className={twIdeaReaderDocument}>
+          <header className={twIdeaReaderHeading}>
+            <p className={twIdeaReaderKicker}>
+              <FileText size={14} aria-hidden="true" />
+              Idea
+            </p>
+            <h1>{idea.title}</h1>
+            <div className={twIdeaReaderAuthor}>
+              {idea.author.avatarUrl ? (
+                <img
+                  src={idea.author.avatarUrl}
+                  alt=""
+                  width="30"
+                  height="30"
+                />
+              ) : (
+                <span className={twIdeaReaderAvatar} aria-hidden="true">
+                  {authorInitials}
+                </span>
+              )}
+              <span>{idea.author.displayName}</span>
+              {idea.author.username &&
+              idea.author.username !== idea.author.displayName ? (
+                <span className={twIdeaReaderUsername}>
                   @{idea.author.username}
                 </span>
               ) : null}
-            </span>
-          </div>
+            </div>
+          </header>
 
-          <dl className="grid gap-1 font-mono text-xs sm:text-right">
+          <div className={twIdeaReaderContent}>
+            {/^\s*(?:&#x20;)?\s*$/i.test(content) ? (
+              <div className={twIdeaReaderEmpty}>
+                <FileText size={20} aria-hidden="true" />
+                <p>No additional notes yet.</p>
+                {isOwner ? (
+                  <Link to="/ideas/$ideaId/edit" params={{ ideaId: idea.id }}>
+                    Add some context <Pencil size={13} aria-hidden="true" />
+                  </Link>
+                ) : null}
+              </div>
+            ) : (
+              <MarkdownContent
+                markdown={content}
+                onTaskListChange={
+                  isOwner
+                    ? (nextContent) => {
+                        if (!taskListMutation.isPending)
+                          taskListMutation.mutate(nextContent);
+                      }
+                    : undefined
+                }
+                taskListDisabled={taskListMutation.isPending}
+              />
+            )}
+            <ActionFeedback
+              className="mt-3"
+              state={
+                taskListMutation.isError
+                  ? "error"
+                  : taskListMutation.isPending
+                    ? "pending"
+                    : taskListMutation.isSuccess
+                      ? "success"
+                      : "idle"
+              }
+            >
+              {taskListMutation.isPending
+                ? "Updating checklist…"
+                : taskListMutation.isError
+                  ? `Checklist wasn’t saved. ${taskListMutation.error.message} Your previous checklist has been restored. Toggle the item to try again.`
+                  : taskListMutation.isSuccess
+                    ? "Checklist saved."
+                    : null}
+            </ActionFeedback>
+          </div>
+        </div>
+
+        <aside className={twIdeaReaderSidebar} aria-label="Idea details">
+          <h2>Details</h2>
+          <dl className={twIdeaReaderProperties}>
             <div>
-              <dt className="inline">Created </dt>
-              <dd className="inline">
-                <time dateTime={idea.createdAt}>
+              <dt>Status</dt>
+              <dd>
+                {isOwner ? (
+                  <IdeaStatusEditor idea={idea} />
+                ) : (
+                  <span
+                    className={twIdeaReaderStatus}
+                    data-status={idea.status}
+                  >
+                    {IDEA_STATUS_LABELS[idea.status]}
+                  </span>
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt>Visibility</dt>
+              <dd>
+                {isOwner ? (
+                  <IdeaVisibilityEditor idea={idea} />
+                ) : (
+                  <span className={twIdeaReaderVisibility}>
+                    <VisibilityIcon
+                      visibility={idea.visibility}
+                      className="size-3.5 shrink-0"
+                    />
+                    {IDEA_VISIBILITY_LABELS[idea.visibility]}
+                  </span>
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt>Created</dt>
+              <dd>
+                <time
+                  dateTime={idea.createdAt}
+                  title={new Date(idea.createdAt).toLocaleString()}
+                >
                   {dateFormatter.format(new Date(idea.createdAt))}
                 </time>
               </dd>
             </div>
             <div>
-              <dt className="inline">Updated </dt>
-              <dd className="inline">
-                <time dateTime={idea.updatedAt}>
+              <dt>Updated</dt>
+              <dd>
+                <time
+                  dateTime={idea.updatedAt}
+                  title={new Date(idea.updatedAt).toLocaleString()}
+                >
                   {dateFormatter.format(new Date(idea.updatedAt))}
                 </time>
               </dd>
             </div>
           </dl>
-        </div>
-
-        {idea.tags.length > 0 ? (
-          <ul className="mt-6 flex flex-wrap gap-2" aria-label="Tags">
-            {idea.tags.map((tag) => (
-              <li key={tag.id} className="min-w-0 max-w-full">
-                <Link
-                  to="/ideas"
-                  search={{ tag: tag.id }}
-                  className="inline-flex min-h-8 max-w-full items-center rounded-full border border-border bg-surface-muted px-3 font-mono text-xs text-muted-foreground transition-colors duration-(--duration-fast) hover:border-border-strong hover:text-foreground"
-                >
-                  <span className="truncate">{tag.name}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </header>
-
-      <div className="idea-detail-sheet mt-8 sm:mt-10">
-        <aside className="idea-detail-margin" aria-hidden="true">
-          <span>IDEA</span>
-          <span>{idea.id.slice(0, 8)}</span>
+          {idea.tags.length > 0 ? (
+            <section className={twIdeaReaderTags} aria-label="Tags">
+              <h2>Tags</h2>
+              <ul>
+                {idea.tags.map((tag) => (
+                  <li key={tag.id}>
+                    <IdeaTagLink tag={tag} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+          {isOwner ? (
+            <div className={twIdeaReaderManage}>
+              <DeleteIdeaDialog ideaId={idea.id} ideaTitle={idea.title} />
+            </div>
+          ) : null}
         </aside>
-        <div className="idea-detail-paper">
-          {/^\s*(?:&#x20;)?\s*$/i.test(content) ? (
-            <p className="text-sm text-muted-foreground">
-              No additional context was added.
-            </p>
-          ) : (
-            <MarkdownContent
-              markdown={content}
-              onTaskListChange={
-                isOwner
-                  ? (nextContent) => {
-                      if (!taskListMutation.isPending) {
-                        taskListMutation.mutate(nextContent);
-                      }
-                    }
-                  : undefined
-              }
-              taskListDisabled={taskListMutation.isPending}
-            />
-          )}
-          <span className="sr-only" aria-live="polite">
-            {taskListMutation.isPending ? "Updating checklist" : ""}
-          </span>
-        </div>
       </div>
     </article>
   );
