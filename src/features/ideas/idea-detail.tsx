@@ -45,6 +45,7 @@ import { VisibilityIcon } from "./visibility-icon.js";
 import { IdeaVisibilityEditor } from "./idea-visibility-editor.js";
 
 import { IDEA_VISIBILITY_LABELS } from "./idea-visibility.js";
+import { ProceduralIdeaBanner } from "./procedural-art/procedural-idea-banner.js";
 
 const routeApi = getRouteApi("/ideas/$ideaId");
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -133,6 +134,8 @@ export function IdeaDetail() {
           </>
         }
       />
+
+      <ProceduralIdeaBanner ideaId={idea.id} />
 
       <div className={twIdeaReaderLayout}>
         <div className={twIdeaReaderDocument}>
