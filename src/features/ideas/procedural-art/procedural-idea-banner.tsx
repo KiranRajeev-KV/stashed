@@ -57,6 +57,7 @@ export function ProceduralIdeaBanner({ ideaId }: { ideaId: string }) {
         focusable="false"
         data-art-version={scene.version}
         data-art-family={scene.family}
+        data-art-variant={scene.variant}
       >
         {scene.primitives.map((primitive, index) => (
           <Primitive key={index} primitive={primitive} />

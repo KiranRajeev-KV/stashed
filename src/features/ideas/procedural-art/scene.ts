@@ -29,7 +29,8 @@ export type ArtPrimitive = Paint &
   );
 
 export type ArtScene = {
-  version: "v1";
+  version: "v2";
   family: "drafting" | "contours" | "editorial" | "orbital";
+  variant: string;
   primitives: readonly ArtPrimitive[];
 };

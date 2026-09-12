@@ -1,4 +1,4 @@
-// v1 compatibility contract: FNV-1a over UTF-16 code units, then Mulberry32.
+// Shared algorithm compatibility contract: FNV-1a over UTF-16 code units, then Mulberry32.
 // Keep these constants and seed encoding unchanged for existing artwork.
 function hash(value: string): number {
   let result = 0x811c9dc5;
