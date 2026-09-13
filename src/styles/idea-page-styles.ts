@@ -29,6 +29,11 @@ idea-reader-layout [&]:grid [&]:grid-cols-[minmax(0,_1fr)_260px] [&]:items-start
 max-lg:[&]:grid-cols-[minmax(0,_1fr)] max-lg:[&]:gap-8 max-lg:[&]:pt-7.5
 `;
 
+export const twIdeaBanner = `
+mt-6 h-32 min-w-0 overflow-hidden rounded-surface border border-border-subtle bg-surface
+md:h-40 lg:h-50
+`;
+
 export const twIdeaReaderDocument = `
 idea-reader-document [&]:min-w-0
 `;

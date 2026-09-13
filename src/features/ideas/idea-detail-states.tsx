@@ -3,6 +3,7 @@ import { Button } from "../../components/ui/button.js";
 import { buttonStyles } from "../../components/ui/button-variants.js";
 import { twAnimatePulse } from "../../styles/common-styles.js";
 import {
+  twIdeaBanner,
   twIdeaReader,
   twIdeaReaderContent,
   twIdeaReaderDocument,
@@ -26,6 +27,7 @@ export function IdeaDetailSkeleton() {
         <div className="h-11 w-28 rounded-control bg-surface-muted" />
         <div className="h-11 w-24 rounded-control bg-surface-muted" />
       </div>
+      <div className={twIdeaBanner} aria-hidden="true" />
       <div className={twIdeaReaderLayout} aria-hidden="true">
         <div className={twIdeaReaderDocument}>
           <div className={`${twIdeaReaderHeading} space-y-4`}>

@@ -57,6 +57,9 @@
   --text-hero: clamp(3rem, 5.1vw, 4.375rem);
   --text-hero--line-height: 1.1;
   --text-hero--letter-spacing: -0.045em;
+  --text-landing-title: clamp(2.625rem, 5.3vw, 4.5rem);
+  --text-landing-title--line-height: 1.08;
+  --text-landing-title--letter-spacing: -0.045em;
   --text-hero-mobile: clamp(2.75rem, 9vw, 4.125rem);
   --text-hero-mobile--line-height: 1.1;
   --text-hero-mobile--letter-spacing: -0.045em;
