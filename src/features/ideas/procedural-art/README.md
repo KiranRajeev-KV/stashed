@@ -1,8 +1,7 @@
 # Procedural idea artwork · V2
 
-The committed V1 is the compositional baseline. V2 selects one complete curated
-composition, then varies parameters owned by that composition. There is no global
-layout, density, reflection, crop, secondary-motif, or accent-placement grammar.
+V2 selects one complete curated composition, then varies parameters owned by that
+composition: `idea.id → family → variant → geometry/details → scene primitives`.
 
 `generateIdeaScene(idea.id)` selects a family and variant. Four family modules each
 contain six named generators. `primitives.ts` only provides low-level SVG geometry
@@ -21,6 +20,13 @@ share a deformation model. Accents are limited to one small structural point;
 contours use none. Most compositions span about 420–650 of the 1200 SVG units.
 The same geometry is cropped on phones and recolored by existing semantic tokens.
 
+Each family's first slot restores its original V1 reference composition from
+commit `6a19079916fbf52475dd9d4bf217244881f1873a`: `construction-circle`,
+`single-basin`, `circle-rectangle`, and `concentric-system`. They preserve V1's
+parameter ranges, proportions, layering, stroke hierarchy, and registration marks,
+but use V2 seeds. The orbital slot retains its stable name even though the restored
+composition contains intersecting rotated ellipses and a quadratic sweep.
+
 The original FNV-1a / Mulberry32 implementation and seed encoding are unchanged:
 
 - `family:v2`
@@ -29,12 +35,20 @@ The original FNV-1a / Mulberry32 implementation and seed encoding are unchanged:
 - `details:v2:<family>:<variant>`
 - `accent:v2:<family>:<variant>`
 
-Family and variant arrays have frozen ordering. Preserve these slots, namespace
-meanings, and generator math after acceptance; new mappings should deliberately
-become V3. This V2 intentionally replaces the previous uncommitted V2; production
-V1 ideas receive new deterministic artwork without persisted configuration.
+The family order is `drafting`, `contours`, `editorial`, `orbital`; variant order
+is shown in the table. Both are frozen. After V2 acceptance, do not append, remove,
+or reorder slots, rename variants, change namespace meanings, or casually alter
+generator math, RNG constants, seed encoding, or geometry helpers. These all affect
+existing artwork. Substantial redesigns and new mappings require an intentional
+V3. V2 replaces V1 artwork without database persistence or per-idea configuration.
 
-Scene metadata is limited to `version`, `family`, and `variant`, exposed as SVG
-data attributes. Only paths, ellipses, and rectangles are used. Loops have fixed
-bounds; contours have 128 samples per closed curve and at most 12 curves. There
-are no dependencies, filters, noise layers, network calls, or runtime entropy.
+Scene metadata is exposed as `data-art-version`, `data-art-family`, and
+`data-art-variant`. The generic React renderer uses inline SVG with a fixed
+`1200 × 240` viewBox, `xMidYMid slice`, non-scaling strokes, and decorative
+accessibility (`aria-hidden`, `focusable="false"`). Theme changes only recolor
+semantic tokens; screen size only changes cropping. Neither regenerates geometry.
+
+Only paths, ellipses, and rectangles are used, with at most 26 primitives per
+scene. Closed contours use 96 or 128 samples; open valley curves use 101 points.
+The subsystem adds no dependencies, runtime entropy, network calls, animation,
+filters, gradients, or noise layers.

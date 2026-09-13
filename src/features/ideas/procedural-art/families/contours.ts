@@ -1,5 +1,6 @@
 import {
   cross,
+  line,
   trace,
   TAU,
   type ArtVariant,
@@ -10,8 +11,14 @@ import type { ArtPrimitive } from "../scene.js";
 
 // All rings in a terrain object share one deformation field. The sampler is
 // geometry-only; each composition below owns its silhouette and contour levels.
-function contour(curve: (angle: number) => Point, index: number): ArtPrimitive {
-  const points = Array.from({ length: 128 }, (_, i) => curve((i / 128) * TAU));
+function contour(
+  curve: (angle: number) => Point,
+  index: number,
+  samples: 96 | 128 = 128,
+): ArtPrimitive {
+  const points = Array.from({ length: samples }, (_, i) =>
+    curve((i / samples) * TAU),
+  );
   return {
     ...trace(
       points,
@@ -23,27 +30,41 @@ function contour(curve: (angle: number) => Point, index: number): ArtPrimitive {
 }
 
 const basin: VariantGenerator = ({ geometry: g, details: d }) => {
-  const x = g(565, 630),
-    y = g(115, 135),
-    rx = g(240, 280),
-    ry = g(90, 108),
-    phase = g(0, TAU);
-  const count = Math.floor(d(7, 10));
+  // Restore V1's silhouette and sampling exactly within this existing V2 slot.
+  // Both phases belong to one shared field; only the ring scale changes.
+  const x = g(530, 650),
+    y = g(125, 170),
+    rx = g(155, 205),
+    ry = g(80, 110),
+    phase = g(0, TAU),
+    phase2 = g(0, TAU);
   const shapes: ArtPrimitive[] = [];
-  for (let i = 0; i < count; i++) {
-    const scale = 0.2 + (0.8 * i) / (count - 1);
+  for (let i = 0; i < 8; i++) {
+    const scale = 0.25 + i * 0.145;
     shapes.push(
-      contour((t) => {
-        const r =
-          1 + 0.1 * Math.sin(3 * t + phase) + 0.045 * Math.cos(5 * t - phase);
-        return [
-          x + Math.cos(t) * rx * scale * r,
-          y + Math.sin(t) * ry * scale * r,
-        ];
-      }, i),
+      contour(
+        (t) => {
+          const r =
+            1 +
+            0.13 * Math.sin(t * 3 + phase) +
+            0.07 * Math.cos(t * 5 + phase2);
+          return [
+            x + Math.cos(t) * rx * scale * r,
+            y + Math.sin(t) * ry * scale * r,
+          ];
+        },
+        i,
+        96,
+      ),
     );
   }
-  shapes.push(cross(x, y, 3));
+  shapes.push(cross(Number(x.toFixed(3)), Number(y.toFixed(3)), 4));
+  const markX = Number((x + d(235, 280)).toFixed(3));
+  shapes.push(
+    line(markX, 76, markX, 148),
+    line(markX - 5, 76, markX + 5, 76),
+    line(markX - 5, 148, markX + 5, 148),
+  );
   return shapes;
 };
 
