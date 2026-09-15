@@ -37,6 +37,19 @@ export const ideaVisibilityValues = ["PUBLIC", "UNLISTED", "PRIVATE"] as const;
 
 export type IdeaVisibility = (typeof ideaVisibilityValues)[number];
 
+export const collectionVisibilityValues = [
+  "PUBLIC",
+  "UNLISTED",
+  "PRIVATE",
+] as const;
+
+export type CollectionVisibility = (typeof collectionVisibilityValues)[number];
+
+export const collectionCollaboratorRoleValues = ["EDITOR", "VIEWER"] as const;
+
+export type CollectionCollaboratorRole =
+  (typeof collectionCollaboratorRoleValues)[number];
+
 /*
  * Users inside Stashed.
  *
@@ -219,6 +232,107 @@ export const ideas = sqliteTable(
       table.visibility,
       desc(table.createdAt),
       desc(table.rowId),
+    ),
+  ],
+);
+
+/** Owned containers for unordered groups of ideas. */
+export const collections = sqliteTable(
+  "collections",
+  {
+    rowId: integer("row_id").primaryKey(),
+    id: text("id")
+      .notNull()
+      .unique()
+      .$defaultFn(() => crypto.randomUUID()),
+    name: text("name").notNull(),
+    description: text("description").notNull().default(""),
+    icon: text("icon").notNull().default("folder"),
+    visibility: text("visibility", { enum: collectionVisibilityValues })
+      .notNull()
+      .default("PUBLIC"),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`)
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("collections_visibility_updated_row_id_idx").on(
+      table.visibility,
+      desc(table.updatedAt),
+      desc(table.rowId),
+    ),
+    index("collections_visibility_created_row_id_idx").on(
+      table.visibility,
+      desc(table.createdAt),
+      desc(table.rowId),
+    ),
+    index("collections_owner_updated_row_id_idx").on(
+      table.ownerId,
+      desc(table.updatedAt),
+      desc(table.rowId),
+    ),
+    index("collections_name_row_id_idx").on(table.name, table.rowId),
+  ],
+);
+
+/** Explicit collection access. Ownership remains on collections.owner_id. */
+export const collectionCollaborators = sqliteTable(
+  "collection_collaborators",
+  {
+    collectionId: text("collection_id")
+      .notNull()
+      .references(() => collections.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    role: text("role", { enum: collectionCollaboratorRoleValues }).notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`)
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    primaryKey({ columns: [table.collectionId, table.userId] }),
+    index("collection_collaborators_user_role_collection_idx").on(
+      table.userId,
+      table.role,
+      table.collectionId,
+    ),
+  ],
+);
+
+/** Unordered, unique membership. Removing a row never mutates its idea. */
+export const collectionIdeas = sqliteTable(
+  "collection_ideas",
+  {
+    collectionId: text("collection_id")
+      .notNull()
+      .references(() => collections.id, { onDelete: "cascade" }),
+    ideaId: text("idea_id")
+      .notNull()
+      .references(() => ideas.id, { onDelete: "cascade" }),
+    addedByUserId: text("added_by_user_id")
+      .notNull()
+      .references(() => users.id),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch() * 1000)`),
+  },
+  (table) => [
+    primaryKey({ columns: [table.collectionId, table.ideaId] }),
+    index("collection_ideas_idea_collection_idx").on(
+      table.ideaId,
+      table.collectionId,
     ),
   ],
 );
