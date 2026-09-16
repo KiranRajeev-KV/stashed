@@ -1,26 +1,14 @@
-import type { IdeaSort } from "../../api/ideas.js";
-import type { SearchIdeaSort } from "../../api/search.js";
+import {
+  archiveSortOptions,
+  type ArchiveSort,
+} from "../../components/ui/archive-sort-options.js";
 
-export type SortValue = IdeaSort | SearchIdeaSort;
+export type SortValue = ArchiveSort;
 
-const SORT_OPTIONS: { label: string; value: SortValue }[] = [
-  { value: "UPDATED_DESC", label: "Recently updated" },
-  { value: "CREATED_DESC", label: "Recently created" },
-  { value: "UPDATED_ASC", label: "Least recently updated" },
-  { value: "CREATED_ASC", label: "Oldest created" },
-];
-
-const BEST_MATCH_OPTION = {
-  value: "BEST_MATCH" as const,
-  label: "Best match",
-};
-
-export function getSortOptions(includeBestMatch: boolean) {
-  return includeBestMatch ? [BEST_MATCH_OPTION, ...SORT_OPTIONS] : SORT_OPTIONS;
+export function getSortOptions() {
+  return archiveSortOptions;
 }
 
-export function getSortLabel(value: SortValue, includeBestMatch: boolean) {
-  return getSortOptions(includeBestMatch).find(
-    (option) => option.value === value,
-  )?.label;
+export function getSortLabel(value: SortValue) {
+  return getSortOptions().find((option) => option.value === value)?.label;
 }

@@ -11,6 +11,7 @@ import {
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link, getRouteApi } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { currentUserQueryOptions, githubLoginPath } from "../../api/auth.js";
 import {
@@ -26,6 +27,8 @@ import type { SearchResult } from "../../api/search.js";
 import { IdeaCard } from "./idea-card.js";
 import { IdeaGrid } from "./idea-grid.js";
 import { IdeaFilters, type IdeaFilterValues } from "./idea-filters.js";
+import { SearchResultsTransition } from "../../components/ui/search-transition.js";
+import type { IdeaListItem } from "../../api/ideas.js";
 import type { IdeaVisibility } from "./idea-visibility.js";
 import {
   IdeasEmptyState,
@@ -45,11 +48,10 @@ export function IdeasFeed() {
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
   const query = search.q ?? "";
-  const browseSort = search.sort === "BEST_MATCH" ? undefined : search.sort;
   const filters = {
     status: search.status,
     visibility: search.visibility,
-    sort: browseSort,
+    sort: search.sort,
     tagIds: search.tag,
   };
   const ideasQuery = useInfiniteQuery(
@@ -66,6 +68,13 @@ export function IdeasFeed() {
   );
   const ideas = ideasQuery.data?.pages.flatMap((page) => page.ideas) ?? [];
   const results = searchQuery.data?.pages.flatMap((page) => page.results) ?? [];
+  const [lastBrowseIdeas, setLastBrowseIdeas] = useState<IdeaListItem[]>([]);
+
+  useEffect(() => {
+    if (!query && ideasQuery.data) {
+      setLastBrowseIdeas(ideasQuery.data.pages.flatMap((page) => page.ideas));
+    }
+  }, [ideasQuery.data, query]);
   const isFiltered = Boolean(
     search.status || search.visibility || search.tag?.length,
   );
@@ -98,7 +107,7 @@ export function IdeasFeed() {
       q: nextQuery,
       status: search.status,
       visibility: search.visibility,
-      sort: nextQuery ? search.sort : browseSort,
+      sort: search.sort,
       tag: search.tag,
     });
 
@@ -107,7 +116,7 @@ export function IdeasFeed() {
       q: query || undefined,
       status: next.status,
       visibility: next.visibility,
-      sort: query ? search.sort : browseSort,
+      sort: search.sort,
       tag: next.tagIds,
     });
 
@@ -143,10 +152,15 @@ export function IdeasFeed() {
       <IdeaFilters
         ideaTags={ideaTags}
         isSignedIn={Boolean(currentUserQuery.data)}
+        isSearching={
+          query
+            ? searchQuery.isFetching && !searchQuery.isFetchingNextPage
+            : ideasQuery.isFetching && !ideasQuery.isFetchingNextPage
+        }
         query={query}
         status={search.status}
         visibility={search.visibility}
-        sort={query ? search.sort : browseSort}
+        sort={search.sort}
         tagIds={search.tag}
         onQueryChange={updateQuery}
         onFiltersChange={updateFacets}
@@ -166,7 +180,10 @@ export function IdeasFeed() {
           currentUserId={currentUserQuery.data?.id}
           query={query}
           results={results}
+          previousIdeas={lastBrowseIdeas}
           isPending={searchQuery.isPending}
+          isFetching={searchQuery.isFetching}
+          hasPreviousResults={searchQuery.data !== undefined}
           isError={searchQuery.isError}
           errorMessage={searchQuery.error?.message ?? ""}
           isSuccess={searchQuery.isSuccess}
@@ -182,6 +199,8 @@ export function IdeasFeed() {
           ideas={ideas}
           filtered={isFiltered}
           isPending={ideasQuery.isPending}
+          isFetching={ideasQuery.isFetching}
+          hasPreviousResults={ideasQuery.data !== undefined}
           isError={ideasQuery.isError}
           errorMessage={ideasQuery.error?.message ?? ""}
           isSuccess={ideasQuery.isSuccess}
@@ -201,12 +220,15 @@ function SearchResults({
   currentUserId,
   query,
   results,
+  previousIdeas,
   errorMessage,
   hasNextPage,
   isError,
   isFetchNextPageError,
   isFetchingNextPage,
   isPending,
+  isFetching,
+  hasPreviousResults,
   isSuccess,
   onFetchNextPage,
   onRetry,
@@ -214,42 +236,57 @@ function SearchResults({
   currentUserId?: string;
   query: string;
   results: SearchResult[];
+  previousIdeas: IdeaListItem[];
   errorMessage: string;
   hasNextPage: boolean;
   isError: boolean;
   isFetchNextPageError: boolean;
   isFetchingNextPage: boolean;
   isPending: boolean;
+  isFetching: boolean;
+  hasPreviousResults: boolean;
   isSuccess: boolean;
   onFetchNextPage: () => void;
   onRetry: () => void;
 }) {
-  return (
-    <div className="mt-7" aria-busy={isPending}>
-      {isPending ? <SearchResultsSkeleton /> : null}
+  const showingBrowseResults =
+    results.length === 0 && isPending && previousIdeas.length > 0;
+  const displayedResults = showingBrowseResults ? previousIdeas : results;
 
-      {isError && results.length === 0 ? (
+  return (
+    <SearchResultsTransition
+      active={isFetching && !isFetchingNextPage}
+      hasPreviousResults={hasPreviousResults || showingBrowseResults}
+      label="Updating Idea search results"
+      className="mt-7"
+    >
+      {isPending && displayedResults.length === 0 ? (
+        <SearchResultsSkeleton />
+      ) : null}
+
+      {isError && displayedResults.length === 0 ? (
         <SearchErrorState message={errorMessage} onRetry={onRetry} />
       ) : null}
 
-      {isSuccess && results.length === 0 ? (
+      {isSuccess && displayedResults.length === 0 ? (
         <SearchNoResultsState query={query} />
       ) : null}
 
-      {results.length > 0 ? (
+      {displayedResults.length > 0 ? (
         <>
           <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
             <p
               className="font-mono text-xs text-muted-foreground"
               role="status"
             >
-              {results.length} {results.length === 1 ? "match" : "matches"}
-              {hasNextPage ? " found so far" : " found"}
+              {showingBrowseResults
+                ? "Searching Ideas…"
+                : `${displayedResults.length} ${displayedResults.length === 1 ? "match" : "matches"}${hasNextPage ? " found so far" : " found"}`}
             </p>
           </div>
 
           <IdeaGrid>
-            {results.map((result) => (
+            {displayedResults.map((result) => (
               <IdeaCard
                 key={result.id}
                 currentUserId={currentUserId}
@@ -258,19 +295,21 @@ function SearchResults({
             ))}
           </IdeaGrid>
 
-          <LoadMore
-            hasNextPage={hasNextPage}
-            isFetchingNextPage={isFetchingNextPage}
-            isFetchNextPageError={isFetchNextPageError}
-            onFetchNextPage={onFetchNextPage}
-            loadingLabel="Searching further…"
-            loadLabel="Load more matches"
-            errorMessage="More matches could not be loaded."
-            retryLabel="Try searching again"
-          />
+          {showingBrowseResults ? null : (
+            <LoadMore
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              isFetchNextPageError={isFetchNextPageError}
+              onFetchNextPage={onFetchNextPage}
+              loadingLabel="Searching further…"
+              loadLabel="Load more matches"
+              errorMessage="More matches could not be loaded."
+              retryLabel="Try searching again"
+            />
+          )}
         </>
       ) : null}
-    </div>
+    </SearchResultsTransition>
   );
 }
 
@@ -284,6 +323,8 @@ function BrowseResults({
   isFetchNextPageError,
   isFetchingNextPage,
   isPending,
+  isFetching,
+  hasPreviousResults,
   isSuccess,
   onFetchNextPage,
   onRetry,
@@ -298,13 +339,20 @@ function BrowseResults({
   isFetchNextPageError: boolean;
   isFetchingNextPage: boolean;
   isPending: boolean;
+  isFetching: boolean;
+  hasPreviousResults: boolean;
   isSuccess: boolean;
   onFetchNextPage: () => void;
   onRetry: () => void;
   onClearFilters: () => void;
 }) {
   return (
-    <div className="mt-7" aria-busy={isPending}>
+    <SearchResultsTransition
+      active={isFetching && !isFetchingNextPage}
+      hasPreviousResults={hasPreviousResults}
+      label="Updating Ideas"
+      className="mt-7"
+    >
       {isPending ? <IdeasFeedSkeleton /> : null}
 
       {isError && ideas.length === 0 ? (
@@ -345,7 +393,7 @@ function BrowseResults({
           />
         </>
       ) : null}
-    </div>
+    </SearchResultsTransition>
   );
 }
 

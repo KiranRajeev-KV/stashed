@@ -1,21 +1,17 @@
-import { buttonStyles } from "../../components/ui/button-variants.js";
+import { ArchiveSearchField } from "../../components/ui/archive-search-field.js";
+import {
+  SearchActivity,
+  SearchResultsTransition,
+} from "../../components/ui/search-transition.js";
+import { MobileChoiceDrawer } from "../../components/ui/mobile-choice-drawer.js";
+import { MobileFilterDrawer } from "../../components/ui/mobile-filter-drawer.js";
 import { twArchiveFilters } from "../../styles/archive-styles.js";
-import {
-  twUiDialogBackdrop,
-  twUiDialogSheet,
-} from "../../styles/dialogs-styles.js";
-import {
-  twUiSelectSheet,
-  twUiSelectTrigger,
-} from "../../styles/selects-styles.js";
-import { Combobox } from "../../components/ui/select.js";
-import { Drawer } from "@base-ui/react/drawer";
+import { Combobox } from "../../components/ui/combobox.js";
 import { useQuery } from "@tanstack/react-query";
 import {
+  ArrowUpDown,
   Check,
   ChevronDown as ChevronsUpDown,
-  ListFilter,
-  LoaderCircle,
   RotateCcw,
   Search,
   X,
@@ -26,12 +22,15 @@ import { tagsQueryOptions, type Tag } from "../../api/tags.js";
 import type { IdeaSort, IdeaStatus } from "../../api/ideas.js";
 import type { SearchIdeaSort } from "../../api/search.js";
 import type { IdeaVisibility } from "./idea-visibility.js";
+import {
+  StatusChoiceFilter,
+  StatusFilter,
+  VisibilityFilter,
+} from "./idea-filter-controls.js";
 import { IDEA_STATUS_LABELS } from "./idea-status.js";
-import { MobileSortDrawer } from "./mobile-sort-drawer.js";
-import { StatusSelect } from "./status-select.js";
+import { getSortLabel, getSortOptions } from "./idea-sort.js";
 import { SortSelect } from "./sort-select.js";
 import { VisibilityIcon } from "./visibility-icon.js";
-import { VisibilitySelect } from "./visibility-select.js";
 
 const tagDiscoveryQuery = { limit: "100", offset: "0" } as const;
 const filterFieldClass = "grid min-w-0 gap-2";
@@ -40,9 +39,9 @@ const filterLabelClass =
 const filterTriggerClass =
   "flex min-h-11 w-full min-w-0 cursor-pointer items-center justify-between gap-3 rounded-control border border-border bg-surface px-3 text-left text-sm text-foreground transition-colors duration-(--duration-fast) hover:border-border-strong hover:bg-surface-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[popup-open]:border-border-strong data-[popup-open]:bg-surface-elevated";
 const filterOptionClass =
-  "group grid min-h-11 w-full cursor-pointer grid-cols-[1.25rem_minmax(0,1fr)_auto] items-center gap-2 rounded-control px-3 py-2 text-sm text-foreground outline-none select-none data-[highlighted]:bg-surface-muted";
+  "group grid min-h-9 w-full cursor-pointer grid-cols-[1rem_minmax(0,1fr)_auto] items-center gap-2.5 rounded-control px-2.5 py-1.5 text-ui text-foreground outline-none select-none data-[highlighted]:bg-surface-muted";
 const filterIndicatorClass =
-  "invisible grid place-items-center text-primary group-data-[selected]:visible [&_svg]:size-4";
+  "grid size-4 place-items-center rounded-[4px] border border-border-strong bg-transparent text-transparent transition-colors duration-(--duration-fast) group-data-[selected]:border-primary group-data-[selected]:bg-primary group-data-[selected]:text-primary-foreground! [&_svg]:size-3 [&_svg]:opacity-0 group-data-[selected]:[&_svg]:opacity-100 motion-reduce:transition-none";
 
 type FilterTag = Pick<Tag, "id" | "name"> & {
   ideaCount?: number;
@@ -50,6 +49,7 @@ type FilterTag = Pick<Tag, "id" | "name"> & {
 
 type IdeaFiltersProps = {
   isSignedIn: boolean;
+  isSearching: boolean;
   ideaTags: FilterTag[];
   onFiltersChange: (filters: IdeaFilterValues) => void;
   onQueryChange: (query?: string) => void;
@@ -158,9 +158,11 @@ function TagFilter({
             <Combobox.Value>
               {(value: FilterTag[]) => (
                 <span className="truncate">
-                  {value.length > 0
-                    ? `${value.length} ${value.length === 1 ? "tag" : "tags"} selected`
-                    : "Every tag"}
+                  {value.length === 0
+                    ? "All tags"
+                    : value.length === 1
+                      ? value[0]?.name
+                      : `${value[0]?.name} +${value.length - 1}`}
                 </span>
               )}
             </Combobox.Value>
@@ -173,29 +175,27 @@ function TagFilter({
         <Combobox.Portal>
           <Combobox.Positioner
             align="start"
-            className="z-[70] w-[min(22rem,calc(100vw-2rem))] min-w-[min(var(--anchor-width),calc(100vw-2rem))] outline-none"
+            className="z-[70] w-[min(18rem,calc(100vw-2rem))] min-w-[min(var(--anchor-width),calc(100vw-2rem))] outline-none"
             sideOffset={6}
           >
             <Combobox.Popup
-              className="flex max-h-[min(24rem,var(--available-height))] w-full min-w-0 flex-col overflow-hidden rounded-card border border-border-strong bg-surface-elevated text-foreground shadow-overlay"
+              className="flex max-h-[min(19rem,var(--available-height))] w-full min-w-0 flex-col overflow-hidden rounded-card border border-border-strong bg-surface-elevated text-foreground shadow-overlay"
               aria-label="Choose tag filters"
             >
-              <div className="m-2 grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-control border border-border bg-surface px-3 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20">
+              <div className="grid shrink-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-b border-border px-3 transition-colors duration-(--duration-fast) focus-within:border-ring focus-within:bg-surface-muted/30 motion-reduce:transition-none">
                 <Search
                   className="size-4 text-muted-foreground"
                   aria-hidden="true"
                 />
                 <Combobox.Input
-                  className="min-h-11 min-w-0 border-0 bg-transparent text-foreground outline-none placeholder:text-muted-foreground"
+                  className="min-h-10 min-w-0 border-0 bg-transparent text-ui text-foreground outline-none placeholder:text-muted-foreground"
                   aria-label="Search tags"
-                  placeholder="Search tags…"
+                  placeholder="Filter tags…"
                 />
-                {activeQuery.isFetching ? (
-                  <LoaderCircle
-                    className="size-4 animate-spin text-muted-foreground motion-reduce:animate-none"
-                    aria-label="Loading tags"
-                  />
-                ) : null}
+                <SearchActivity
+                  active={activeQuery.isFetching}
+                  label="Loading tags"
+                />
               </div>
 
               {activeQuery.isError ? (
@@ -214,7 +214,11 @@ function TagFilter({
                   </button>
                 </div>
               ) : (
-                <>
+                <SearchResultsTransition
+                  active={activeQuery.isFetching}
+                  hasPreviousResults={activeQuery.data !== undefined}
+                  label="Updating tags"
+                >
                   <Combobox.Empty
                     className={
                       visibleOptions.length === 0
@@ -225,10 +229,10 @@ function TagFilter({
                     {activeQuery.isPending
                       ? "Looking through tags…"
                       : debouncedInput
-                        ? `No tags start with “${debouncedInput}”.`
+                        ? `No tags match “${debouncedInput}”.`
                         : "No tags have been used yet."}
                   </Combobox.Empty>
-                  <Combobox.List className="w-full max-h-[min(19rem,calc(var(--available-height)-4rem))] overflow-y-auto p-1 outline-none">
+                  <Combobox.List className="w-full max-h-[min(13.5rem,calc(var(--available-height)-5rem))] overflow-y-auto p-1 outline-none [scrollbar-gutter:stable]">
                     {(tag: FilterTag) => (
                       <Combobox.Item
                         key={tag.id}
@@ -252,8 +256,25 @@ function TagFilter({
                       </Combobox.Item>
                     )}
                   </Combobox.List>
-                </>
+                </SearchResultsTransition>
               )}
+              {selectedTags.length > 0 ? (
+                <div className="flex min-h-10 shrink-0 items-center justify-between gap-3 border-t border-border bg-surface-muted/30 px-3">
+                  <span className="font-mono text-micro uppercase tracking-wider text-muted-foreground">
+                    {selectedTags.length} selected
+                  </span>
+                  <button
+                    type="button"
+                    className="min-h-8 rounded-control px-2 text-ui font-medium text-muted-foreground transition-colors duration-(--duration-fast) hover:bg-surface-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring motion-reduce:transition-none"
+                    onClick={() => {
+                      onChange(undefined);
+                      setInputValue("");
+                    }}
+                  >
+                    Clear
+                  </button>
+                </div>
+              ) : null}
             </Combobox.Popup>
           </Combobox.Positioner>
         </Combobox.Portal>
@@ -264,8 +285,8 @@ function TagFilter({
 
 const visibilityFilterLabels: Record<IdeaVisibility, string> = {
   PUBLIC: "Public",
-  UNLISTED: "My unlisted",
-  PRIVATE: "My private",
+  UNLISTED: "Unlisted",
+  PRIVATE: "Private",
 };
 
 function activeFilterCount(filters: IdeaFilterValues) {
@@ -276,7 +297,7 @@ function activeFilterCount(filters: IdeaFilterValues) {
   );
 }
 
-function MobileFilterDrawer({
+function IdeaMobileFilterDrawer({
   filters,
   ideaTags,
   isSignedIn,
@@ -287,19 +308,8 @@ function MobileFilterDrawer({
   isSignedIn: boolean;
   onApply: (filters: IdeaFilterValues) => void;
 }) {
-  const [open, setOpen] = React.useState(false);
   const [draft, setDraft] = React.useState(filters);
   const count = activeFilterCount(filters);
-
-  React.useEffect(() => {
-    const desktop = window.matchMedia("(min-width: 64rem)");
-    const closeOnDesktop = () => {
-      if (desktop.matches) setOpen(false);
-    };
-
-    desktop.addEventListener("change", closeOnDesktop);
-    return () => desktop.removeEventListener("change", closeOnDesktop);
-  }, []);
 
   function handleOpenChange(nextOpen: boolean) {
     if (nextOpen) {
@@ -309,125 +319,53 @@ function MobileFilterDrawer({
         visibility: filters.visibility,
       });
     }
-    setOpen(nextOpen);
   }
 
   function applyFilters() {
     onApply(draft);
-    setOpen(false);
   }
 
   return (
-    <Drawer.Root open={open} onOpenChange={handleOpenChange}>
-      <Drawer.Trigger
-        className={`${twUiSelectTrigger} flex min-h-14 min-w-0 items-center gap-3 rounded-control border border-border-strong bg-surface px-3 text-left text-foreground transition-colors duration-(--duration-fast) hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring`}
-      >
-        <ListFilter className="size-4 shrink-0" aria-hidden="true" />
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-medium leading-5">Filters</span>
-          <span className="block truncate text-xs leading-4 text-muted-foreground">
-            {count > 0
-              ? `${count} ${count === 1 ? "filter" : "filters"} active`
-              : "All ideas"}
-          </span>
-        </span>
-        {count > 0 ? (
-          <span className="grid min-h-5 min-w-5 shrink-0 place-items-center rounded-full bg-primary px-1 font-mono text-micro text-primary-foreground">
-            {count}
-          </span>
-        ) : null}
-      </Drawer.Trigger>
-
-      <Drawer.VirtualKeyboardProvider>
-        <Drawer.Portal>
-          <Drawer.Backdrop
-            className={`${twUiDialogBackdrop} fixed inset-0 z-50 bg-foreground/35 opacity-100 backdrop-blur-[2px] transition-opacity duration-(--duration-standard) data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 motion-reduce:transition-none`}
-          />
-          <Drawer.Viewport className="fixed inset-0 z-50 flex items-end justify-center">
-            <Drawer.Popup
-              className={`${twUiDialogSheet} ${twUiSelectSheet} flex max-h-[min(88dvh,52rem)] w-full translate-y-[var(--drawer-swipe-movement-y)] flex-col overflow-hidden rounded-t-[1rem] border border-b-0 border-border-strong bg-surface-elevated text-foreground shadow-overlay transition-transform duration-(--duration-slow) ease-emphasized data-[ending-style]:translate-y-full data-[starting-style]:translate-y-full data-[swiping]:select-none motion-reduce:transition-none sm:max-w-xl`}
-            >
-              <div className="grid shrink-0 gap-4 border-b border-border px-4 pb-4 pt-2 sm:px-6">
-                <div
-                  className="mx-auto h-1 w-11 rounded-full bg-border-strong"
-                  aria-hidden="true"
-                />
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <Drawer.Title className="text-xl font-semibold tracking-tight">
-                      Filter ideas
-                    </Drawer.Title>
-                    <Drawer.Description className="mt-1 text-sm text-muted-foreground">
-                      Narrow the archive using one or more filters.
-                    </Drawer.Description>
-                  </div>
-                  <Drawer.Close
-                    className="grid size-11 shrink-0 place-items-center rounded-control text-muted-foreground transition-colors duration-(--duration-fast) hover:bg-surface-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-                    aria-label="Close filters"
-                  >
-                    <X className="size-5" aria-hidden="true" />
-                  </Drawer.Close>
-                </div>
-              </div>
-
-              <Drawer.Content className="min-h-0 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6">
-                <div className="grid gap-5" data-base-ui-swipe-ignore>
-                  <StatusSelect
-                    allowAll
-                    className={filterFieldClass}
-                    label="Status"
-                    labelClassName={filterLabelClass}
-                    value={draft.status}
-                    onValueChange={(status) =>
-                      setDraft((current) => ({ ...current, status }))
-                    }
-                  />
-                  {isSignedIn ? (
-                    <VisibilitySelect
-                      allowAll
-                      className={filterFieldClass}
-                      label="Visibility"
-                      labelClassName={filterLabelClass}
-                      onValueChange={(visibility) =>
-                        setDraft((current) => ({ ...current, visibility }))
-                      }
-                      optionLabels={visibilityFilterLabels}
-                      size="filter"
-                      value={draft.visibility}
-                      valueLabels={visibilityFilterLabels}
-                    />
-                  ) : null}
-                  <TagFilter
-                    ideaTags={ideaTags}
-                    tagIds={draft.tagIds}
-                    onChange={(tagIds) =>
-                      setDraft((current) => ({ ...current, tagIds }))
-                    }
-                  />
-                </div>
-              </Drawer.Content>
-
-              <div className="grid shrink-0 grid-cols-[auto_minmax(0,1fr)] gap-3 border-t border-border bg-surface px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 sm:px-6">
-                <button
-                  type="button"
-                  className={buttonStyles({ variant: "ghost" })}
-                  onClick={() => setDraft({})}
-                >
-                  Clear
-                </button>
-                <button
-                  type="button"
-                  className={buttonStyles({ variant: "primary" })}
-                  onClick={applyFilters}
-                >
-                  View results
-                </button>
-              </div>
-            </Drawer.Popup>
-          </Drawer.Viewport>
-        </Drawer.Portal>
-      </Drawer.VirtualKeyboardProvider>
-    </Drawer.Root>
+    <MobileFilterDrawer
+      activeCount={count}
+      closeLabel="Close filters"
+      description="Narrow the archive using one or more filters."
+      title="Filter ideas"
+      triggerSummary={
+        count > 0
+          ? `${count} ${count === 1 ? "filter" : "filters"} active`
+          : "All ideas"
+      }
+      onOpenChange={handleOpenChange}
+      onClear={() => setDraft({})}
+      onApply={applyFilters}
+    >
+      <StatusChoiceFilter
+        className={filterFieldClass}
+        label="Status"
+        labelClassName={filterLabelClass}
+        value={draft.status}
+        onValueChange={(status) =>
+          setDraft((current) => ({ ...current, status }))
+        }
+      />
+      {isSignedIn ? (
+        <VisibilityFilter
+          className={filterFieldClass}
+          label="Visibility"
+          labelClassName={filterLabelClass}
+          onValueChange={(visibility) =>
+            setDraft((current) => ({ ...current, visibility }))
+          }
+          value={draft.visibility}
+        />
+      ) : null}
+      <TagFilter
+        ideaTags={ideaTags}
+        tagIds={draft.tagIds}
+        onChange={(tagIds) => setDraft((current) => ({ ...current, tagIds }))}
+      />
+    </MobileFilterDrawer>
   );
 }
 
@@ -518,6 +456,7 @@ function AppliedFilters({
 export function IdeaFilters({
   ideaTags,
   isSignedIn,
+  isSearching,
   onFiltersChange,
   onQueryChange,
   onSortChange,
@@ -527,7 +466,6 @@ export function IdeaFilters({
   query,
   visibility,
 }: IdeaFiltersProps) {
-  const [draftQuery, setDraftQuery] = React.useState(query ?? "");
   const selectedTagsQuery = useQuery({
     ...tagsQueryOptions(tagDiscoveryQuery),
     enabled: tagIds.length > 0,
@@ -537,82 +475,45 @@ export function IdeaFilters({
     ...ideaTags,
   ]);
   const filters = { status, tagIds, visibility } satisfies IdeaFilterValues;
-
-  React.useEffect(() => {
-    setDraftQuery(query ?? "");
-  }, [query]);
-
-  React.useEffect(() => {
-    const nextQuery = draftQuery.trim();
-    if (nextQuery === (query ?? "")) return;
-
-    const timeout = window.setTimeout(
-      () => onQueryChange(nextQuery || undefined),
-      250,
-    );
-    return () => window.clearTimeout(timeout);
-  }, [draftQuery, onQueryChange, query]);
+  const mobileSortValue = sort ?? "UPDATED_DESC";
+  const mobileSortOptions = getSortOptions();
 
   return (
     <div className={twArchiveFilters}>
-      <div
-        className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-card border border-border-strong bg-surface-elevated p-2 shadow-raised transition-[border-color,box-shadow] duration-(--duration-fast) focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30"
-        role="search"
-      >
-        <label htmlFor="idea-search" className="sr-only">
-          Search ideas
-        </label>
-        <span id="idea-search-guidance" className="sr-only">
-          Results update automatically as you type.
-        </span>
-        <Search
-          aria-hidden="true"
-          className="ml-2 size-[1.15rem] text-muted-foreground"
-          strokeWidth={1.8}
-        />
-        <input
-          id="idea-search"
-          type="search"
-          value={draftQuery}
-          onChange={(event) => setDraftQuery(event.target.value)}
-          maxLength={200}
-          autoComplete="off"
-          aria-describedby="idea-search-guidance"
-          placeholder="Find that thought… search titles and content"
-          className="min-h-11 min-w-0 border-0 bg-transparent text-foreground outline-none placeholder:text-muted-foreground/80 [&::-webkit-search-cancel-button]:hidden"
-        />
-        {draftQuery ? (
-          <button
-            type="button"
-            onClick={() => {
-              setDraftQuery("");
-              onQueryChange(undefined);
-            }}
-            className="grid size-11 shrink-0 place-items-center rounded-control text-muted-foreground transition-colors duration-(--duration-fast) hover:bg-surface-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-            aria-label="Clear search"
-          >
-            <X className="size-4" aria-hidden="true" />
-          </button>
-        ) : null}
-      </div>
+      <ArchiveSearchField
+        id="idea-search"
+        label="Search ideas"
+        value={query}
+        isSearching={isSearching}
+        onValueChange={onQueryChange}
+        placeholder="Search ideas…"
+        description="Searches idea titles and content. Results update automatically as you type."
+      />
 
       <div className="mt-4 grid grid-cols-2 gap-3 lg:hidden">
-        <MobileFilterDrawer
+        <IdeaMobileFilterDrawer
           filters={filters}
           ideaTags={knownTags}
           isSignedIn={isSignedIn}
           onApply={onFiltersChange}
         />
-        <MobileSortDrawer
-          value={sort}
-          includeBestMatch={Boolean(query)}
-          onValueChange={onSortChange}
+        <MobileChoiceDrawer
+          closeLabel="Close sorting options"
+          description="Choose how ideas are ordered."
+          options={mobileSortOptions}
+          selectedLabel={getSortLabel(mobileSortValue) ?? "Recently updated"}
+          title="Sort ideas"
+          triggerIcon={<ArrowUpDown className="size-4" />}
+          triggerLabel="Sort"
+          value={mobileSortValue}
+          onValueChange={(nextValue) =>
+            onSortChange(nextValue === "UPDATED_DESC" ? undefined : nextValue)
+          }
         />
       </div>
 
-      <div className="mt-5 hidden items-start gap-4 lg:grid lg:grid-cols-[repeat(3,minmax(0,14rem))_minmax(0,1fr)_minmax(0,14rem)]">
-        <StatusSelect
-          allowAll
+      <div className="mt-5 hidden items-start gap-4 lg:grid lg:grid-cols-[minmax(0,12rem)_minmax(0,22rem)_minmax(0,14rem)_minmax(0,1fr)_minmax(0,14rem)]">
+        <StatusFilter
           className={filterFieldClass}
           label="Status"
           labelClassName={filterLabelClass}
@@ -622,18 +523,14 @@ export function IdeaFilters({
           }
         />
         {isSignedIn ? (
-          <VisibilitySelect
-            allowAll
+          <VisibilityFilter
             className={filterFieldClass}
             label="Visibility"
             labelClassName={filterLabelClass}
             onValueChange={(nextVisibility) =>
               onFiltersChange({ ...filters, visibility: nextVisibility })
             }
-            optionLabels={visibilityFilterLabels}
-            size="filter"
             value={visibility}
-            valueLabels={visibilityFilterLabels}
           />
         ) : null}
         <TagFilter
@@ -648,8 +545,8 @@ export function IdeaFilters({
           <SortSelect
             className={filterFieldClass}
             labelClassName={filterLabelClass}
+            options={mobileSortOptions}
             value={sort}
-            includeBestMatch={Boolean(query)}
             onValueChange={onSortChange}
           />
         </div>

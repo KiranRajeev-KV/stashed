@@ -62,7 +62,8 @@ type ListIdeasInput = {
   tagIds?: string[];
   viewerId?: string;
   sort: IdeaSort;
-  cursor?: { timestamp: number; rowId: number };
+  cursor?:
+    { timestamp: number; rowId: number } | { name: string; rowId: number };
   limit: number;
 };
 
@@ -210,24 +211,42 @@ export async function listIdeaRecords(
   if (input.visibility) {
     filters.push(eq(ideas.visibility, input.visibility));
   }
+  const sortByName = input.sort.startsWith("NAME");
   const sortByUpdatedAt = input.sort.startsWith("UPDATED");
   const ascending = input.sort.endsWith("ASC");
-  const sortColumn = sortByUpdatedAt ? ideas.updatedAt : ideas.createdAt;
+  const sortColumn = sortByName
+    ? ideas.title
+    : sortByUpdatedAt
+      ? ideas.updatedAt
+      : ideas.createdAt;
 
   if (input.cursor) {
-    const cursorTimestamp = new Date(input.cursor.timestamp);
-    const isAfterCursor = ascending
-      ? gt(sortColumn, cursorTimestamp)
-      : lt(sortColumn, cursorTimestamp);
-    const isSameTimestampAfterCursor = ascending
+    const isSameValueAfterCursor = ascending
       ? gt(ideas.rowId, input.cursor.rowId)
       : lt(ideas.rowId, input.cursor.rowId);
-    filters.push(
-      or(
-        isAfterCursor,
-        and(eq(sortColumn, cursorTimestamp), isSameTimestampAfterCursor),
-      ),
-    );
+
+    if (sortByName && "name" in input.cursor) {
+      const isAfterCursor = ascending
+        ? gt(ideas.title, input.cursor.name)
+        : lt(ideas.title, input.cursor.name);
+      filters.push(
+        or(
+          isAfterCursor,
+          and(eq(ideas.title, input.cursor.name), isSameValueAfterCursor),
+        ),
+      );
+    } else if (!sortByName && "timestamp" in input.cursor) {
+      const cursorTimestamp = new Date(input.cursor.timestamp);
+      const isAfterCursor = ascending
+        ? gt(sortColumn, cursorTimestamp)
+        : lt(sortColumn, cursorTimestamp);
+      filters.push(
+        or(
+          isAfterCursor,
+          and(eq(sortColumn, cursorTimestamp), isSameValueAfterCursor),
+        ),
+      );
+    }
   }
   for (const tagId of input.tagIds ?? []) {
     filters.push(
@@ -510,11 +529,11 @@ export async function searchIdeaRecords(
   }
 
   const orderBy = {
-    BEST_MATCH: "bm25(ideas_fts, 5.0, 1.0), i.row_id DESC",
     UPDATED_DESC: "i.updated_at DESC, i.row_id DESC",
     CREATED_DESC: "i.created_at DESC, i.row_id DESC",
-    UPDATED_ASC: "i.updated_at ASC, i.row_id ASC",
     CREATED_ASC: "i.created_at ASC, i.row_id ASC",
+    NAME_ASC: "i.title ASC, i.row_id ASC",
+    NAME_DESC: "i.title DESC, i.row_id DESC",
   }[input.sort ?? "UPDATED_DESC"];
   const limitPlaceholder = nextPlaceholder();
   bindings.push(input.limit);

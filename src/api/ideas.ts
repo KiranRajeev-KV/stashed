@@ -3,7 +3,11 @@ import {
   type InferResponseType,
   parseResponse,
 } from "hono/client";
-import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
+import {
+  infiniteQueryOptions,
+  keepPreviousData,
+  queryOptions,
+} from "@tanstack/react-query";
 
 import { ApiClientError, apiClient, apiRequest } from "./client.js";
 
@@ -64,6 +68,7 @@ export function ideasInfiniteQueryOptions(
     queryKey: ideasQueryKey({ ...filters, tagIds }),
     initialPageParam: null as string | null,
     enabled: options.enabled,
+    placeholderData: keepPreviousData,
     queryFn: ({ pageParam }) =>
       listIdeas({
         status: filters.status,

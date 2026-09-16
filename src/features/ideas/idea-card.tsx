@@ -17,6 +17,7 @@ type IdeaCardProps = {
   idea: IdeaListItem;
   currentUserId?: string;
   excerpt?: ReactNode;
+  footerAction?: ReactNode;
   title?: ReactNode;
 };
 
@@ -57,6 +58,7 @@ function IdeaAuthor({ idea }: IdeaCardProps) {
 export function IdeaCard({
   currentUserId,
   excerpt,
+  footerAction,
   idea,
   title,
 }: IdeaCardProps) {
@@ -117,19 +119,21 @@ export function IdeaCard({
         <footer className="pt-5 text-caption text-muted-foreground">
           <div className="-mx-6.5 flex items-center justify-between gap-4 border-t border-border bg-foreground/2 px-6.5 py-2.25 max-md:-mx-5 max-md:px-5">
             <IdeaAuthor idea={idea} />
-            <Link
-              to="/ideas/$ideaId"
-              params={{ ideaId: idea.id }}
-              className="inline-flex min-h-9.5 shrink-0 items-center justify-center gap-2 rounded-sm font-medium text-muted-foreground transition-[color,transform] duration-200 hover:translate-x-0.5 hover:text-foreground motion-reduce:transform-none motion-reduce:transition-none"
-              aria-label={`Open ${idea.title}`}
-            >
-              Open idea
-              <ArrowUpRight
-                size={15}
-                className="inline-block size-4.5"
-                aria-hidden="true"
-              />
-            </Link>
+            {footerAction ?? (
+              <Link
+                to="/ideas/$ideaId"
+                params={{ ideaId: idea.id }}
+                className="inline-flex min-h-9.5 shrink-0 items-center justify-center gap-2 rounded-sm font-medium text-muted-foreground transition-[color,transform] duration-200 hover:translate-x-0.5 hover:text-foreground motion-reduce:transform-none motion-reduce:transition-none"
+                aria-label={`Open ${idea.title}`}
+              >
+                Open idea
+                <ArrowUpRight
+                  size={15}
+                  className="inline-block size-4.5"
+                  aria-hidden="true"
+                />
+              </Link>
+            )}
           </div>
         </footer>
       </div>
