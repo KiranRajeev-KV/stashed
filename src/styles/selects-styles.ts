@@ -81,6 +81,7 @@ ui-select-trigger [&]:min-h-control [&]:border [&]:border-border [&]:rounded-con
 [&:focus-visible]:[outline:2px_solid_var(--ring)] [&:focus-visible]:[outline-offset:3px]
 [&[data-disabled]]:opacity-50 [&[data-disabled]]:cursor-not-allowed [&:disabled]:opacity-50
 [&:disabled]:cursor-not-allowed [&.idea-status]:min-h-8 [&.idea-status]:border-0
+[&.select-compact]:min-h-9 [@media(pointer:_coarse)]:[&.select-compact]:min-h-control
 [&.idea-status]:rounded-[5px] [&.idea-status]:bg-transparent [&.idea-status]:shadow-none
 [&.idea-status]:text-muted-foreground [&.idea-status]:px-[7px] [&.idea-status]:normal-case
 [&.idea-status:hover]:bg-surface-muted [&.idea-status:hover]:text-foreground
@@ -104,8 +105,7 @@ ui-select-popup [&]:max-w-[calc(100dvw-2rem)] [&]:max-h-(--available-height) [&]
 export const twUiSelectItem = `
 ui-select-item [&]:min-h-9 [&]:rounded-[5px] [&]:py-2 [&]:px-2.5 [&]:font-sans [&]:text-ui
 [&]:leading-normal [&]:font-normal [&]:text-foreground [&]:gap-2 [&]:[scroll-margin:5px]
-[&[data-highlighted]]:bg-surface-muted [&[data-highlighted]]:[outline:1px_solid_var(--border-strong)]
-[&[data-highlighted]]:[outline-offset:-1px] [&:hover]:bg-surface-muted
+[&[data-highlighted]]:bg-surface-muted [&:hover]:bg-surface-muted
 [&[data-selected]:not([data-highlighted])]:bg-surface-muted/60 [&[data-selected]]:font-medium
 [&[data-disabled]]:opacity-45 [&[data-disabled]]:pointer-events-none
 [&_>_span:first-child]:text-muted-foreground [&[data-selected]_>_span:first-child]:text-foreground
