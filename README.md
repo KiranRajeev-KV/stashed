@@ -21,6 +21,7 @@ on a single Cloudflare Worker, backed by Cloudflare D1 and Drizzle ORM.
 
 - GitHub authentication and registration
 - Public, unlisted, and private idea visibility
+- Collaborative Collections for organizing Ideas without changing their access rules
 - A shared public idea feed, ordered by recently updated ideas
 - Author-owned idea creation, editing, and deletion
 - Idea statuses for tracking how thoughts develop
