@@ -5,15 +5,18 @@ import {
   ArrowDown,
   ArrowRight,
   ArrowUpRight,
+  BookMarked,
   Check,
   Circle,
   FileText,
+  FolderPlus,
   Globe2,
   Hash,
   Layers3,
   Link2,
   LockKeyhole,
   Search,
+  UsersRound,
 } from "lucide-react";
 import { currentUserQueryOptions, githubLoginPath } from "../../api/auth.js";
 import { Navbar } from "../../components/layout/navbar.js";
@@ -28,6 +31,9 @@ import {
   landingPage,
   landingSection,
   landingWrap,
+  previewAvatar,
+  previewCollectionItem,
+  previewCollectionNote,
   previewFilter,
   previewFrame,
   previewIdea,
@@ -102,6 +108,50 @@ const visibilityOptions = [
   },
 ];
 
+const collectionExamples = [
+  {
+    id: "weekend",
+    icon: "◌",
+    name: "Small things worth making",
+    description: "Ideas with just enough shape to try this weekend.",
+    visibility: "Public collection",
+    people: ["KR", "EL", "NO"],
+    ideas: [
+      { title: "The one-weekend tool", tag: "building", visibility: "Public" },
+      {
+        title: "Borrow a library thing",
+        tag: "everyday",
+        visibility: "Public",
+      },
+    ],
+  },
+  {
+    id: "reading",
+    icon: "⌁",
+    name: "Notes to return to",
+    description: "A shared trail of writing, questions, and useful fragments.",
+    visibility: "Shared with the team",
+    people: ["KR", "EL"],
+    ideas: [
+      {
+        title: "A slower corner of the internet",
+        tag: "design",
+        visibility: "Public",
+      },
+      {
+        title: "Notes from the long way home",
+        tag: "everyday",
+        visibility: "Unlisted",
+      },
+      {
+        title: "How we make room for doubt",
+        tag: "writing",
+        visibility: "Public",
+      },
+    ],
+  },
+];
+
 function StartButton() {
   const session = useQuery(currentUserQueryOptions());
   const classes = buttonStyles({ variant: "primary" });
@@ -119,6 +169,25 @@ function StartButton() {
   ) : (
     <a href={githubLoginPath} className={classes}>
       Start your stash <ArrowUpRight size={16} aria-hidden="true" />
+    </a>
+  );
+}
+
+function CollectionButton() {
+  const session = useQuery(currentUserQueryOptions());
+  const classes = buttonStyles({ variant: "secondary" });
+
+  if (session.isPending) {
+    return null;
+  }
+
+  return session.data ? (
+    <Link to="/collections/new" className={classes}>
+      Create a collection <FolderPlus size={16} aria-hidden="true" />
+    </Link>
+  ) : (
+    <a href={githubLoginPath} className={classes}>
+      Create a collection <ArrowUpRight size={16} aria-hidden="true" />
     </a>
   );
 }
@@ -159,7 +228,7 @@ function ArchivePreview() {
           aria-label="Filter example ideas"
         >
           <p className="mb-2 hidden px-3 pt-2 font-mono text-caption text-muted-foreground lg:block">
-            COLLECTION
+            IDEAS
           </p>
           <Button
             variant="ghost"
@@ -189,7 +258,7 @@ function ArchivePreview() {
           <div className="mt-auto hidden px-3 pt-16 text-caption text-muted-foreground lg:block">
             A few ideas to explore.
             <br />
-            Your collection comes next.
+            Keep the thread in sight.
           </div>
         </aside>
         <div className="min-w-0 lg:border-l lg:border-border-subtle">
@@ -320,6 +389,126 @@ function ArchivePreview() {
   );
 }
 
+function CollectionPreview() {
+  const [selectedId, setSelectedId] = useState(collectionExamples[0].id);
+  const selected =
+    collectionExamples.find((collection) => collection.id === selectedId) ??
+    collectionExamples[0];
+
+  return (
+    <div className={previewFrame}>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-subtle px-4 py-3 md:px-6">
+        <span className="flex items-center gap-2.5 text-ui font-medium">
+          <BookMarked size={17} className="text-primary" aria-hidden="true" />
+          Collections
+        </span>
+        <span className="font-mono text-caption text-muted-foreground">
+          A place for related ideas
+        </span>
+      </div>
+      <div className="grid min-w-0 lg:grid-cols-[minmax(12rem,0.85fr)_minmax(0,1.45fr)]">
+        <div className="border-b border-border-subtle bg-background/50 p-3 lg:border-b-0 lg:border-r lg:p-4">
+          <p className="mb-3 hidden px-3 pt-2 font-mono text-caption text-muted-foreground lg:block">
+            YOUR SPACES
+          </p>
+          <div className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
+            {collectionExamples.map((collection) => (
+              <button
+                key={collection.id}
+                type="button"
+                className={previewCollectionItem}
+                aria-pressed={collection.id === selected.id}
+                aria-controls="collection-preview-detail"
+                onClick={() => setSelectedId(collection.id)}
+              >
+                <span className="grid size-7 shrink-0 place-items-center rounded-control bg-primary/10 font-display text-body text-primary">
+                  {collection.icon}
+                </span>
+                <span className="min-w-0 text-left">
+                  <span className="block truncate text-ui font-medium">
+                    {collection.name}
+                  </span>
+                  <span className="mt-0.5 block text-caption text-muted-foreground">
+                    {collection.ideas.length} ideas
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+          <p className="mt-6 hidden px-3 text-caption text-muted-foreground lg:block">
+            A Collection gathers ideas without taking ownership of them.
+          </p>
+        </div>
+        <article
+          id="collection-preview-detail"
+          className="min-w-0 bg-surface-elevated p-5 md:p-7"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <div
+            key={selected.id}
+            className="motion-safe:animate-[st-content-in_250ms_both]"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 text-caption text-muted-foreground">
+                  <BookMarked size={13} aria-hidden="true" />
+                  {selected.visibility}
+                </div>
+                <h3 className="mt-3 font-display text-card-title">
+                  {selected.name}
+                </h3>
+                <p className="mt-2 max-w-lg text-ui leading-reading text-muted-foreground">
+                  {selected.description}
+                </p>
+              </div>
+              <div
+                className="flex items-center -space-x-1.5"
+                aria-label="Collection collaborators"
+              >
+                {selected.people.map((person, index) => (
+                  <span
+                    key={person}
+                    className={`${previewAvatar} ${index === 0 ? "border-primary bg-primary/15 text-primary" : ""}`}
+                    title={index === 0 ? "Owner" : "Editor"}
+                  >
+                    {person}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="mt-7 divide-y divide-border-subtle border-y border-border-subtle">
+              {selected.ideas.map((idea) => (
+                <div
+                  key={idea.title}
+                  className="flex min-w-0 items-center gap-3 py-3"
+                >
+                  <FileText
+                    size={15}
+                    className="shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                  <span className="min-w-0 flex-1 truncate text-ui font-medium">
+                    {idea.title}
+                  </span>
+                  <span className={previewTag}># {idea.tag}</span>
+                  <span className="hidden text-caption text-muted-foreground sm:inline">
+                    {idea.visibility}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className={`${previewCollectionNote} mt-5`}>
+              <LockKeyhole size={13} className="shrink-0" aria-hidden="true" />
+              Everyone sees only the ideas they can already access.
+            </p>
+          </div>
+        </article>
+      </div>
+    </div>
+  );
+}
+
 function VisibilityPreview() {
   const [selected, setSelected] = useState(0);
   const option = visibilityOptions[selected];
@@ -396,13 +585,13 @@ export function LandingPage() {
                 Good ideas deserve
                 <br />
                 <span className="font-display font-normal text-primary">
-                  a second thought.
+                  a place to gather.
                 </span>
               </h1>
               <div className="pb-1">
                 <p className="max-w-sm text-prose text-muted-foreground">
-                  Save the thought before it slips away. Give it shape, find it
-                  later, and share it when you’re ready.
+                  Keep a thought before it slips away. Give it shape, connect it
+                  to the ideas around it, and share the thread when ready.
                 </p>
                 <div className="mt-7 flex flex-wrap items-center gap-2">
                   <StartButton />
@@ -412,10 +601,18 @@ export function LandingPage() {
                   >
                     Explore ideas <ArrowRight size={15} aria-hidden="true" />
                   </Link>
+                  {/*<Link
+                    to="/collections"
+                    className={buttonStyles({ variant: "ghost" })}
+                  >
+                    Browse collections{" "}
+                    <ArrowRight size={15} aria-hidden="true" />
+                  </Link>*/}
                 </div>
                 <p className="mt-4 flex items-center gap-1.5 text-caption text-muted-foreground">
                   <FaGithub size={13} aria-hidden="true" /> GitHub sign-in to
-                  save. Open to everyone to explore.
+                  create and collaborate. Public ideas and collections are open
+                  to explore.
                 </p>
               </div>
             </div>
@@ -499,6 +696,73 @@ export function LandingPage() {
         </section>
 
         <section
+          className="border-y border-border-subtle bg-surface/45"
+          aria-labelledby="collections-title"
+        >
+          <div className={`${landingWrap} py-16 md:py-24`}>
+            <div className="grid items-end gap-8 md:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] md:gap-20">
+              <div>
+                <p className={landingEyebrow}>02 / MAKE A SPACE FOR IT</p>
+                <h2 id="collections-title" className={`${landingHeading} mt-5`}>
+                  Gather the ideas
+                  <br />
+                  that belong together.
+                </h2>
+              </div>
+              <div>
+                <p className={landingCopy}>
+                  Collections are flexible, shared spaces for ideas that have a
+                  connection. Add an idea to more than one collection, invite
+                  editors to keep the space current, and leave every idea under
+                  its author’s control.
+                </p>
+                <div className="mt-6 flex flex-wrap gap-2">
+                  <CollectionButton />
+                  <Link
+                    to="/collections"
+                    className={buttonStyles({ variant: "ghost" })}
+                  >
+                    Explore public collections{" "}
+                    <ArrowUpRight size={15} aria-hidden="true" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+            <div className="mt-12">
+              <CollectionPreview />
+            </div>
+            <div className="mt-6 grid gap-5 border-t border-border-subtle pt-6 sm:grid-cols-3">
+              {[
+                {
+                  icon: FolderPlus,
+                  label: "Organize, without ownership transfer",
+                },
+                {
+                  icon: UsersRound,
+                  label: "Invite editors to add and remove ideas",
+                },
+                {
+                  icon: LockKeyhole,
+                  label: "Collections never widen an idea’s access",
+                },
+              ].map(({ icon: Icon, label }) => (
+                <p
+                  key={label}
+                  className="flex items-start gap-2 text-ui text-muted-foreground"
+                >
+                  <Icon
+                    size={16}
+                    className="mt-0.5 shrink-0 text-primary"
+                    aria-hidden="true"
+                  />
+                  {label}
+                </p>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section
           className="border-y border-border-subtle bg-surface/60"
           aria-labelledby="visibility-title"
         >
@@ -506,7 +770,7 @@ export function LandingPage() {
             className={`${landingWrap} grid items-center gap-10 py-16 md:grid-cols-2 md:gap-20 md:py-24`}
           >
             <div>
-              <p className={landingEyebrow}>02 / CHOOSE YOUR AUDIENCE</p>
+              <p className={landingEyebrow}>03 / CHOOSE YOUR AUDIENCE</p>
               <h2 id="visibility-title" className={`${landingHeading} mt-5`}>
                 Some thoughts are yours.
                 <br />
@@ -538,29 +802,34 @@ export function LandingPage() {
         >
           <div className="grid items-end gap-8 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] md:gap-20">
             <div>
-              <p className={landingEyebrow}>03 / FOLLOW YOUR CURIOSITY</p>
+              <p className={landingEyebrow}>04 / FOLLOW YOUR CURIOSITY</p>
               <h2 id="shared-title" className={`${landingHeading} mt-5`}>
-                Your next idea might
+                Follow a thought.
                 <br />
-                start with someone else’s.
+                Find its neighbors.
               </h2>
             </div>
             <div>
               <p className={landingCopy}>
-                An archive for curious people. Explore what others are thinking,
-                revisit a familiar subject, or find a starting point you hadn’t
-                considered.
+                Browse public ideas and public collections made by curious
+                people. Find a starting point, then take a useful thread in a
+                direction of your own.
               </p>
-              <Link
-                to="/ideas"
-                className={buttonStyles({
-                  variant: "secondary",
-                  className: "mt-6",
-                })}
-              >
-                Browse the public archive{" "}
-                <ArrowUpRight size={15} aria-hidden="true" />
-              </Link>
+              <div className="mt-6 flex flex-wrap gap-2">
+                <Link
+                  to="/ideas"
+                  className={buttonStyles({ variant: "secondary" })}
+                >
+                  Browse ideas <ArrowUpRight size={15} aria-hidden="true" />
+                </Link>
+                <Link
+                  to="/collections"
+                  className={buttonStyles({ variant: "ghost" })}
+                >
+                  Browse collections{" "}
+                  <ArrowUpRight size={15} aria-hidden="true" />
+                </Link>
+              </div>
             </div>
           </div>
           <div className="mt-12 border-t border-border-subtle">
@@ -580,8 +849,8 @@ export function LandingPage() {
             ))}
           </div>
           <p className="mt-4 text-caption text-muted-foreground">
-            Illustrative ideas. Discover what’s being shared in the live
-            archive.
+            Illustrative ideas. Public spaces are discoverable; unlisted and
+            private work stays out of discovery.
           </p>
         </section>
 
@@ -595,7 +864,7 @@ export function LandingPage() {
             <div>
               <p className={landingEyebrow}>
                 <Layers3 size={16} aria-hidden="true" /> A thought today. A
-                starting point tomorrow.
+                useful thread tomorrow.
               </p>
               <h2
                 id="closing-title"
@@ -604,14 +873,17 @@ export function LandingPage() {
                 Keep something
                 <br />
                 <span className="font-display font-normal text-primary">
-                  worth coming back to.
+                  worth building on.
                 </span>
               </h2>
             </div>
             <div>
-              <StartButton />
+              <div className="flex flex-wrap gap-2">
+                <StartButton />
+                <CollectionButton />
+              </div>
               <p className="mt-3 text-caption text-muted-foreground">
-                Start with the idea on your mind.
+                Start with a thought, or a place to keep a few together.
               </p>
             </div>
           </div>
@@ -629,7 +901,7 @@ export function LandingPage() {
           stashed.
         </Link>
         <p className="text-caption text-muted-foreground">
-          A shared idea archive. Made for curious people.
+          A shared idea archive and collection space. Made for curious people.
         </p>
         <a
           href="#landing-content"
