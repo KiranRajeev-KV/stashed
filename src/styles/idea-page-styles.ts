@@ -116,37 +116,29 @@ idea-reader-empty [&]:flex [&]:flex-col [&]:items-start [&]:gap-3 [&]:py-3 [&]:p
 [&_a]:min-h-control [&_a]:text-metadata [&_a]:text-primary
 `;
 
-export const twIdeaPageToolbar = `
-idea-page-toolbar [&]:flex [&]:items-center [&]:justify-between [&]:gap-6 [&]:min-w-0 [&]:pt-3
+export const twResourcePageToolbar = `
+resource-page-toolbar [&]:flex [&]:items-center [&]:justify-between [&]:gap-6 [&]:min-w-0 [&]:pt-3
 [&]:pb-5 [&]:border-b [&]:border-b-border
 [&_:is(a,_button):focus-visible]:[outline:2px_solid_var(--ring)]
 [&_:is(a,_button):focus-visible]:[outline-offset:3px] max-phone:[&]:flex-wrap
 max-md:[&]:flex-wrap max-md:[&]:gap-2
 `;
 
-export const twIdeaPageToolbarSticky = `
-idea-page-toolbar-sticky [&]:sticky [&]:top-16 [&]:z-20 [&]:bg-background [&]:pt-3
+export const twResourcePageToolbarSticky = `
+resource-page-toolbar-sticky [&]:sticky [&]:top-16 [&]:z-20 [&]:bg-background [&]:pt-3
 max-lg:[&]:static
 `;
 
-export const twIdeaPageBreadcrumb = `
-idea-page-breadcrumb [&]:flex [&]:items-center [&]:gap-3 [&]:min-w-0 [&]:text-muted-foreground
-[&]:font-sans [&]:font-normal [&]:not-italic [&]:text-metadata [&]:leading-normal
-[&_:is(a,_button)]:inline-flex [&_:is(a,_button)]:items-center [&_:is(a,_button)]:gap-2
-[&_:is(a,_button)]:min-h-control [&_:is(a,_button)]:shrink-0 [&_:is(a,_button):hover]:text-foreground
-max-md:[&]:w-full
+export const twResourcePageContext = `
+resource-page-context flex min-w-0 items-center gap-3 max-md:w-full
 `;
 
-export const twIdeaPageCurrent = `
-idea-page-current [&]:overflow-hidden [&]:text-ellipsis [&]:whitespace-nowrap [&]:text-foreground
+export const twResourcePageSaveState = `
+resource-page-save-state shrink-0 text-caption text-muted-foreground max-md:hidden
 `;
 
-export const twIdeaPageSaveState = `
-idea-page-save-state [&]:shrink-0 [&]:text-caption max-md:[&]:hidden
-`;
-
-export const twIdeaPageActions = `
-idea-page-actions [&]:flex [&]:flex-wrap [&]:min-w-0 [&]:max-w-full [&]:items-start [&]:gap-2 [&]:shrink-0 max-md:[&]:ml-auto
+export const twResourcePageActions = `
+resource-page-actions [&]:flex [&]:flex-wrap [&]:min-w-0 [&]:max-w-full [&]:items-start [&]:gap-2 [&]:shrink-0 max-md:[&]:ml-auto
 `;
 
 export const twIdeaTagLink = `

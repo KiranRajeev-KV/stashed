@@ -16,7 +16,6 @@ import { Select } from "../../components/ui/select.js";
 import {
   Bold,
   Check,
-  ChevronDown as ChevronsUpDown,
   Code2,
   FileCode2,
   Italic,
@@ -111,47 +110,19 @@ function BlockStyleSelect({
   value: string;
 }) {
   return (
-    <Select.Root
+    <Select
+      className="shrink-0"
+      label="Block style"
+      options={BLOCK_TYPES.map((blockType) => ({
+        value: blockType,
+        label: BLOCK_LABELS[blockType],
+      }))}
+      positionerClassName="w-(--anchor-width)"
+      triggerClassName="w-36"
       value={value}
-      onValueChange={(nextValue) => {
-        if (nextValue) onValueChange(nextValue);
-      }}
-    >
-      <div className="shrink-0">
-        <Select.Label className="sr-only">Block style</Select.Label>
-        <Select.Trigger className="flex min-h-11 w-36 cursor-pointer items-center justify-between gap-2 rounded-control border border-border bg-surface px-3 text-left text-sm text-foreground transition-colors duration-(--duration-fast) hover:border-border-strong hover:bg-surface-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[popup-open]:border-border-strong data-[popup-open]:bg-surface-elevated">
-          <Select.Value>{BLOCK_LABELS[value]}</Select.Value>
-          <Select.Icon className="grid shrink-0 place-items-center text-muted-foreground">
-            <ChevronsUpDown className="size-4" aria-hidden="true" />
-          </Select.Icon>
-        </Select.Trigger>
-      </div>
-
-      <Select.Portal>
-        <Select.Positioner
-          align="start"
-          alignItemWithTrigger={false}
-          className="z-50 w-(--anchor-width) outline-none"
-          sideOffset={6}
-        >
-          <Select.Popup className="w-full overflow-hidden rounded-card border border-border-strong bg-surface-elevated text-foreground shadow-overlay">
-            <Select.List className="w-full p-1 outline-none">
-              {BLOCK_TYPES.map((blockType) => (
-                <Select.Item
-                  key={blockType}
-                  value={blockType}
-                  className="group grid min-h-11 w-full cursor-pointer grid-cols-1 items-center gap-2 rounded-control px-3 py-2 text-sm text-foreground outline-none select-none data-[highlighted]:bg-surface-muted"
-                >
-                  <Select.ItemText className="min-w-0 whitespace-nowrap">
-                    {BLOCK_LABELS[blockType]}
-                  </Select.ItemText>
-                </Select.Item>
-              ))}
-            </Select.List>
-          </Select.Popup>
-        </Select.Positioner>
-      </Select.Portal>
-    </Select.Root>
+      variant="filter"
+      onValueChange={onValueChange}
+    />
   );
 }
 

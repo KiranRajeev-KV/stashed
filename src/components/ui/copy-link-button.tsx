@@ -3,7 +3,13 @@ import { Check, Link2 } from "lucide-react";
 import { Button } from "./button.js";
 import { ActionFeedback } from "./action-feedback.js";
 
-export function CopyLinkButton({ isPrivate }: { isPrivate: boolean }) {
+export function CopyLinkButton({
+  isPrivate,
+  subject = "idea",
+}: {
+  isPrivate: boolean;
+  subject?: string;
+}) {
   const copy = useMutation({
     mutationFn: () => navigator.clipboard.writeText(window.location.href),
   });
@@ -38,7 +44,7 @@ export function CopyLinkButton({ isPrivate }: { isPrivate: boolean }) {
           ? "Couldn’t copy the link. Copy the address from your browser, or try again."
           : copy.isSuccess
             ? isPrivate
-              ? "Link copied. This idea is still private."
+              ? `Link copied. This ${subject} is still private.`
               : "Link copied to clipboard."
             : copy.isPending
               ? "Copying link…"

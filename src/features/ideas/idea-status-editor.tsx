@@ -52,7 +52,6 @@ export function IdeaStatusEditor({ idea }: IdeaStatusEditorProps) {
       <StatusSelect
         className="min-w-0"
         disabled={mutation.isPending}
-        icon="down"
         iconClassName="text-current"
         label="Change status"
         labelClassName="sr-only"
