@@ -4,11 +4,13 @@ import type { ContentfulStatusCode } from "hono/utils/http-status";
 export const apiErrorCodes = [
   "AUTHORIZATION_FAILED",
   "AUTH_STATE_INVALID",
+  "COLLECTION_NOT_FOUND",
   "FORBIDDEN",
   "IDEA_NOT_FOUND",
   "INTERNAL_ERROR",
   "NOT_FOUND",
   "UNAUTHORIZED",
+  "USER_NOT_FOUND",
   "VALIDATION_ERROR",
 ] as const;
 

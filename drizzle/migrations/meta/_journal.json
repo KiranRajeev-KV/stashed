@@ -36,6 +36,13 @@
       "when": 1787852235268,
       "tag": "0004_small_blazing_skull",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1789486144744,
+      "tag": "0005_keen_frightful_four",
+      "breakpoints": true
     }
   ]
 }

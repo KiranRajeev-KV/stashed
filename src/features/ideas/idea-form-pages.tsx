@@ -251,6 +251,7 @@ export function EditIdeaPage() {
   return (
     <section>
       <IdeaForm
+        ideaId={ideaId}
         mode="edit"
         initialValues={{
           title: idea.title,

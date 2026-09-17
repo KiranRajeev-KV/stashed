@@ -25,12 +25,20 @@ import type {
 } from "./schemas.js";
 import { excerptFromPlainText } from "./markdown.js";
 
-const cursorSchema = z.object({
-  v: z.literal(2),
-  sort: z.enum(["UPDATED_DESC", "CREATED_DESC", "UPDATED_ASC", "CREATED_ASC"]),
-  timestamp: z.number().int().nonnegative(),
-  rowId: z.number().int().positive(),
-});
+const cursorSchema = z.discriminatedUnion("v", [
+  z.object({
+    v: z.literal(2),
+    sort: z.enum(["UPDATED_DESC", "CREATED_DESC", "CREATED_ASC"]),
+    timestamp: z.number().int().nonnegative(),
+    rowId: z.number().int().positive(),
+  }),
+  z.object({
+    v: z.literal(3),
+    sort: z.enum(["NAME_ASC", "NAME_DESC"]),
+    name: z.string().max(200),
+    rowId: z.number().int().positive(),
+  }),
+]);
 
 type ListIdeasInput = {
   status?: IdeaStatus;
@@ -41,8 +49,19 @@ type ListIdeasInput = {
   limit: number;
 };
 
-function encodeCursor(sort: IdeaSort, timestamp: number, rowId: number) {
-  return btoa(JSON.stringify({ v: 2, sort, timestamp, rowId }))
+function encodeCursor(sort: IdeaSort, idea: IdeaListRecord) {
+  const cursor = sort.startsWith("NAME")
+    ? { v: 3 as const, sort, name: idea.title, rowId: idea.rowId }
+    : {
+        v: 2 as const,
+        sort,
+        timestamp:
+          idea[
+            sort.startsWith("UPDATED") ? "updatedAt" : "createdAt"
+          ].getTime(),
+        rowId: idea.rowId,
+      };
+  return btoa(JSON.stringify(cursor))
     .replaceAll("+", "-")
     .replaceAll("/", "_")
     .replace(/=+$/, "");
@@ -53,7 +72,11 @@ function decodeCursor(cursor: string, sort: IdeaSort) {
     const base64 = cursor.replaceAll("-", "+").replaceAll("_", "/");
     const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
     const parsed = cursorSchema.safeParse(JSON.parse(atob(padded)));
-    if (parsed.success && parsed.data.sort === sort) {
+    if (
+      parsed.success &&
+      parsed.data.sort === sort &&
+      (sort.startsWith("NAME") ? parsed.data.v === 3 : parsed.data.v === 2)
+    ) {
       return parsed.data;
     }
   } catch {
@@ -155,13 +178,7 @@ export async function listIdeas(
     ),
     nextCursor:
       hasMore && page.length > 0
-        ? encodeCursor(
-            sort,
-            page[page.length - 1][
-              sort.startsWith("UPDATED") ? "updatedAt" : "createdAt"
-            ].getTime(),
-            page[page.length - 1].rowId,
-          )
+        ? encodeCursor(sort, page[page.length - 1])
         : null,
   };
 }

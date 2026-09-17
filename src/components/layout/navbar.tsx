@@ -62,6 +62,9 @@ export function Navbar({
             <Link to="/ideas" className={twSiteNavLink}>
               Ideas
             </Link>
+            <Link to="/collections" className={twSiteNavLink}>
+              Collections
+            </Link>
           </nav>
           <div className={twSiteNavActions}>
             <ThemeControl variant="toggle" />

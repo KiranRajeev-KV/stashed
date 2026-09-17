@@ -53,3 +53,31 @@ ui-dialog-sheet [&]:border [&]:border-border [&]:bg-surface-elevated [&]:text-fo
 [&_button[aria-pressed]:focus-visible]:[outline-offset:-2px] motion-reduce:[&]:animate-none
 motion-reduce:[&]:transition-none
 `;
+
+/** A responsive, right-aligned editing surface for resource metadata. */
+export const twResourceEditSheetBackdrop = `
+resource-edit-sheet-backdrop fixed inset-0 z-[49] bg-foreground/35 backdrop-blur-[2px]
+opacity-100 transition-opacity duration-(--duration-standard) data-[ending-style]:opacity-0
+data-[starting-style]:opacity-0 motion-reduce:transition-none
+`;
+
+export const twResourceEditSheet = `
+resource-edit-sheet fixed inset-y-0 right-0 z-[50] flex h-dvh w-full min-w-0 flex-col overflow-hidden
+border-l border-border bg-surface-elevated text-foreground shadow-dialog transition-transform
+duration-(--duration-slow) ease-emphasized data-[ending-style]:translate-x-full
+data-[starting-style]:translate-x-full motion-reduce:transition-none sm:w-[min(32rem,calc(100dvw-2rem))]
+`;
+
+/** A wider resource sheet for search-and-select workflows with richer rows. */
+export const twResourceEditSheetWide = `
+sm:w-[min(42rem,calc(100dvw-2rem))]
+`;
+
+export const twResourceEditSheetHeader = `
+resource-edit-sheet-header flex shrink-0 items-start justify-between gap-4 border-b border-border-subtle
+px-5 py-4 sm:px-6
+`;
+
+export const twResourceEditSheetFooter = `
+resource-edit-sheet-footer relative z-10 shrink-0 border-t border-border-subtle bg-surface-elevated px-5 py-4 sm:px-6
+`;

@@ -19,6 +19,7 @@
     "db:local": "wrangler d1 migrations apply stashed-db --local",
     "db:seed": "node ./scripts/seed.mjs",
     "db:backfill-content-plain": "node --experimental-strip-types ./scripts/backfill-idea-content-plain.ts",
+    "verify:collections": "node ./scripts/verify-collections.mjs",
     "db:remote": "wrangler d1 migrations apply stashed-db --remote"
   },
   "dependencies": {

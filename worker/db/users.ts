@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq, like, ne, or } from "drizzle-orm";
 
 import type { GitHubIdentity } from "../auth/github.js";
 import type { Database } from "./client.js";
@@ -94,6 +94,41 @@ export async function getUserById(
     .get();
 
   return stored ? toAuthenticatedUser(stored) : undefined;
+}
+
+export async function searchUsers(
+  db: Database,
+  query: string,
+  requesterId: string,
+) {
+  const escaped = query.replaceAll("%", "\\%").replaceAll("_", "\\_");
+  const pattern = `${escaped}%`;
+  return db
+    .select({
+      id: users.id,
+      displayName: users.displayName,
+      username: userIdentities.providerUsername,
+      avatarUrl: userIdentities.providerAvatarUrl,
+    })
+    .from(users)
+    .innerJoin(
+      userIdentities,
+      and(
+        eq(userIdentities.userId, users.id),
+        eq(userIdentities.provider, GITHUB_PROVIDER),
+      ),
+    )
+    .where(
+      and(
+        ne(users.id, requesterId),
+        or(
+          like(users.displayName, pattern),
+          like(userIdentities.providerUsername, pattern),
+        ),
+      ),
+    )
+    .orderBy(asc(users.displayName))
+    .limit(10);
 }
 
 async function updateGitHubIdentity(

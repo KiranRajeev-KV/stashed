@@ -10,10 +10,14 @@ import {
   twTagToken,
 } from "../../styles/selects-styles.js";
 import * as React from "react";
-import { LoaderCircle, Plus, RotateCcw, X } from "lucide-react";
+import { Plus, RotateCcw, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
 import { tagsQueryOptions } from "../../api/tags.js";
+import {
+  SearchActivity,
+  SearchResultsTransition,
+} from "../../components/ui/search-transition.js";
 
 type TagSelectorProps = {
   describedBy?: string;
@@ -213,12 +217,11 @@ export function TagSelector({
           onKeyDown={handleKeyDown}
         />
 
-        {tagsQuery.isFetching ? (
-          <LoaderCircle
-            className={twTagSelectorLoader}
-            aria-label="Loading tag suggestions"
-          />
-        ) : null}
+        <SearchActivity
+          active={tagsQuery.isFetching}
+          label="Loading tag suggestions"
+          className={twTagSelectorLoader}
+        />
       </div>
 
       {open && !atLimit ? (
@@ -235,43 +238,49 @@ export function TagSelector({
             </div>
           ) : null}
 
-          {!tagsQuery.isError && tagsQuery.isPending ? (
-            <p className={twTagSelectorMessage} role="status">
-              Looking through tags…
-            </p>
-          ) : null}
+          <SearchResultsTransition
+            active={tagsQuery.isFetching}
+            hasPreviousResults={tagsQuery.data !== undefined}
+            label="Updating tag suggestions"
+          >
+            {!tagsQuery.isError && tagsQuery.isPending ? (
+              <p className={twTagSelectorMessage} role="status">
+                Looking through tags…
+              </p>
+            ) : null}
 
-          {!tagsQuery.isError &&
-          !tagsQuery.isPending &&
-          options.length === 0 ? (
-            <p className={twTagSelectorMessage}>
-              {normalizedDraft
-                ? "No matching tags. Press Enter to create it."
-                : "No tags have been used yet."}
-            </p>
-          ) : null}
+            {!tagsQuery.isError &&
+            !tagsQuery.isPending &&
+            options.length === 0 ? (
+              <p className={twTagSelectorMessage}>
+                {normalizedDraft
+                  ? "No matching tags. Press Enter to create it."
+                  : "No tags have been used yet."}
+              </p>
+            ) : null}
 
-          {options.map((option, index) => (
-            <button
-              key={option.id}
-              id={`${listboxId}-option-${index}`}
-              type="button"
-              role="option"
-              aria-selected={index === activeIndex}
-              className={twTagSelectorOption}
-              onMouseDown={(event) => event.preventDefault()}
-              onMouseEnter={() => setActiveIndex(index)}
-              onClick={() => addTag(option.name)}
-            >
-              <span>{option.name}</span>
-              {option.kind === "create" ? (
-                <span className={twTagSelectorCreate}>
-                  <Plus aria-hidden="true" />
-                  Create
-                </span>
-              ) : null}
-            </button>
-          ))}
+            {options.map((option, index) => (
+              <button
+                key={option.id}
+                id={`${listboxId}-option-${index}`}
+                type="button"
+                role="option"
+                aria-selected={index === activeIndex}
+                className={twTagSelectorOption}
+                onMouseDown={(event) => event.preventDefault()}
+                onMouseEnter={() => setActiveIndex(index)}
+                onClick={() => addTag(option.name)}
+              >
+                <span>{option.name}</span>
+                {option.kind === "create" ? (
+                  <span className={twTagSelectorCreate}>
+                    <Plus aria-hidden="true" />
+                    Create
+                  </span>
+                ) : null}
+              </button>
+            ))}
+          </SearchResultsTransition>
         </div>
       ) : null}
 

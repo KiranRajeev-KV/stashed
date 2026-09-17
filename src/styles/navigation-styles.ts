@@ -13,7 +13,7 @@ user-identity relative inline-flex [flex:none]
 `;
 
 export const twUserIdentityTrigger = `
-user-identity-trigger grid min-w-10 min-h-10 p-1 cursor-help place-items-center border-0 rounded-full
+user-identity-trigger grid min-w-10 min-h-10 p-1 cursor-pointer place-items-center border-0 rounded-full
 bg-transparent [transition:background-color_var(--duration-fast)_var(--motion-standard)]
 [&:hover]:bg-surface-muted [&:focus-visible]:bg-surface-muted
 `;
@@ -63,11 +63,31 @@ max-md:[&]:border-t-border max-md:[&]:gap-[5px]
 `;
 
 export const twSiteNavLink = `
-site-nav-link [&]:min-h-9 [&]:inline-flex [&]:items-center [&]:gap-[7px] [&]:py-2 [&]:px-3
+site-nav-link relative [&]:min-h-9 [&]:inline-flex [&]:items-center [&]:gap-[7px] [&]:py-2 [&]:px-3
 [&]:text-muted-foreground [&]:rounded-[5px] [&]:text-metadata
-[&]:[transition:background_120ms,_color_120ms] [&:hover]:text-foreground [&:hover]:bg-surface-muted
-[&[data-status='active']]:text-foreground [&[data-status='active']]:bg-surface-muted
-[&[data-status='active']]:font-medium max-md:[&]:min-h-10 max-md:[&]:py-2.5
+[&]:[transition:color_var(--duration-fast)_var(--motion-standard),_background-color_var(--duration-fast)_var(--motion-standard)]
+[&]:after:absolute [&]:after:inset-x-3 [&]:after:bottom-0 [&]:after:h-px [&]:after:origin-center
+[&]:after:scale-x-0 [&]:after:rounded-full [&]:after:bg-primary [&]:after:opacity-0
+[&]:after:[transition:transform_var(--duration-fast)_var(--motion-standard),_opacity_var(--duration-fast)_var(--motion-standard)]
+[&:hover]:text-foreground [&:hover]:bg-surface-muted/45
+[&[data-status='active']]:text-foreground [&[data-status='active']]:bg-transparent
+[&[data-status='active']]:font-medium [&[data-status='active']]:after:scale-x-100
+[&[data-status='active']]:after:opacity-100 [&[data-status='active']:hover]:bg-transparent
+max-md:[&]:min-h-10 max-md:[&]:py-2.5
+`;
+
+/** Quiet peer navigation used for in-page views such as collection scopes. */
+export const twViewTab = `
+view-tab relative inline-flex min-h-9 items-center rounded-control px-3 text-ui text-muted-foreground
+[transition:color_var(--duration-fast)_var(--motion-standard),_background-color_var(--duration-fast)_var(--motion-standard)]
+after:absolute after:inset-x-3 after:bottom-0 after:h-px after:origin-center after:scale-x-0
+after:rounded-full after:bg-primary after:opacity-0
+after:[transition:transform_var(--duration-fast)_var(--motion-standard),_opacity_var(--duration-fast)_var(--motion-standard)]
+hover:bg-surface-muted/45 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2
+focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-40
+aria-selected:bg-transparent aria-selected:font-medium aria-selected:text-foreground
+aria-selected:after:scale-x-100 aria-selected:after:opacity-100 aria-selected:hover:bg-transparent
+motion-reduce:transition-none motion-reduce:after:transition-none
 `;
 
 export const twSiteNavActions = `
@@ -82,4 +102,32 @@ site-session-loading [&]:text-caption [&]:text-muted-foreground [&]:px-2
 export const twSiteNavError = `
 site-nav-error [&]:m-0 [&]:py-2 [&]:px-5 [&]:text-center [&]:text-metadata [&]:text-danger
 [&]:border-t [&]:border-t-border [&_button]:underline [&_button]:cursor-pointer
+`;
+
+/** Semantic resource hierarchy with a quiet, compact Linear-like treatment. */
+export const twBreadcrumb = `
+breadcrumb min-w-0 font-sans text-metadata leading-normal text-muted-foreground
+`;
+
+export const twBreadcrumbList = `
+breadcrumb-list flex min-w-0 items-center gap-1.5 overflow-hidden
+`;
+
+export const twBreadcrumbItem = `
+breadcrumb-item flex min-w-0 shrink items-center
+`;
+
+export const twBreadcrumbLink = `
+breadcrumb-link [&_a]:inline-flex [&_a]:min-h-control [&_a]:shrink-0 [&_a]:items-center [&_a]:rounded-[5px]
+[&_a]:px-1.5 [&_a]:text-muted-foreground [&_a]:transition-colors [&_a]:duration-(--duration-fast)
+[&_a:hover]:bg-surface-muted [&_a:hover]:text-foreground [&_a:focus-visible]:outline-2
+[&_a:focus-visible]:outline-offset-2 [&_a:focus-visible]:outline-ring motion-reduce:[&_a]:transition-none
+`;
+
+export const twBreadcrumbSeparator = `
+breadcrumb-separator grid size-4 shrink-0 place-items-center text-muted-foreground/70
+`;
+
+export const twBreadcrumbCurrent = `
+breadcrumb-current min-w-0 truncate px-1.5 text-foreground
 `;

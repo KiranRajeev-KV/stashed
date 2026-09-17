@@ -9,13 +9,14 @@ const MAX_TAG_FILTERS = 20;
 const ideaSortValues = [
   "UPDATED_DESC",
   "CREATED_DESC",
-  "UPDATED_ASC",
   "CREATED_ASC",
+  "NAME_ASC",
+  "NAME_DESC",
 ] as const;
 
 export type IdeaSort = (typeof ideaSortValues)[number];
 
-const searchIdeaSortValues = [...ideaSortValues, "BEST_MATCH"] as const;
+const searchIdeaSortValues = ideaSortValues;
 
 export type SearchIdeaSort = (typeof searchIdeaSortValues)[number];
 

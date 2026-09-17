@@ -58,8 +58,8 @@ Multiple `tagId` values use AND matching: an idea is included only when it has
 every selected tag. A single `tagId` remains supported for backwards
 compatibility.
 
-Sort accepts `UPDATED_DESC` (default), `CREATED_DESC`, `UPDATED_ASC`, or
-`CREATED_ASC`. The cursor is tied to its sort order and does not expose
+Sort accepts `UPDATED_DESC` (default), `CREATED_DESC`, `CREATED_ASC`,
+`NAME_ASC`, or `NAME_DESC`. The cursor is tied to its sort order and does not expose
 `ideas.row_id` or full idea content:
 
 ```json
@@ -133,10 +133,10 @@ database.
 `GET /api/search` requires `q` and accepts `status`, `visibility`, repeated
 `tagId`, `sort`, `limit`, and `offset`. It applies status, tag, and visibility
 rules in the same way as the ideas list endpoint. `sort` defaults to
-`UPDATED_DESC` and also accepts `BEST_MATCH` for weighted FTS relevance:
+`UPDATED_DESC` and accepts the same values as the ideas list endpoint:
 
 ```text
-GET /api/search?q=cloudflare+d1&status=ACTIVE&visibility=PUBLIC&sort=BEST_MATCH&limit=20&offset=0
+GET /api/search?q=cloudflare+d1&status=ACTIVE&visibility=PUBLIC&sort=NAME_ASC&limit=20&offset=0
 ```
 
 Search uses the custom `ideas_fts` FTS5 table and joins matches back through
@@ -150,9 +150,8 @@ Each whitespace-separated query term is treated as a word prefix, so `arch`
 matches tokens such as `archive`, `archived`, and `archaeology`. All terms must
 match somewhere across the title or content.
 
-Results use the selected date sort by default. `sort=BEST_MATCH` uses weighted
-BM25 relevance, where title matches are weighted more heavily than content
-matches. Titles and excerpts are returned as plain text.
+Results use the selected sort, with recently updated first by default. Titles and
+excerpts are returned as plain text.
 
 The existing migration triggers keep FTS synchronized after insert, searchable
 updates, and deletion. API code must not write directly to `ideas_fts`.

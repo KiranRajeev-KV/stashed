@@ -113,3 +113,20 @@ rebuild the index:
 ```sql
 INSERT INTO ideas_fts(ideas_fts) VALUES ('rebuild');
 ```
+
+### `0005_keen_frightful_four.sql`: Collections
+
+This migration adds Collections, collaborators, unordered Idea membership, and
+the custom `collections_fts` external-content index. Collection search must
+always pair search candidates with the Collection visibility predicate. Verify:
+
+```sql
+SELECT name FROM sqlite_master WHERE name = 'collections_fts';
+SELECT name FROM sqlite_master
+WHERE type = 'trigger' AND name LIKE 'collections_fts_%';
+INSERT INTO collections_fts(collections_fts, rank) VALUES ('integrity-check', 1);
+PRAGMA foreign_key_check;
+```
+
+As with `ideas_fts`, schema changes that rebuild `collections` must preserve or
+recreate its FTS table and three triggers.

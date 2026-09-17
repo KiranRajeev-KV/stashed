@@ -2,10 +2,12 @@ import { Hono } from "hono";
 
 import { ApiError, apiError } from "./api/errors.js";
 import { authRoutes } from "./auth/routes.js";
+import { collectionsRoutes } from "./collections/routes.js";
 import { ideasRoutes, searchRoutes } from "./ideas/routes.js";
 import { databaseMiddleware } from "./middleware/database.js";
 import { requireSameOrigin } from "./middleware/same-origin.js";
 import { tagsRoutes } from "./tags/routes.js";
+import { usersRoutes } from "./users/routes.js";
 import type { AppEnv } from "./types.js";
 
 const app = new Hono<AppEnv>();
@@ -15,9 +17,11 @@ app.use("/api/*", databaseMiddleware);
 
 const routes = app
   .route("/api/auth", authRoutes)
+  .route("/api/collections", collectionsRoutes)
   .route("/api/ideas", ideasRoutes)
   .route("/api/search", searchRoutes)
   .route("/api/tags", tagsRoutes)
+  .route("/api/users", usersRoutes)
   .get("/api/health", (c) => {
     return c.json({
       ok: true,

@@ -1,6 +1,5 @@
 import * as React from "react";
 import { Moon, Sun } from "lucide-react";
-import { ChevronDown } from "lucide-react";
 import { Select } from "./select.js";
 
 import {
@@ -77,44 +76,25 @@ export function ThemeControl({ variant = "segmented" }: ThemeControlProps) {
 
   if (variant === "select") {
     return (
-      <Select.Root
+      <Select
+        className="inline-flex"
+        label="Appearance"
+        options={themePreferences.map((theme) => ({
+          value: theme,
+          label: themeLabels[theme],
+          icon:
+            theme === "light" ? (
+              <Sun className="size-3.5" />
+            ) : (
+              <Moon className="size-3.5" />
+            ),
+        }))}
+        positionerClassName="min-w-40"
+        triggerClassName="gap-3 px-3"
         value={preference}
-        onValueChange={(value) => {
-          if (value) chooseTheme(value);
-        }}
-      >
-        <div className="inline-flex">
-          <Select.Label className="sr-only">Appearance</Select.Label>
-          <Select.Trigger className="flex min-h-11 items-center gap-3 px-3">
-            <Select.Value>{themeLabels[preference]}</Select.Value>
-            <Select.Icon>
-              <ChevronDown size={14} />
-            </Select.Icon>
-          </Select.Trigger>
-        </div>
-        <Select.Portal>
-          <Select.Positioner
-            sideOffset={6}
-            alignItemWithTrigger={false}
-            className="z-[70] min-w-40 max-w-[calc(100vw-2rem)]"
-          >
-            <Select.Popup>
-              <Select.List className="p-1">
-                {themePreferences.map((theme) => (
-                  <Select.Item
-                    key={theme}
-                    value={theme}
-                    className="group grid grid-cols-[1rem_1fr] items-center"
-                  >
-                    {theme === "light" ? <Sun size={14} /> : <Moon size={14} />}
-                    <Select.ItemText>{themeLabels[theme]}</Select.ItemText>
-                  </Select.Item>
-                ))}
-              </Select.List>
-            </Select.Popup>
-          </Select.Positioner>
-        </Select.Portal>
-      </Select.Root>
+        variant="filter"
+        onValueChange={chooseTheme}
+      />
     );
   }
 

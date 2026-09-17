@@ -18,9 +18,9 @@ const ideasSearchSchema = z.object({
     .enum([
       "UPDATED_DESC",
       "CREATED_DESC",
-      "UPDATED_ASC",
       "CREATED_ASC",
-      "BEST_MATCH",
+      "NAME_ASC",
+      "NAME_DESC",
     ])
     .optional()
     .catch(undefined),

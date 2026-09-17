@@ -88,11 +88,31 @@ archive-results-label [&]:font-sans [&]:font-normal [&]:not-italic [&]:text-meta
 export const twArchiveFilters = `
 archive-filters [&]:p-5.5 [&]:border [&]:border-border [&]:rounded-card
 [&]:[background:color-mix(in_srgb,_var(--surface-muted)_45%,_var(--background))]
-[&_[role='search']]:border-border [&_[role='search']]:[box-shadow:0_2px_5px_#00000003]
-[&_[role='search']]:rounded-control [&_[role='search']]:py-[5px] [&_[role='search']]:px-2
 [&_input]:text-sm [&_label]:text-micro [&_[data-slot='label']]:text-micro [&_button]:cursor-pointer
 [&_button[role='combobox']]:text-metadata [&_button[role='combobox']]:bg-surface
 max-md:[&]:p-3.5 max-md:[&_input]:text-ui
+`;
+
+/** Shared local search affordance for archive-style pages. */
+export const twArchiveSearchField = `
+archive-search-field grid min-h-11 min-w-0 grid-cols-[auto_auto_minmax(0,1fr)_auto] items-center gap-2
+rounded-control border border-border bg-surface-elevated px-3 text-foreground shadow-raised
+[transition:border-color_var(--duration-fast)_var(--motion-standard),_box-shadow_var(--duration-fast)_var(--motion-standard)]
+hover:border-border-strong focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30
+[&_input]:min-w-0 [&_input]:border-0 [&_input]:bg-transparent [&_input]:text-ui [&_input]:text-foreground
+[&_input]:outline-none [&_input]:placeholder:text-muted-foreground/80
+motion-reduce:transition-none
+`;
+
+/** Shared loading treatment for result lists during an active search update. */
+export const twSearchTransitionContent = `
+flex min-h-0 min-w-0 flex-1 flex-col transition-opacity duration-(--duration-standard) ease-standard
+motion-reduce:transition-none
+`;
+
+export const twSearchTransitionBadge = `
+absolute right-0 top-0 z-10 inline-flex min-h-6 items-center gap-1.5 rounded-control border border-border-subtle
+bg-surface-elevated/92 px-2 text-metadata text-muted-foreground shadow-control backdrop-blur-sm
 `;
 
 export const twArchiveCardGrid = `

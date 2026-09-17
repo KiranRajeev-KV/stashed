@@ -3,7 +3,7 @@ import {
   type InferResponseType,
   parseResponse,
 } from "hono/client";
-import { queryOptions } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 
 import { apiClient, apiRequest } from "./client.js";
 
@@ -29,6 +29,7 @@ export function tagsQueryOptions(query: ListTagsQuery = {}) {
     queryKey: tagsQueryKey(query),
     queryFn: () => listTags(query),
     staleTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
     refetchOnWindowFocus: false,
   });
 }

@@ -1,8 +1,17 @@
 import { ActionFeedback } from "../../components/ui/action-feedback.js";
+import {
+  BreadcrumbCurrent,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  Breadcrumbs,
+  BreadcrumbSeparator,
+} from "../../components/ui/breadcrumb.js";
 import { Button } from "../../components/ui/button.js";
+import { ResourcePageToolbar } from "../../components/ui/resource-page-toolbar.js";
+import { twFormTitleInput } from "../../styles/common-styles.js";
 import { twIdeaTitleInput } from "../../styles/idea-page-styles.js";
-import { IdeaPageToolbar } from "./idea-page-ui.js";
 import { revalidateLogic, useForm } from "@tanstack/react-form";
+import { Link } from "@tanstack/react-router";
 import { Check } from "lucide-react";
 import { z } from "zod";
 
@@ -43,6 +52,7 @@ type IdeaFormValues = z.infer<typeof ideaFormSchema>;
 export type IdeaFormSubmission = Required<CreateIdeaInput>;
 
 type IdeaFormProps = {
+  ideaId?: string;
   initialValues: Omit<IdeaFormValues, "tagDraft">;
   mode: "create" | "edit";
   onCancel: () => void;
@@ -117,6 +127,7 @@ function IdeaFormActionButtons({
 }
 
 export function IdeaForm({
+  ideaId,
   initialValues,
   mode,
   onCancel,
@@ -168,11 +179,34 @@ export function IdeaForm({
         ]}
       >
         {([isDirty, canSubmit, isSubmitting]) => (
-          <IdeaPageToolbar
-            title={mode === "create" ? "New idea" : "Edit idea"}
-            onBack={onCancel}
-            backLabel={mode === "create" ? "Ideas" : "Idea"}
-            disabled={isSubmitting}
+          <ResourcePageToolbar
+            breadcrumbs={
+              <Breadcrumbs>
+                <BreadcrumbItem>
+                  <BreadcrumbLink>
+                    <Link to="/ideas">Ideas</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                {mode === "edit" && ideaId ? (
+                  <>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink>
+                        <Link to="/ideas/$ideaId" params={{ ideaId }}>
+                          {initialValues.title}
+                        </Link>
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                  </>
+                ) : null}
+                <BreadcrumbItem>
+                  <BreadcrumbCurrent>
+                    {mode === "create" ? "New idea" : "Edit idea"}
+                  </BreadcrumbCurrent>
+                </BreadcrumbItem>
+              </Breadcrumbs>
+            }
             sticky
             status={
               isSubmitting
@@ -214,7 +248,7 @@ export function IdeaForm({
                   </span>
                   <textarea
                     rows={2}
-                    className={`${twIdeaTitleInput} min-h-24 w-full scroll-mt-60 resize-y rounded-control border-0 bg-transparent p-0 text-idea-title text-foreground outline-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring/40 [field-sizing:content]`}
+                    className={`${twIdeaTitleInput} ${twFormTitleInput} min-h-24 w-full scroll-mt-60 text-idea-title [field-sizing:content]`}
                     onKeyDown={(event) => {
                       if (
                         event.key === "Enter" &&
