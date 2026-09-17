@@ -18,6 +18,7 @@
     "db:generate": "drizzle-kit generate",
     "db:local": "wrangler d1 migrations apply stashed-db --local",
     "db:seed": "node ./scripts/seed.mjs",
+    "screenshots": "node ./scripts/screenshots.mjs",
     "db:backfill-content-plain": "node --experimental-strip-types ./scripts/backfill-idea-content-plain.ts",
     "verify:collections": "node ./scripts/verify-collections.mjs",
     "db:remote": "wrangler d1 migrations apply stashed-db --remote"
@@ -64,6 +65,7 @@
     "knip": "^6.35.1",
     "oxlint": "^1.75.0",
     "prettier": "3.9.6",
+    "playwright": "1.63.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "vite": "^8.2.0",
