@@ -43,6 +43,13 @@
       "when": 1789486144744,
       "tag": "0005_keen_frightful_four",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1790109879255,
+      "tag": "0006_luxuriant_boomer",
+      "breakpoints": true
     }
   ]
 }

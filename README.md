@@ -159,7 +159,7 @@ branch, and add these environment secrets:
 
 Scope the API token to this Cloudflare account. It needs **Workers Scripts:
 Write** and **D1: Edit**. The GitHub App client ID, client secret, and Stashed
-session secret are Worker secrets stored directly in Cloudflare; they do not
+session secret and TypeSafe API key are Worker secrets stored directly in Cloudflare; they do not
 need to be duplicated in GitHub.
 
 The intended release flow is to work normally on `main`, then open a pull

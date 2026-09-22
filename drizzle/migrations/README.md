@@ -130,3 +130,23 @@ PRAGMA foreign_key_check;
 
 As with `ideas_fts`, schema changes that rebuild `collections` must preserve or
 recreate its FTS table and three triggers.
+
+### `0006_luxuriant_boomer.sql`: tag suggestion controls
+
+This migration adds a disabled-by-default kill switch, daily per-user and
+monthly global counters, an attempt ledger, and triggers that atomically check
+all limits during each reservation. Apply it before deploying the suggestion
+endpoint. The feature stays off until the Worker secret and quota behavior
+are verified. No separate data backfill is needed.
+
+Use `SELECT * FROM tag_suggestion_control WHERE id = 1` to inspect the current
+settings. An operator can immediately stop **new** provider attempts with:
+
+```sh
+pnpm exec wrangler d1 execute stashed-db --remote --command "UPDATE tag_suggestion_control SET enabled = 0 WHERE id = 1"
+```
+
+Use `--local` for local development. Enable only after verification with the
+same command using `enabled = 1`. Keep `user_daily_limit` and
+`global_monthly_limit` positive; they can be changed in this row without a
+code deployment. Already-reserved requests may finish after disabling.

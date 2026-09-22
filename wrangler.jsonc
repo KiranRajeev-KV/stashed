@@ -15,7 +15,12 @@
     "enabled": true,
   },
   "secrets": {
-    "required": ["GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET", "SESSION_SECRET"],
+    "required": [
+      "GITHUB_CLIENT_ID",
+      "GITHUB_CLIENT_SECRET",
+      "SESSION_SECRET",
+      "TYPESAFE_API_KEY",
+    ],
   },
   "upload_source_maps": true,
   "d1_databases": [
