@@ -8,10 +8,18 @@ import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { apiClient, apiRequest } from "./client.js";
 
 const listTagsRequest = apiClient.api.tags.$get;
+const suggestTagsRequest = apiClient.api.tags.suggestions.$post;
 
 export type ListTagsQuery = InferRequestType<typeof listTagsRequest>["query"];
 type TagsPage = InferResponseType<typeof listTagsRequest, 200>;
 export type Tag = TagsPage["tags"][number];
+export type SuggestTagsInput = InferRequestType<
+  typeof suggestTagsRequest
+>["json"];
+export type SuggestedTag = InferResponseType<
+  typeof suggestTagsRequest,
+  200
+>["tags"][number];
 
 function tagsQueryKey(query: ListTagsQuery = {}) {
   return [
@@ -36,4 +44,10 @@ export function tagsQueryOptions(query: ListTagsQuery = {}) {
 
 function listTags(query: ListTagsQuery = {}) {
   return apiRequest(() => parseResponse(listTagsRequest({ query })));
+}
+
+export function suggestTags(json: SuggestTagsInput, signal?: AbortSignal) {
+  return apiRequest(() =>
+    parseResponse(suggestTagsRequest({ json }, { init: { signal } })),
+  );
 }

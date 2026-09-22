@@ -15,7 +15,15 @@ members who can edit or delete their ideas.
 Stashed is a full-stack web app: the React frontend and Hono API run together
 on a single Cloudflare Worker, backed by Cloudflare D1 and Drizzle ORM.
 
-<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/2c86726f-cb87-4a82-be30-e1f0723b2a71" />
+## Screenshots
+
+| Landing                                                                                                                                                                                                                                                                  | Browse ideas                                                                                                                                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| <picture><source media="(prefers-color-scheme: light)" srcset="./docs/assets/screenshots/landing-light.png"><img src="./docs/assets/screenshots/landing.png" alt="Stashed landing page with product introduction and interactive archive preview" width="450"></picture> | <picture><source media="(prefers-color-scheme: light)" srcset="./docs/assets/screenshots/ideas-light.png"><img src="./docs/assets/screenshots/ideas.png" alt="Public Ideas archive showing searchable idea cards" width="450"></picture> |
+
+| Read an idea                                                                                                                                                                                                                                                        | Explore a collection                                                                                                                                                                                                                                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| <picture><source media="(prefers-color-scheme: light)" srcset="./docs/assets/screenshots/idea-detail-light.png"><img src="./docs/assets/screenshots/idea-detail.png" alt="Public Idea detail with author, status, tags, and formatted notes" width="450"></picture> | <picture><source media="(prefers-color-scheme: light)" srcset="./docs/assets/screenshots/collection-detail-light.png"><img src="./docs/assets/screenshots/collection-detail.png" alt="Public Collection detail with collaborators and curated Ideas" width="450"></picture> |
 
 ## Current Features
 
@@ -83,7 +91,35 @@ Run `just` to list every recipe. The ones you'll use most:
 | `just db-generate` | Generate Drizzle migrations from the schema               |
 | `just db-local`    | Apply migrations to the local D1 database                 |
 | `just db-remote`   | Apply migrations to the remote D1 database                |
+| `just screenshots` | Regenerate committed README/documentation screenshots     |
 | `just clean`       | Remove build artifacts (dist, .wrangler, tsbuildinfo)     |
+
+### Screenshots
+
+Screenshot assets are committed under `docs/assets/screenshots/`. Install
+Playwright's Chromium once, then regenerate all of them with:
+
+```sh
+pnpm exec playwright install chromium
+pnpm screenshots
+```
+
+The capture is read-only against the public production site and uses a fixed
+desktop viewport, dark-primary/light-secondary themes, reduced motion, and UTC
+locale. The two detail routes are explicit public records in
+`scripts/screenshots.mjs`; the command fails rather than silently substituting
+another record if either changes.
+Because it captures public production content, the copy and public avatars can
+legitimately change between regenerations.
+
+To capture only specific assets, pass their stable names:
+
+```sh
+pnpm screenshots -- --only ideas,collection-detail
+```
+
+Set `STASHED_SCREENSHOT_BASE_URL` to capture the same public routes from a
+different deployment.
 
 Knip runs in both comprehensive and production modes. Its project patterns in
 `knip.json` mark the React and Worker trees as shipped code while keeping local
@@ -123,7 +159,7 @@ branch, and add these environment secrets:
 
 Scope the API token to this Cloudflare account. It needs **Workers Scripts:
 Write** and **D1: Edit**. The GitHub App client ID, client secret, and Stashed
-session secret are Worker secrets stored directly in Cloudflare; they do not
+session secret and TypeSafe API key are Worker secrets stored directly in Cloudflare; they do not
 need to be duplicated in GitHub.
 
 The intended release flow is to work normally on `main`, then open a pull

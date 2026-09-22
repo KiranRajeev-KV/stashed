@@ -444,3 +444,54 @@ export const ideaTags = sqliteTable(
     index("idea_tags_tag_id_idx").on(table.tagId),
   ],
 );
+
+/** Operator-controlled Jev access and hard attempt limits. */
+export const tagSuggestionControl = sqliteTable("tag_suggestion_control", {
+  id: integer("id").primaryKey(),
+  enabled: integer("enabled").notNull().default(0),
+  userDailyLimit: integer("user_daily_limit").notNull().default(10),
+  globalMonthlyLimit: integer("global_monthly_limit").notNull().default(1500),
+});
+
+export const tagSuggestionUserUsage = sqliteTable(
+  "tag_suggestion_user_usage",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    utcDay: text("utc_day").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.utcDay] })],
+);
+
+export const tagSuggestionGlobalUsage = sqliteTable(
+  "tag_suggestion_global_usage",
+  {
+    utcMonth: text("utc_month").primaryKey(),
+    attempts: integer("attempts").notNull().default(0),
+    inputTokens: integer("input_tokens").notNull().default(0),
+  },
+);
+
+/** Inserting an attempt atomically checks the kill switch and both quotas. */
+export const tagSuggestionAttempts = sqliteTable(
+  "tag_suggestion_attempts",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    utcDay: text("utc_day").notNull(),
+    utcMonth: text("utc_month").notNull(),
+    createdAt: integer("created_at").notNull(),
+    inputTokens: integer("input_tokens"),
+    providerStatus: integer("provider_status"),
+  },
+  (table) => [
+    index("tag_suggestion_attempts_user_day_idx").on(
+      table.userId,
+      table.utcDay,
+    ),
+  ],
+);

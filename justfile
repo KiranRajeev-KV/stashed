@@ -68,6 +68,10 @@ db-local:
 db-seed:
     pnpm db:seed
 
+# Regenerate the committed README and documentation screenshots
+screenshots:
+    pnpm screenshots
+
 # Apply migrations to the remote D1 database
 db-remote:
     pnpm db:remote
