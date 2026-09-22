@@ -18,6 +18,7 @@ import { z } from "zod";
 import type { CreateIdeaInput } from "../../api/ideas.js";
 import { TechnicalMarkdownEditor } from "../markdown/technical-markdown-editor.js";
 import { TagSelector } from "../tags/tag-selector.js";
+import { TagSuggestions } from "../tags/tag-suggestions.js";
 import { IDEA_STATUSES } from "./idea-status.js";
 import { IDEA_VISIBILITIES } from "./idea-visibility.js";
 import { StatusSelect } from "./status-select.js";
@@ -381,45 +382,59 @@ export function IdeaForm({
                     firstError(tagsField.state.meta.errors) ??
                     firstError(draftField.state.meta.errors);
                   return (
-                    <div className="col-span-full grid min-w-0 gap-2">
-                      <label
-                        htmlFor="idea-tags"
-                        className="text-xs font-medium text-muted-foreground"
-                      >
-                        Tags
-                      </label>
-                      <TagSelector
-                        inputId="idea-tags"
-                        tags={tagsField.state.value}
-                        draft={draftField.state.value}
-                        invalid={Boolean(error)}
-                        describedBy={
-                          error ? "idea-tags-error" : tagDescriptionId
-                        }
-                        onBlur={() => {
-                          tagsField.handleBlur();
-                          draftField.handleBlur();
-                        }}
-                        onChange={tagsField.handleChange}
-                        onDraftChange={draftField.handleChange}
-                      />
-                      {error ? (
-                        <p
-                          id="idea-tags-error"
-                          className="text-xs text-danger"
-                          role="alert"
+                    <form.Subscribe
+                      selector={(state) => ({
+                        title: state.values.title,
+                        content: state.values.content,
+                        tags: state.values.tags,
+                        tagDraft: state.values.tagDraft,
+                        isSubmitting: state.isSubmitting,
+                      })}
+                    >
+                      {({ isSubmitting, ...values }) => (
+                        <TagSuggestions
+                          values={values}
+                          isSubmitting={isSubmitting}
+                          getValues={() => form.store.state.values}
+                          onAdd={(name) => {
+                            const current = form.store.state.values.tags;
+                            tagsField.handleChange([...current, name]);
+                          }}
                         >
-                          {error}
-                        </p>
-                      ) : (
-                        <p
-                          id={tagDescriptionId}
-                          className="text-caption leading-relaxed text-muted-foreground"
-                        >
-                          Find a tag or press Enter to add one.
-                        </p>
+                          <TagSelector
+                            inputId="idea-tags"
+                            tags={tagsField.state.value}
+                            draft={draftField.state.value}
+                            invalid={Boolean(error)}
+                            describedBy={
+                              error ? "idea-tags-error" : tagDescriptionId
+                            }
+                            onBlur={() => {
+                              tagsField.handleBlur();
+                              draftField.handleBlur();
+                            }}
+                            onChange={tagsField.handleChange}
+                            onDraftChange={draftField.handleChange}
+                          />
+                          {error ? (
+                            <p
+                              id="idea-tags-error"
+                              className="text-xs text-danger"
+                              role="alert"
+                            >
+                              {error}
+                            </p>
+                          ) : (
+                            <p
+                              id={tagDescriptionId}
+                              className="text-caption leading-relaxed text-muted-foreground"
+                            >
+                              Find a tag or press Enter to add one.
+                            </p>
+                          )}
+                        </TagSuggestions>
                       )}
-                    </div>
+                    </form.Subscribe>
                   );
                 }}
               </form.Field>
