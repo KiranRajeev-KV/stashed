@@ -35,19 +35,19 @@ INSERT INTO tag_suggestion_control (id, enabled, user_daily_limit, global_monthl
 VALUES (1, 0, 10, 1500);
 --> statement-breakpoint
 CREATE TRIGGER tag_suggestion_attempts_before_insert BEFORE INSERT ON tag_suggestion_attempts BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT (CASE WHEN NOT EXISTS (
     SELECT 1 FROM tag_suggestion_control
     WHERE id = 1 AND enabled = 1 AND user_daily_limit > 0 AND global_monthly_limit > 0
-  ) THEN RAISE(ABORT, 'SUGGESTIONS_DISABLED') END;
-  SELECT CASE WHEN COALESCE((
+  ) THEN RAISE(ABORT, 'SUGGESTIONS_DISABLED') END);
+  SELECT (CASE WHEN COALESCE((
     SELECT attempts FROM tag_suggestion_user_usage
     WHERE user_id = NEW.user_id AND utc_day = NEW.utc_day
   ), 0) >= (SELECT user_daily_limit FROM tag_suggestion_control WHERE id = 1)
-  THEN RAISE(ABORT, 'USER_QUOTA_REACHED') END;
-  SELECT CASE WHEN COALESCE((
+  THEN RAISE(ABORT, 'USER_QUOTA_REACHED') END);
+  SELECT (CASE WHEN COALESCE((
     SELECT attempts FROM tag_suggestion_global_usage WHERE utc_month = NEW.utc_month
   ), 0) >= (SELECT global_monthly_limit FROM tag_suggestion_control WHERE id = 1)
-  THEN RAISE(ABORT, 'GLOBAL_QUOTA_REACHED') END;
+  THEN RAISE(ABORT, 'GLOBAL_QUOTA_REACHED') END);
 END;
 --> statement-breakpoint
 CREATE TRIGGER tag_suggestion_attempts_after_insert AFTER INSERT ON tag_suggestion_attempts BEGIN
