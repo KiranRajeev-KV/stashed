@@ -60,10 +60,10 @@ when names have the same lowercase representation. This ordering is preserved
 when prefix search and pagination are used.
 
 The database query reads the materialized `tags.public_idea_count` value,
-maintained by `idea_tags` and idea-visibility triggers. It filters to
+maintained by `idea_tags` and idea access/distribution triggers. It filters to
 `public_idea_count > 0` and uses the `tags_public_idea_count_name_key_idx`
 index for its popularity-first order. This avoids exposing tags that occur only
-on unlisted or private ideas.
+on collections-only, unlisted, or private ideas.
 Consequently:
 
 - tags with no idea relationships remain stored but are not returned;
@@ -98,8 +98,8 @@ up to five existing tags in relevance order. It never creates or attaches a
 tag. No candidates is a successful empty result and does not spend quota.
 
 The candidate shortlist is the 100 most recently linked distinct tags on
-public ideas or the requesting author's own ideas. Links to other authors'
-private or unlisted ideas are never included. Already-selected names are
+public listed ideas or the requesting author's own ideas. Links to other authors'
+private, collections-only, or unlisted ideas are never included. Already-selected names are
 removed after the 100-tag limit without backfilling older tags.
 
 The provider sees the title, up to 4,000 plain-text note characters, and each

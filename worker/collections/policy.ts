@@ -33,24 +33,3 @@ export function canViewCollection(
 ) {
   return visibility !== "PRIVATE" || role !== null;
 }
-
-/**
- * Unlisted ideas are link-accessible. A public collection may only surface
- * them to an explicit participant or their author; non-public collection URLs
- * already supply the required link context. Private ideas remain author-only.
- */
-export function collectionIdeaVisibilitySql(options: {
-  collectionVisibility: CollectionVisibility;
-  isParticipant: boolean;
-  viewerId?: string;
-}) {
-  const { collectionVisibility, isParticipant, viewerId } = options;
-  const publicCollectionAllowsUnlisted = isParticipant;
-  const allowsUnlisted =
-    collectionVisibility !== "PUBLIC" || publicCollectionAllowsUnlisted;
-
-  return {
-    allowsUnlisted,
-    viewerId,
-  };
-}

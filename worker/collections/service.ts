@@ -24,6 +24,7 @@ import type { Database } from "../db/client.js";
 import { getIdeaRecord, getTagsForIdeas } from "../db/ideas.js";
 import { getUserById } from "../db/users.js";
 import { excerptFromPlainText } from "../ideas/markdown.js";
+import { canSurfaceIdea } from "../ideas/policy.js";
 import {
   canViewCollection,
   capabilitiesForRole,
@@ -218,10 +219,22 @@ export async function addCollectionIdea(
     ["OWNER", "EDITOR"],
     "Only collection owners and editors may add ideas",
   );
-  if (!(await getIdeaRecord(db, ideaId, userId))) {
+  const idea = await getIdeaRecord(db, ideaId, userId);
+  if (
+    !idea ||
+    !canSurfaceIdea({ ...idea, authorId: idea.author.id }, "COLLECTION", userId)
+  ) {
     throw new ApiError(404, "IDEA_NOT_FOUND", "Idea not found");
   }
-  await addCollectionIdeaRecord(db, id, ideaId, userId);
+  const insertedIdeaIds = await addCollectionIdeaRecord(db, id, ideaId, userId);
+  if (
+    insertedIdeaIds.length === 0 &&
+    (await listCollectionMemberIdeaIds(db, id, [ideaId], userId)).length === 0
+  ) {
+    // The policy can change after the initial read. An eligible existing
+    // membership remains idempotent; a skipped insert must not report success.
+    throw new ApiError(404, "IDEA_NOT_FOUND", "Idea not found");
+  }
 }
 
 export async function listCollectionIdeaCandidates(
@@ -261,7 +274,11 @@ export async function listCollectionIdeaTargets(
   input: CollectionIdeaTargetsInput,
   userId: string,
 ) {
-  if (!(await getIdeaRecord(db, input.ideaId, userId))) {
+  const idea = await getIdeaRecord(db, input.ideaId, userId);
+  if (
+    !idea ||
+    !canSurfaceIdea({ ...idea, authorId: idea.author.id }, "COLLECTION", userId)
+  ) {
     throw new ApiError(404, "IDEA_NOT_FOUND", "Idea not found");
   }
   const records = await listCollectionIdeaTargetRecords(db, input, userId);
@@ -298,7 +315,17 @@ export async function addCollectionIdeas(
   const accessibleIdeas = await Promise.all(
     ideaIds.map((ideaId) => getIdeaRecord(db, ideaId, userId)),
   );
-  if (accessibleIdeas.some((idea) => !idea)) {
+  if (
+    accessibleIdeas.some(
+      (idea) =>
+        !idea ||
+        !canSurfaceIdea(
+          { ...idea, authorId: idea.author.id },
+          "COLLECTION",
+          userId,
+        ),
+    )
+  ) {
     throw new ApiError(
       404,
       "IDEA_NOT_FOUND",
@@ -306,11 +333,15 @@ export async function addCollectionIdeas(
     );
   }
 
-  const existingIdeaIds = await listCollectionMemberIdeaIds(db, id, ideaIds);
-  await addCollectionIdeaRecords(db, id, ideaIds, userId);
-  const existing = new Set(existingIdeaIds);
+  const existingIdeaIds = await listCollectionMemberIdeaIds(
+    db,
+    id,
+    ideaIds,
+    userId,
+  );
+  const addedIdeaIds = await addCollectionIdeaRecords(db, id, ideaIds, userId);
   return {
-    addedIdeaIds: ideaIds.filter((ideaId) => !existing.has(ideaId)),
+    addedIdeaIds,
     alreadyMemberIdeaIds: existingIdeaIds,
   };
 }
@@ -327,7 +358,11 @@ export async function removeCollectionIdea(
     ["OWNER", "EDITOR"],
     "Only collection owners and editors may remove ideas",
   );
-  await removeCollectionIdeaRecord(db, id, ideaId);
+  if (
+    (await listCollectionMemberIdeaIds(db, id, [ideaId], userId)).length === 0
+  )
+    throw new ApiError(404, "IDEA_NOT_FOUND", "Idea not found");
+  await removeCollectionIdeaRecord(db, id, ideaId, userId);
 }
 
 /** Remove up to fifty memberships without touching the underlying Ideas. */
@@ -343,9 +378,19 @@ export async function removeCollectionIdeas(
     ["OWNER", "EDITOR"],
     "Only collection owners and editors may remove ideas",
   );
-  const memberIdeaIds = await listCollectionMemberIdeaIds(db, id, ideaIds);
-  await removeCollectionIdeaRecords(db, id, memberIdeaIds);
-  return { removedIdeaIds: memberIdeaIds };
+  const memberIdeaIds = await listCollectionMemberIdeaIds(
+    db,
+    id,
+    ideaIds,
+    userId,
+  );
+  const removedIdeaIds = await removeCollectionIdeaRecords(
+    db,
+    id,
+    memberIdeaIds,
+    userId,
+  );
+  return { removedIdeaIds };
 }
 
 export async function getCollaborators(

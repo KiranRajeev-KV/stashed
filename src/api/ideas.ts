@@ -7,6 +7,7 @@ import {
   infiniteQueryOptions,
   keepPreviousData,
   queryOptions,
+  type QueryClient,
 } from "@tanstack/react-query";
 
 import { ApiClientError, apiClient, apiRequest } from "./client.js";
@@ -84,6 +85,14 @@ export function ideasInfiniteQueryOptions(
 
 export function ideaQueryKey(id: string) {
   return ["idea", id] as const;
+}
+
+export function invalidateIdeaSurfaces(queryClient: QueryClient) {
+  return Promise.all(
+    ["ideas", "search", "tags", "collections", "collection"].map((key) =>
+      queryClient.invalidateQueries({ queryKey: [key] }),
+    ),
+  );
 }
 
 export function ideaQueryOptions(id: string) {

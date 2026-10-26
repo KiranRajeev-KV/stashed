@@ -2,6 +2,7 @@ import { and, asc, desc, eq, gt, or, sql } from "drizzle-orm";
 
 import type { Database } from "./client.js";
 import { ideas, ideaTags, tags } from "./schema.js";
+import { ideaPolicySql } from "../ideas/policy.js";
 
 export type TagDiscoveryRecord = {
   id: string;
@@ -57,7 +58,7 @@ export async function listRecentSuggestionCandidates(
     .from(ideaTags)
     .innerJoin(ideas, eq(ideas.id, ideaTags.ideaId))
     .innerJoin(tags, eq(tags.id, ideaTags.tagId))
-    .where(or(eq(ideas.visibility, "PUBLIC"), eq(ideas.authorId, userId)))
+    .where(or(ideaPolicySql("TAG_DISCOVERY"), eq(ideas.authorId, userId)))
     .groupBy(tags.id, tags.name, tags.nameKey)
     .orderBy(
       desc(sql`max(${ideaTags.createdAt})`),

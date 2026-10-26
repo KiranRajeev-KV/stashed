@@ -1,14 +1,16 @@
 # Collections authorization
 
-Collection access and Idea access are separate. A Collection role can edit the
-container and its membership, but never the underlying Idea.
+Collection access and idea access are independent. Public and unlisted
+collections can be opened by anyone with the URL; private collections require
+an owner, editor, or viewer role. Only owners and editors may change membership.
 
-- Public Collections are discoverable; Unlisted and Private Collections are not.
-- Private Collections require an explicit Owner, Editor, or Viewer role.
-- Public Ideas may be shown in any accessible Collection.
-- Unlisted Ideas may be shown through an Unlisted/Private Collection URL. In a
-  Public Collection they are shown only to explicit participants or the Idea owner.
-- Private Ideas are always shown only to their owner.
+Within an accessible collection, the SQL policy includes public listed and
+public collections-only ideas. A private idea appears only to its author, even
+if another member owns the collection. Public unlisted ideas never appear.
+The same predicate controls nested lists, local search, counts, candidates,
+add targets, and membership mutations. Authorization runs before pagination.
 
-Every nested list, search, count, and pagination query applies these predicates
-in SQL. Never fetch a page and filter hidden Ideas in application code.
+A hidden membership remains stored when an idea changes access or distribution.
+Batch responses and membership flags disclose only IDs visible to the acting
+user. Changing the idea back to an eligible state reveals the preserved
+membership automatically.

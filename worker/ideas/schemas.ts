@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-import { ideaStatusValues, ideaVisibilityValues } from "../db/schema.js";
+import {
+  ideaAccessValues,
+  ideaDistributionValues,
+  ideaStatusValues,
+  ideaVisibilityValues,
+} from "../db/schema.js";
 
 const MAX_CONTENT_LENGTH = 200_000;
 const MAX_TAGS = 20;
@@ -24,6 +29,22 @@ const titleSchema = z.string().trim().min(1).max(200);
 const contentSchema = z.string().max(MAX_CONTENT_LENGTH);
 const tagNameSchema = z.string().trim().min(1).max(50);
 const tagsSchema = z.array(tagNameSchema).max(MAX_TAGS);
+const legacyVisibilityQuery = z
+  .string()
+  .optional()
+  .transform((value) =>
+    ideaVisibilityValues.find((visibility) => visibility === value),
+  );
+const scopeQuery = z
+  .string()
+  .optional()
+  .transform((value) =>
+    value === undefined
+      ? undefined
+      : value === "MINE"
+        ? ("MINE" as const)
+        : ("DISCOVER" as const),
+  );
 
 export const ideaIdParamSchema = z.object({
   id: z.string().uuid(),
@@ -31,7 +52,10 @@ export const ideaIdParamSchema = z.object({
 
 export const listIdeasQuerySchema = z.object({
   status: z.enum(ideaStatusValues).optional(),
-  visibility: z.enum(ideaVisibilityValues).optional(),
+  visibility: legacyVisibilityQuery,
+  scope: scopeQuery,
+  access: z.enum(ideaAccessValues).optional(),
+  distribution: z.enum(ideaDistributionValues).optional(),
   sort: z.enum(ideaSortValues).optional(),
   tagId: z
     .union([
@@ -53,9 +77,17 @@ export const createIdeaSchema = z
     content: contentSchema,
     status: z.enum(ideaStatusValues).optional(),
     visibility: z.enum(ideaVisibilityValues).optional(),
+    access: z.enum(ideaAccessValues).optional(),
+    distribution: z.enum(ideaDistributionValues).optional(),
     tags: tagsSchema.optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (value) =>
+      value.visibility === undefined ||
+      (value.access === undefined && value.distribution === undefined),
+    { message: "Do not mix visibility with access/distribution" },
+  );
 
 export const updateIdeaSchema = z
   .object({
@@ -63,17 +95,28 @@ export const updateIdeaSchema = z
     content: contentSchema.optional(),
     status: z.enum(ideaStatusValues).optional(),
     visibility: z.enum(ideaVisibilityValues).optional(),
+    access: z.enum(ideaAccessValues).optional(),
+    distribution: z.enum(ideaDistributionValues).optional(),
     tags: tagsSchema.optional(),
   })
   .strict()
   .refine((value) => Object.keys(value).length > 0, {
     message: "At least one field is required",
-  });
+  })
+  .refine(
+    (value) =>
+      value.visibility === undefined ||
+      (value.access === undefined && value.distribution === undefined),
+    { message: "Do not mix visibility with access/distribution" },
+  );
 
 export const searchIdeasQuerySchema = z.object({
   q: z.string().trim().min(1).max(200),
   status: z.enum(ideaStatusValues).optional(),
-  visibility: z.enum(ideaVisibilityValues).optional(),
+  visibility: legacyVisibilityQuery,
+  scope: scopeQuery,
+  access: z.enum(ideaAccessValues).optional(),
+  distribution: z.enum(ideaDistributionValues).optional(),
   sort: z.enum(searchIdeaSortValues).optional(),
   tagId: z
     .union([

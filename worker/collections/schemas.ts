@@ -5,6 +5,8 @@ import {
   collectionVisibilityValues,
   ideaStatusValues,
   ideaVisibilityValues,
+  ideaAccessValues,
+  ideaDistributionValues,
 } from "../db/schema.js";
 
 const COLLECTION_ICONS = [
@@ -75,6 +77,8 @@ export const collectionIdeasQuerySchema = z.object({
   q: z.string().trim().max(200).optional(),
   status: z.enum(ideaStatusValues).optional(),
   visibility: z.enum(ideaVisibilityValues).optional(),
+  access: z.enum(ideaAccessValues).optional(),
+  distribution: z.enum(ideaDistributionValues).optional(),
   sort: z
     .enum([
       "UPDATED_DESC",

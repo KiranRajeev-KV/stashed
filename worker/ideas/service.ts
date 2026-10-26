@@ -4,7 +4,6 @@ import { ApiError } from "../api/errors.js";
 import {
   createIdeaRecord,
   deleteIdeaRecord,
-  getIdeaAuthorId,
   getIdeaRecord,
   getTagsForIdeas,
   listIdeaRecords,
@@ -16,7 +15,12 @@ import {
   type IdeaTagRecord,
 } from "../db/ideas.js";
 import type { Database } from "../db/client.js";
-import type { IdeaStatus, IdeaVisibility } from "../db/schema.js";
+import type {
+  IdeaAccess,
+  IdeaDistribution,
+  IdeaStatus,
+  IdeaVisibility,
+} from "../db/schema.js";
 import type {
   CreateIdeaInput,
   IdeaSort,
@@ -24,6 +28,7 @@ import type {
   UpdateIdeaInput,
 } from "./schemas.js";
 import { excerptFromPlainText } from "./markdown.js";
+import type { IdeaScope } from "./policy.js";
 
 const cursorSchema = z.discriminatedUnion("v", [
   z.object({
@@ -43,6 +48,9 @@ const cursorSchema = z.discriminatedUnion("v", [
 type ListIdeasInput = {
   status?: IdeaStatus;
   visibility?: IdeaVisibility;
+  access?: IdeaAccess;
+  distribution?: IdeaDistribution;
+  scope?: IdeaScope;
   tagId?: string[];
   sort?: IdeaSort;
   cursor?: string;
@@ -104,6 +112,8 @@ function serializeIdea(idea: IdeaRecord, tags: IdeaTagRecord[]) {
     content: idea.content,
     status: idea.status,
     visibility: idea.visibility,
+    access: idea.access,
+    distribution: idea.distribution,
     author: idea.author,
     tags: tags.map(serializeTag),
     createdAt: idea.createdAt.toISOString(),
@@ -118,6 +128,8 @@ function serializeIdeaListItem(idea: IdeaListRecord, tags: IdeaTagRecord[]) {
     excerpt: excerptFromPlainText(idea.contentPlain),
     status: idea.status,
     visibility: idea.visibility,
+    access: idea.access,
+    distribution: idea.distribution,
     author: idea.author,
     tags: tags.map(serializeTag),
     createdAt: idea.createdAt.toISOString(),
@@ -132,6 +144,8 @@ function serializeSearchResult(idea: IdeaSearchRecord, tags: IdeaTagRecord[]) {
     excerpt: excerptFromPlainText(idea.excerpt),
     status: idea.status,
     visibility: idea.visibility,
+    access: idea.access,
+    distribution: idea.distribution,
     author: idea.author,
     tags: tags.map(serializeTag),
     createdAt: idea.createdAt.toISOString(),
@@ -140,11 +154,11 @@ function serializeSearchResult(idea: IdeaSearchRecord, tags: IdeaTagRecord[]) {
 }
 
 async function requireIdeaAuthor(db: Database, ideaId: string, userId: string) {
-  const authorId = await getIdeaAuthorId(db, ideaId);
-  if (!authorId) {
+  const idea = await getIdeaRecord(db, ideaId, userId);
+  if (!idea) {
     throw new ApiError(404, "IDEA_NOT_FOUND", "Idea not found");
   }
-  if (authorId !== userId) {
+  if (idea.author.id !== userId) {
     throw new ApiError(403, "FORBIDDEN", "Only the idea author may modify it");
   }
 }
@@ -154,11 +168,32 @@ export async function listIdeas(
   input: ListIdeasInput,
   viewerId?: string,
 ) {
+  const scope =
+    input.scope ??
+    (input.visibility === "PRIVATE" || input.visibility === "UNLISTED"
+      ? "MINE"
+      : "DISCOVER");
+  if (scope === "MINE" && !viewerId)
+    throw new ApiError(401, "UNAUTHORIZED", "Authentication required");
   const sort = input.sort ?? "UPDATED_DESC";
   const cursor = input.cursor ? decodeCursor(input.cursor, sort) : undefined;
   const records = await listIdeaRecords(db, {
     status: input.status,
-    visibility: input.visibility,
+    access:
+      input.access ??
+      (input.visibility === "PRIVATE"
+        ? "PRIVATE"
+        : input.visibility === "UNLISTED"
+          ? "PUBLIC"
+          : undefined),
+    distribution:
+      input.distribution ??
+      (input.visibility === "UNLISTED"
+        ? "UNLISTED"
+        : input.visibility === "PUBLIC"
+          ? "LISTED"
+          : undefined),
+    scope,
     tagIds: input.tagId,
     viewerId,
     sort,
@@ -233,6 +268,9 @@ export async function searchIdeas(
     q: string;
     status?: IdeaStatus;
     visibility?: IdeaVisibility;
+    access?: IdeaAccess;
+    distribution?: IdeaDistribution;
+    scope?: IdeaScope;
     sort?: SearchIdeaSort;
     tagId?: string[];
     limit: number;
@@ -240,10 +278,31 @@ export async function searchIdeas(
   },
   viewerId?: string,
 ) {
+  const scope =
+    input.scope ??
+    (input.visibility === "PRIVATE" || input.visibility === "UNLISTED"
+      ? "MINE"
+      : "DISCOVER");
+  if (scope === "MINE" && !viewerId)
+    throw new ApiError(401, "UNAUTHORIZED", "Authentication required");
   const records = await searchIdeaRecords(db, {
     query: input.q,
     status: input.status,
-    visibility: input.visibility,
+    access:
+      input.access ??
+      (input.visibility === "PRIVATE"
+        ? "PRIVATE"
+        : input.visibility === "UNLISTED"
+          ? "PUBLIC"
+          : undefined),
+    distribution:
+      input.distribution ??
+      (input.visibility === "UNLISTED"
+        ? "UNLISTED"
+        : input.visibility === "PUBLIC"
+          ? "LISTED"
+          : undefined),
+    scope,
     sort: input.sort,
     tagIds: input.tagId,
     viewerId,

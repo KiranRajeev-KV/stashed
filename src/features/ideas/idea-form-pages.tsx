@@ -3,12 +3,7 @@ import { Button } from "../../components/ui/button.js";
 import { FileQuestion, RefreshCw, LockKeyhole } from "lucide-react";
 import { buttonStyles } from "../../components/ui/button-variants.js";
 import { twAnimatePulse } from "../../styles/common-styles.js";
-import {
-  type QueryClient,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
@@ -16,6 +11,7 @@ import { ApiClientError } from "../../api/client.js";
 import {
   createIdea,
   ideaQueryKey,
+  invalidateIdeaSurfaces,
   ideaQueryOptions,
   updateIdea,
 } from "../../api/ideas.js";
@@ -154,14 +150,6 @@ function IdeaEditForbidden({ ideaId }: { ideaId: string }) {
   );
 }
 
-function invalidateIdeaCollections(queryClient: QueryClient) {
-  return Promise.all([
-    queryClient.invalidateQueries({ queryKey: ["ideas"] }),
-    queryClient.invalidateQueries({ queryKey: ["tags"] }),
-    queryClient.invalidateQueries({ queryKey: ["search"] }),
-  ]);
-}
-
 export function CreateIdeaPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -169,7 +157,7 @@ export function CreateIdeaPage() {
     mutationFn: (value: IdeaFormSubmission) => createIdea(value),
     onSuccess: async ({ idea }) => {
       queryClient.setQueryData(ideaQueryKey(idea.id), idea);
-      await invalidateIdeaCollections(queryClient);
+      await invalidateIdeaSurfaces(queryClient);
       toast.success("Idea created");
       await navigate({
         to: "/ideas/$ideaId",
@@ -187,7 +175,8 @@ export function CreateIdeaPage() {
           title: "",
           content: "",
           status: "DRAFT",
-          visibility: "PUBLIC",
+          access: "PUBLIC",
+          distribution: "LISTED",
           tags: [],
         }}
         submissionError={mutation.error?.message}
@@ -216,7 +205,7 @@ export function EditIdeaPage() {
       queryClient.setQueryData(ideaQueryKey(idea.id), idea);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ideaQueryKey(idea.id) }),
-        invalidateIdeaCollections(queryClient),
+        invalidateIdeaSurfaces(queryClient),
       ]);
       toast.success("Idea updated");
       await navigate({
@@ -257,7 +246,8 @@ export function EditIdeaPage() {
           title: idea.title,
           content: idea.content,
           status: idea.status,
-          visibility: idea.visibility,
+          access: idea.access,
+          distribution: idea.distribution,
           tags: idea.tags.map((tag) => tag.name),
         }}
         submissionError={mutation.error?.message}

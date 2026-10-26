@@ -18,10 +18,8 @@ import type {
   ListCollectionsInput,
   UpdateCollectionInput,
 } from "../collections/schemas.js";
-import {
-  collectionIdeaVisibilitySql,
-  type CollectionRole,
-} from "../collections/policy.js";
+import type { CollectionRole } from "../collections/policy.js";
+import { ideaPolicySql } from "../ideas/policy.js";
 import type { Database } from "./client.js";
 import {
   collectionCollaborators,
@@ -385,42 +383,40 @@ export async function removeCollaboratorRecord(
   ]);
 }
 
-function nestedIdeaVisibility(
-  collection: CollectionRecord,
-  role: CollectionRole,
-  viewerId?: string,
-) {
-  const { allowsUnlisted } = collectionIdeaVisibilitySql({
-    collectionVisibility: collection.visibility,
-    isParticipant: role !== null,
-    viewerId,
-  });
-  const visible = [eq(ideas.visibility, "PUBLIC")];
-  if (allowsUnlisted) visible.push(eq(ideas.visibility, "UNLISTED"));
-  if (viewerId) {
-    // Author access covers both the Public-Collection/Unlisted exception and
-    // the invariant that Private Ideas remain independently authorized.
-    visible.push(eq(ideas.authorId, viewerId));
-  }
-  return or(...visible);
+function nestedIdeaVisibility(viewerId?: string) {
+  return ideaPolicySql("COLLECTION", viewerId);
 }
 
 function nestedIdeaFilters(
   collection: CollectionRecord,
-  role: CollectionRole,
+  _role: CollectionRole,
   input: CollectionIdeasInput,
   viewerId?: string,
 ) {
   const filters = [
     eq(collectionIdeas.collectionId, collection.id),
-    nestedIdeaVisibility(collection, role, viewerId),
+    nestedIdeaVisibility(viewerId),
   ];
   if (input.status) filters.push(eq(ideas.status, input.status));
-  if (input.visibility) filters.push(eq(ideas.visibility, input.visibility));
+  if (input.access) filters.push(eq(ideas.access, input.access));
+  if (input.distribution)
+    filters.push(eq(ideas.distribution, input.distribution));
+  if (input.visibility === "PRIVATE") filters.push(eq(ideas.access, "PRIVATE"));
+  if (input.visibility === "PUBLIC")
+    filters.push(
+      and(eq(ideas.access, "PUBLIC"), eq(ideas.distribution, "LISTED"))!,
+    );
+  if (input.visibility === "UNLISTED")
+    filters.push(
+      and(
+        eq(ideas.access, "PUBLIC"),
+        eq(ideas.distribution, "COLLECTIONS_ONLY"),
+      )!,
+    );
   if (input.q) {
     const pattern = `%${input.q.replaceAll("%", "\\%").replaceAll("_", "\\_")}%`;
     filters.push(
-      or(like(ideas.title, pattern), like(ideas.contentPlain, pattern)),
+      or(like(ideas.title, pattern), like(ideas.contentPlain, pattern))!,
     );
   }
   return and(...filters);
@@ -448,6 +444,8 @@ export async function listCollectionIdeaRecords(
       excerpt: ideas.contentPlain,
       status: ideas.status,
       visibility: ideas.visibility,
+      access: ideas.access,
+      distribution: ideas.distribution,
       authorId: users.id,
       authorDisplayName: users.displayName,
       authorUsername: userIdentities.providerUsername,
@@ -478,6 +476,8 @@ export async function listCollectionIdeaRecords(
     excerpt: row.excerpt,
     status: row.status,
     visibility: row.visibility,
+    access: row.access,
+    distribution: row.distribution,
     author: {
       id: row.authorId,
       displayName: row.authorDisplayName,
@@ -492,7 +492,7 @@ export async function listCollectionIdeaRecords(
 export async function countVisibleCollectionIdeas(
   db: Database,
   collection: CollectionRecord,
-  role: CollectionRole,
+  _role: CollectionRole,
   viewerId?: string,
 ) {
   const result = await db
@@ -502,7 +502,7 @@ export async function countVisibleCollectionIdeas(
     .where(
       and(
         eq(collectionIdeas.collectionId, collection.id),
-        nestedIdeaVisibility(collection, role, viewerId),
+        nestedIdeaVisibility(viewerId),
       ),
     )
     .get();
@@ -521,13 +521,11 @@ export async function listCollectionIdeaCandidateRecords(
   input: CollectionIdeaCandidatesInput,
   viewerId: string,
 ) {
-  const filters = [
-    or(eq(ideas.visibility, "PUBLIC"), eq(ideas.authorId, viewerId)),
-  ];
+  const filters = [ideaPolicySql("COLLECTION", viewerId)];
   if (input.q) {
     const pattern = `%${input.q.replaceAll("%", "\\%").replaceAll("_", "\\_")}%`;
     filters.push(
-      or(like(ideas.title, pattern), like(ideas.contentPlain, pattern)),
+      or(like(ideas.title, pattern), like(ideas.contentPlain, pattern))!,
     );
   }
 
@@ -536,6 +534,8 @@ export async function listCollectionIdeaCandidateRecords(
       id: ideas.id,
       title: ideas.title,
       visibility: ideas.visibility,
+      access: ideas.access,
+      distribution: ideas.distribution,
       authorId: users.id,
       authorDisplayName: users.displayName,
       authorUsername: userIdentities.providerUsername,
@@ -567,6 +567,8 @@ export async function listCollectionIdeaCandidateRecords(
     id: row.id,
     title: row.title,
     visibility: row.visibility,
+    access: row.access,
+    distribution: row.distribution,
     author: {
       id: row.authorId,
       displayName: row.authorDisplayName,
@@ -581,15 +583,18 @@ export async function listCollectionMemberIdeaIds(
   db: Database,
   collectionId: string,
   ideaIds: string[],
+  viewerId: string,
 ) {
   if (ideaIds.length === 0) return [];
   const rows = await db
     .select({ ideaId: collectionIdeas.ideaId })
     .from(collectionIdeas)
+    .innerJoin(ideas, eq(ideas.id, collectionIdeas.ideaId))
     .where(
       and(
         eq(collectionIdeas.collectionId, collectionId),
         inArray(collectionIdeas.ideaId, ideaIds),
+        ideaPolicySql("COLLECTION", viewerId),
       ),
     );
   return rows.map((row) => row.ideaId);
@@ -601,17 +606,7 @@ export async function addCollectionIdeaRecord(
   ideaId: string,
   userId: string,
 ) {
-  const now = new Date();
-  await db.batch([
-    db
-      .insert(collectionIdeas)
-      .values({ collectionId, ideaId, addedByUserId: userId, createdAt: now })
-      .onConflictDoNothing(),
-    db
-      .update(collections)
-      .set({ updatedAt: now })
-      .where(eq(collections.id, collectionId)),
-  ]);
+  return addCollectionIdeaRecords(db, collectionId, [ideaId], userId);
 }
 
 export async function addCollectionIdeaRecords(
@@ -621,66 +616,79 @@ export async function addCollectionIdeaRecords(
   userId: string,
 ) {
   const now = new Date();
-  await db.batch([
+  // Recheck the idea policy in the insert itself so a stale picker or a
+  // concurrent access edit cannot add a hidden membership.
+  const [inserted] = await db.batch([
     db
       .insert(collectionIdeas)
-      .values(
-        ideaIds.map((ideaId) => ({
-          collectionId,
-          ideaId,
-          addedByUserId: userId,
-          createdAt: now,
-        })),
+      .select(
+        db
+          .select({
+            collectionId: sql<string>`${collectionId}`.as("collection_id"),
+            ideaId: ideas.id,
+            addedByUserId: sql<string>`${userId}`.as("added_by_user_id"),
+            createdAt: sql<Date>`${now.getTime()}`.as("created_at"),
+          })
+          .from(ideas)
+          .where(
+            and(
+              inArray(ideas.id, ideaIds),
+              ideaPolicySql("COLLECTION", userId),
+            ),
+          ),
       )
-      .onConflictDoNothing(),
+      .onConflictDoNothing()
+      .returning({ ideaId: collectionIdeas.ideaId }),
     db
       .update(collections)
       .set({ updatedAt: now })
       .where(eq(collections.id, collectionId)),
   ]);
+  return inserted.map((row) => row.ideaId);
 }
 
 export async function removeCollectionIdeaRecord(
   db: Database,
   collectionId: string,
   ideaId: string,
+  userId: string,
 ) {
-  const now = new Date();
-  await db.batch([
-    db
-      .delete(collectionIdeas)
-      .where(
-        and(
-          eq(collectionIdeas.collectionId, collectionId),
-          eq(collectionIdeas.ideaId, ideaId),
-        ),
-      ),
-    db
-      .update(collections)
-      .set({ updatedAt: now })
-      .where(eq(collections.id, collectionId)),
-  ]);
+  await removeCollectionIdeaRecords(db, collectionId, [ideaId], userId);
 }
 
 export async function removeCollectionIdeaRecords(
   db: Database,
   collectionId: string,
   ideaIds: string[],
+  userId: string,
 ) {
-  if (ideaIds.length === 0) return;
+  if (ideaIds.length === 0) return [];
   const now = new Date();
-  await db.batch([
+  const [removed] = await db.batch([
     db
       .delete(collectionIdeas)
       .where(
         and(
           eq(collectionIdeas.collectionId, collectionId),
           inArray(collectionIdeas.ideaId, ideaIds),
+          exists(
+            db
+              .select({ value: sql`1` })
+              .from(ideas)
+              .where(
+                and(
+                  eq(ideas.id, collectionIdeas.ideaId),
+                  ideaPolicySql("COLLECTION", userId),
+                ),
+              ),
+          ),
         ),
-      ),
+      )
+      .returning({ ideaId: collectionIdeas.ideaId }),
     db
       .update(collections)
       .set({ updatedAt: now })
       .where(eq(collections.id, collectionId)),
   ]);
+  return removed.map((row) => row.ideaId);
 }

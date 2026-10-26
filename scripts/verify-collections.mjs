@@ -30,6 +30,25 @@ const ideas = {
   ownerPrivate: "20000000-0000-4000-8000-000000000003",
   strangerPrivate: "20000000-0000-4000-8000-000000000004",
   extraPublic: "20000000-0000-4000-8000-000000000005",
+  collectionsOnly: "20000000-0000-4000-8000-000000000006",
+};
+
+const hiddenTags = {
+  unlisted: {
+    id: "50000000-0000-4000-8000-000000000001",
+    name: "matrix-secret-unlisted-tag",
+    ideaId: ideas.unlisted,
+  },
+  ownerPrivate: {
+    id: "50000000-0000-4000-8000-000000000002",
+    name: "matrix-secret-owner-private-tag",
+    ideaId: ideas.ownerPrivate,
+  },
+  strangerPrivate: {
+    id: "50000000-0000-4000-8000-000000000003",
+    name: "matrix-secret-stranger-private-tag",
+    ideaId: ideas.strangerPrivate,
+  },
 };
 
 function run(command, args, options = {}) {
@@ -98,6 +117,12 @@ function fixtureSql() {
       users.stranger,
     ],
     [ideas.extraPublic, "Matrix extra public idea", "PUBLIC", users.stranger],
+    [
+      ideas.collectionsOnly,
+      "Matrix collections-only idea",
+      "UNLISTED",
+      users.stranger,
+    ],
   ]
     .map(
       ([id, title, visibility, authorId], index) => `
@@ -111,6 +136,18 @@ function fixtureSql() {
         );`,
     )
     .join("\n");
+  const collectionsOnlyUpdate = `UPDATE ideas SET access = 'PUBLIC', distribution = 'COLLECTIONS_ONLY', visibility = 'UNLISTED' WHERE id = ${sqlLiteral(ideas.collectionsOnly)};`;
+  const hiddenTagRows = Object.values(hiddenTags)
+    .map(
+      (tag) => `
+        INSERT INTO tags (id, name, name_key) VALUES (
+          ${sqlLiteral(tag.id)}, ${sqlLiteral(tag.name)}, ${sqlLiteral(tag.name)}
+        );
+        INSERT INTO idea_tags (idea_id, tag_id) VALUES (
+          ${sqlLiteral(tag.ideaId)}, ${sqlLiteral(tag.id)}
+        );`,
+    )
+    .join("\n");
   const membershipRows = Object.values(collections)
     .flatMap((collectionId) =>
       [
@@ -118,6 +155,7 @@ function fixtureSql() {
         ideas.unlisted,
         ideas.ownerPrivate,
         ideas.strangerPrivate,
+        ideas.collectionsOnly,
       ].map(
         (ideaId) => `
           INSERT INTO collection_ideas (collection_id, idea_id, added_by_user_id, created_at)
@@ -137,7 +175,37 @@ function fixtureSql() {
     ])
     .join("\n");
 
-  return `PRAGMA foreign_keys = ON;\n${userRows}\n${collectionRows}\n${ideaRows}\n${membershipRows}\n${collaboratorRows}`;
+  return `PRAGMA foreign_keys = ON;\n${userRows}\n${collectionRows}\n${ideaRows}\n${collectionsOnlyUpdate}\n${hiddenTagRows}\n${membershipRows}\n${collaboratorRows}`;
+}
+
+function plannerFixtureSql() {
+  // Added after API assertions so pagination tests keep a small exact fixture.
+  // Mix all three discovery classes to give EXPLAIN realistic selectivity.
+  return `
+    INSERT INTO ideas (
+      row_id, id, title, content, content_plain, status,
+      visibility, access, distribution, author_id, created_at, updated_at
+    )
+    WITH RECURSIVE sequence(n) AS (
+      VALUES(1) UNION ALL SELECT n + 1 FROM sequence WHERE n < 900
+    )
+    SELECT
+      1000 + n,
+      printf('60000000-0000-4000-8000-%012d', n),
+      printf('Planner idea %04d', n),
+      'planner body', 'planner body', 'ACTIVE',
+      CASE WHEN n % 3 = 0 THEN 'PUBLIC' WHEN n % 3 = 1 THEN 'UNLISTED' ELSE 'PRIVATE' END,
+      CASE WHEN n % 3 = 2 THEN 'PRIVATE' ELSE 'PUBLIC' END,
+      CASE WHEN n % 3 = 0 THEN 'LISTED' WHEN n % 3 = 1 THEN 'COLLECTIONS_ONLY' ELSE 'LISTED' END,
+      ${sqlLiteral(users.stranger)},
+      ${Date.now()} + n,
+      ${Date.now()} + n
+    FROM sequence;
+    INSERT INTO collection_ideas (collection_id, idea_id, added_by_user_id)
+    SELECT ${sqlLiteral(collections.public)}, id, ${sqlLiteral(users.owner)}
+    FROM ideas WHERE row_id BETWEEN 1001 AND 1900;
+    ANALYZE;
+  `;
 }
 
 /** Existing application data used to prove migration 0005 is additive. */
@@ -231,6 +299,26 @@ function verifyMigrationUpgrade(stateDirectory, fixturePath) {
     join(migrationDirectory, "0005_keen_frightful_four.sql"),
   );
 
+  for (const migration of [
+    "0006_luxuriant_boomer.sql",
+    "0007_messy_ghost_rider.sql",
+    "0008_youthful_liz_osborn.sql",
+  ]) {
+    executeFile(stateDirectory, join(migrationDirectory, migration));
+  }
+
+  assert.deepEqual(
+    query(
+      stateDirectory,
+      "SELECT visibility, access, distribution FROM ideas ORDER BY id",
+    ).map((row) => [row.visibility, row.access, row.distribution]),
+    [
+      ["PUBLIC", "PUBLIC", "LISTED"],
+      ["UNLISTED", "PUBLIC", "UNLISTED"],
+      ["PRIVATE", "PRIVATE", "LISTED"],
+    ],
+    "migration 0007 maps every legacy visibility value",
+  );
   assert.equal(
     query(stateDirectory, "SELECT count(*) AS count FROM ideas")[0].count,
     3,
@@ -319,6 +407,34 @@ function assertIdeaIds(response, expectedIds, label) {
     [...expectedIds].sort(),
     label,
   );
+}
+
+function assertNoHiddenIdeaMetadata(response, hiddenIdeaIds, label) {
+  const privateDetails = {
+    [ideas.unlisted]: ["Matrix unlisted idea", hiddenTags.unlisted],
+    [ideas.ownerPrivate]: [
+      "Matrix owner private idea",
+      hiddenTags.ownerPrivate,
+    ],
+    [ideas.strangerPrivate]: [
+      "Matrix stranger private idea",
+      hiddenTags.strangerPrivate,
+    ],
+  };
+  for (const ideaId of hiddenIdeaIds) {
+    const details = privateDetails[ideaId];
+    const forbidden = [ideaId];
+    if (details) {
+      forbidden.push(details[0], details[1].id, details[1].name);
+    }
+    for (const value of forbidden) {
+      assert.equal(
+        response.body.includes(value),
+        false,
+        `${label} exposed hidden metadata: ${value}`,
+      );
+    }
+  }
 }
 
 let workerLog = "";
@@ -458,10 +574,10 @@ async function main() {
       "shared navigation includes explicit collaboration only",
     );
 
-    // The core Collection/Idea visibility matrix.
+    // The core Collection/Idea access and distribution matrix.
     await assertIdeaIds(
       await request(`/api/collections/${collections.public}/ideas`),
-      [ideas.public],
+      [ideas.public, ideas.collectionsOnly],
       "anonymous public collection contents",
     );
     const anonymousPublic = await request(
@@ -469,7 +585,7 @@ async function main() {
     );
     assert.equal(
       anonymousPublic.json.collection.visibleIdeaCount,
-      1,
+      2,
       "anonymous public count excludes restricted memberships",
     );
     await assertIdeaIds(
@@ -481,55 +597,674 @@ async function main() {
       await request(
         `/api/collections/${collections.public}/ideas?visibility=UNLISTED`,
       ),
-      [],
-      "anonymous public filtering cannot infer unlisted membership",
+      [ideas.collectionsOnly],
+      "legacy unlisted filter maps to collections-only membership",
     );
     await assertIdeaIds(
       await request(`/api/collections/${collections.public}/ideas`, {
         userId: users.owner,
       }),
-      [ideas.public, ideas.unlisted, ideas.ownerPrivate],
+      [ideas.public, ideas.collectionsOnly, ideas.ownerPrivate],
       "public collection owner sees unlisted and independently owned private ideas",
     );
     await assertIdeaIds(
       await request(`/api/collections/${collections.public}/ideas`, {
         userId: users.editor,
       }),
-      [ideas.public, ideas.unlisted],
+      [ideas.public, ideas.collectionsOnly],
       "public collection editor sees unlisted but not private ideas",
     );
     await assertIdeaIds(
       await request(`/api/collections/${collections.public}/ideas`, {
         userId: users.viewer,
       }),
-      [ideas.public, ideas.unlisted],
+      [ideas.public, ideas.collectionsOnly],
       "public collection viewer sees unlisted but not private ideas",
     );
     await assertIdeaIds(
       await request(`/api/collections/${collections.public}/ideas`, {
         userId: users.stranger,
       }),
-      [ideas.public, ideas.unlisted, ideas.strangerPrivate],
+      [ideas.public, ideas.collectionsOnly, ideas.strangerPrivate],
       "idea author sees their own restricted ideas without becoming a collaborator",
     );
     await assertIdeaIds(
       await request(`/api/collections/${collections.unlisted}/ideas`),
-      [ideas.public, ideas.unlisted],
+      [ideas.public, ideas.collectionsOnly],
       "unlisted collection URL reveals link-accessible ideas only",
     );
     await assertIdeaIds(
       await request(`/api/collections/${collections.private}/ideas`, {
         userId: users.viewer,
       }),
-      [ideas.public, ideas.unlisted],
+      [ideas.public, ideas.collectionsOnly],
       "private collection viewer sees public and unlisted ideas only",
     );
     await assertIdeaIds(
       await request(`/api/collections/${collections.private}/ideas`, {
         userId: users.owner,
       }),
-      [ideas.public, ideas.unlisted, ideas.ownerPrivate],
+      [ideas.public, ideas.collectionsOnly, ideas.ownerPrivate],
       "private collection owner still sees only independently owned private ideas",
+    );
+
+    const members = [
+      ideas.public,
+      ideas.unlisted,
+      ideas.ownerPrivate,
+      ideas.strangerPrivate,
+      ideas.collectionsOnly,
+    ];
+    const actors = [
+      ["anonymous", undefined],
+      ["owner and idea author", users.owner],
+      ["editor", users.editor],
+      ["viewer", users.viewer],
+      ["unrelated member and idea author", users.stranger],
+    ];
+    for (const [collectionName, collectionId] of Object.entries(collections)) {
+      for (const [actorName, userId] of actors) {
+        const label = `${collectionName} collection, ${actorName}`;
+        const canOpen =
+          collectionName !== "private" ||
+          [users.owner, users.editor, users.viewer].includes(userId);
+        const path = `/api/collections/${collectionId}/ideas`;
+        const result = await request(`${path}?limit=50`, { userId });
+        if (!canOpen) {
+          assertStatus(result, 404, label);
+          assert.equal(
+            result.body.includes("Matrix private collection"),
+            false,
+            `${label} exposed the collection name`,
+          );
+          continue;
+        }
+        const expected = [ideas.public, ideas.collectionsOnly];
+        if (userId === users.owner) expected.push(ideas.ownerPrivate);
+        if (userId === users.stranger) expected.push(ideas.strangerPrivate);
+        const hidden = members.filter((id) => !expected.includes(id));
+        assertIdeaIds(result, expected, label);
+        assertNoHiddenIdeaMetadata(result, hidden, label);
+        assert.equal(
+          result.json.visibleIdeaCount,
+          expected.length,
+          `${label} list count`,
+        );
+        const detail = await request(`/api/collections/${collectionId}`, {
+          userId,
+        });
+        assertStatus(detail, 200, `${label} detail`);
+        assert.equal(
+          detail.json.collection.visibleIdeaCount,
+          expected.length,
+          `${label} visible count`,
+        );
+        assertNoHiddenIdeaMetadata(detail, hidden, `${label} detail`);
+        const nestedSearch = await request(`${path}?q=Matrix&limit=50`, {
+          userId,
+        });
+        assertIdeaIds(nestedSearch, expected, `${label} local search`);
+        assertNoHiddenIdeaMetadata(
+          nestedSearch,
+          hidden,
+          `${label} local search`,
+        );
+        const pageIds = [];
+        for (let offset = 0; offset < expected.length; offset++) {
+          const page = await request(`${path}?limit=1&offset=${offset}`, {
+            userId,
+          });
+          assertStatus(page, 200, `${label} page ${offset}`);
+          pageIds.push(...page.json.ideas.map((idea) => idea.id));
+          assertNoHiddenIdeaMetadata(page, hidden, `${label} page ${offset}`);
+          assert.equal(
+            page.json.nextOffset,
+            offset + 1,
+            `${label} next offset follows visible rows`,
+          );
+        }
+        assert.deepEqual(
+          pageIds,
+          result.json.ideas.map((idea) => idea.id),
+          `${label} paginates after policy filtering`,
+        );
+        const emptyPage = await request(
+          `${path}?limit=1&offset=${expected.length}`,
+          { userId },
+        );
+        assertIdeaIds(emptyPage, [], `${label} exhausted page`);
+        assert.equal(
+          emptyPage.json.nextOffset,
+          null,
+          `${label} page terminates`,
+        );
+      }
+    }
+
+    // Direct reads, archive, FTS, candidates, and hidden membership writes.
+    assertStatus(
+      await request(`/api/ideas/${ideas.unlisted}`),
+      200,
+      "public link-only direct read",
+    );
+    assertStatus(
+      await request(`/api/ideas/${ideas.collectionsOnly}`),
+      200,
+      "collections-only direct read",
+    );
+    const anonymousPrivateDetail = await request(
+      `/api/ideas/${ideas.ownerPrivate}`,
+    );
+    assertStatus(anonymousPrivateDetail, 404, "anonymous private direct read");
+    assertNoHiddenIdeaMetadata(
+      anonymousPrivateDetail,
+      [ideas.ownerPrivate],
+      "anonymous private direct read",
+    );
+    assertStatus(
+      await request(`/api/ideas/${ideas.ownerPrivate}`, {
+        userId: users.owner,
+      }),
+      200,
+      "author private direct read",
+    );
+    const publicArchive = await request("/api/ideas?limit=50");
+    await assertIdeaIds(
+      publicArchive,
+      [ideas.public, ideas.extraPublic],
+      "archive only lists public listed",
+    );
+    assertNoHiddenIdeaMetadata(
+      publicArchive,
+      [
+        ideas.unlisted,
+        ideas.ownerPrivate,
+        ideas.strangerPrivate,
+        ideas.collectionsOnly,
+      ],
+      "public archive",
+    );
+    await assertIdeaIds(
+      await request("/api/ideas?scope=MINE&limit=50", {
+        userId: users.stranger,
+      }),
+      [
+        ideas.public,
+        ideas.unlisted,
+        ideas.strangerPrivate,
+        ideas.extraPublic,
+        ideas.collectionsOnly,
+      ],
+      "personal view includes author's hidden ideas",
+    );
+    for (const [visibility, expected] of [
+      ["PRIVATE", [ideas.strangerPrivate]],
+      ["UNLISTED", [ideas.unlisted]],
+    ]) {
+      await assertIdeaIds(
+        await request(`/api/ideas?visibility=${visibility}&limit=50`, {
+          userId: users.stranger,
+        }),
+        expected,
+        `legacy ${visibility} archive uses personal scope when omitted`,
+      );
+      const legacySearch = await request(
+        `/api/search?q=Matrix&visibility=${visibility}&limit=50`,
+        { userId: users.stranger },
+      );
+      assertStatus(legacySearch, 200, `legacy ${visibility} search`);
+      assert.deepEqual(
+        legacySearch.json.results.map((idea) => idea.id).sort(),
+        expected,
+        `legacy ${visibility} search uses personal scope when omitted`,
+      );
+      for (const path of [
+        `/api/ideas?visibility=${visibility}`,
+        `/api/search?q=Matrix&visibility=${visibility}`,
+      ]) {
+        assertStatus(
+          await request(path),
+          401,
+          "legacy personal scope requires authentication",
+        );
+      }
+    }
+    for (const path of ["/api/ideas", "/api/search?q=Matrix"]) {
+      const separator = path.includes("?") ? "&" : "?";
+      assertStatus(
+        await request(`${path}${separator}scope=MINE`),
+        401,
+        "explicit personal scope requires authentication",
+      );
+      for (const scope of ["DISCOVER", "OBSOLETE"]) {
+        const result = await request(
+          `${path}${separator}scope=${scope}&limit=50`,
+          { userId: users.stranger },
+        );
+        assertStatus(result, 200, `${scope} scope remains global`);
+        assertNoHiddenIdeaMetadata(
+          result,
+          [ideas.unlisted, ideas.collectionsOnly, ideas.ownerPrivate],
+          `${scope} scope does not expose hidden public ideas`,
+        );
+      }
+    }
+    await assertIdeaIds(
+      await request("/api/ideas?visibility=UNLISTED&scope=DISCOVER&limit=50", {
+        userId: users.stranger,
+      }),
+      [],
+      "explicit discovery scope overrides legacy personal fallback",
+    );
+    await assertIdeaIds(
+      await request("/api/ideas?visibility=OBSOLETE&limit=50"),
+      [ideas.public, ideas.extraPublic],
+      "obsolete visibility query falls back to public discovery",
+    );
+    const anonymousSearch = await request("/api/search?q=Matrix&limit=50");
+    assertStatus(anonymousSearch, 200, "anonymous global search");
+    assert.deepEqual(
+      anonymousSearch.json.results.map((idea) => idea.id).sort(),
+      [ideas.public, ideas.extraPublic].sort(),
+      "global search only lists public listed",
+    );
+    assertNoHiddenIdeaMetadata(
+      anonymousSearch,
+      [
+        ideas.unlisted,
+        ideas.ownerPrivate,
+        ideas.strangerPrivate,
+        ideas.collectionsOnly,
+      ],
+      "anonymous global search",
+    );
+    const ownerSearch = await request("/api/search?q=Matrix&limit=50", {
+      userId: users.owner,
+    });
+    assert.deepEqual(
+      ownerSearch.json.results.map((idea) => idea.id).sort(),
+      [ideas.public, ideas.extraPublic, ideas.ownerPrivate].sort(),
+      "global search includes requester private but excludes public hidden",
+    );
+    assertNoHiddenIdeaMetadata(
+      ownerSearch,
+      [ideas.unlisted, ideas.strangerPrivate, ideas.collectionsOnly],
+      "owner global search",
+    );
+    const candidateList = await request(
+      `/api/collections/${collections.public}/ideas/candidates?limit=50`,
+      { userId: users.owner },
+    );
+    assertStatus(candidateList, 200, "owner candidate picker");
+    assert.deepEqual(
+      candidateList.json.ideas.map((idea) => idea.id).sort(),
+      [
+        ideas.public,
+        ideas.extraPublic,
+        ideas.collectionsOnly,
+        ideas.ownerPrivate,
+      ].sort(),
+      "candidate picker excludes link-only and another author's private idea",
+    );
+    assertNoHiddenIdeaMetadata(
+      candidateList,
+      [ideas.unlisted, ideas.strangerPrivate],
+      "owner candidate picker",
+    );
+    const editorCandidates = await request(
+      `/api/collections/${collections.public}/ideas/candidates?limit=50`,
+      { userId: users.editor },
+    );
+    assertStatus(editorCandidates, 200, "editor candidate picker");
+    assert.deepEqual(
+      editorCandidates.json.ideas.map((idea) => idea.id).sort(),
+      [ideas.public, ideas.extraPublic, ideas.collectionsOnly].sort(),
+    );
+    assertNoHiddenIdeaMetadata(
+      editorCandidates,
+      [ideas.unlisted, ideas.ownerPrivate, ideas.strangerPrivate],
+      "editor candidate picker",
+    );
+    assertStatus(
+      await request(`/api/collections/${collections.public}/ideas/candidates`, {
+        userId: users.viewer,
+      }),
+      403,
+      "viewer cannot list mutation candidates",
+    );
+    const eligibleTargets = await request(
+      `/api/collections/idea-targets?ideaId=${ideas.collectionsOnly}`,
+      { userId: users.owner },
+    );
+    assertStatus(eligibleTargets, 200, "collections-only targets");
+    assert.deepEqual(
+      eligibleTargets.json.collections
+        .map((collection) => collection.id)
+        .sort(),
+      Object.values(collections).sort(),
+      "collections-only idea can target every editable collection",
+    );
+    assert.ok(
+      eligibleTargets.json.collections.every(
+        (collection) => collection.isMember,
+      ),
+      "eligible target membership is reported",
+    );
+    const hiddenTargets = await request(
+      `/api/collections/idea-targets?ideaId=${ideas.unlisted}`,
+      { userId: users.owner },
+    );
+    assertStatus(hiddenTargets, 404, "link-only idea has no targets");
+    assertNoHiddenIdeaMetadata(
+      hiddenTargets,
+      [ideas.unlisted],
+      "link-only targets",
+    );
+    assertStatus(
+      await request(
+        `/api/collections/${collections.public}/ideas/${ideas.unlisted}`,
+        { method: "DELETE", userId: users.editor },
+      ),
+      404,
+      "editor cannot remove a hidden membership by ID",
+    );
+    const hiddenBatchRemove = await request(
+      `/api/collections/${collections.public}/ideas/batch`,
+      {
+        method: "DELETE",
+        userId: users.editor,
+        body: { ideaIds: [ideas.unlisted, ideas.ownerPrivate] },
+      },
+    );
+    assertStatus(hiddenBatchRemove, 200, "hidden batch removal");
+    assert.deepEqual(
+      hiddenBatchRemove.json.removedIdeaIds,
+      [],
+      "batch removal does not disclose hidden membership IDs",
+    );
+    assertNoHiddenIdeaMetadata(
+      hiddenBatchRemove,
+      [ideas.unlisted, ideas.ownerPrivate],
+      "hidden batch removal",
+    );
+    const mixedBatchRemove = await request(
+      `/api/collections/${collections.public}/ideas/batch`,
+      {
+        method: "DELETE",
+        userId: users.editor,
+        body: { ideaIds: [ideas.collectionsOnly, ideas.unlisted] },
+      },
+    );
+    assertStatus(mixedBatchRemove, 200, "mixed batch removal");
+    assert.deepEqual(mixedBatchRemove.json.removedIdeaIds, [
+      ideas.collectionsOnly,
+    ]);
+    assert.equal(
+      query(
+        stateDirectory,
+        `SELECT count(*) AS count FROM collection_ideas WHERE collection_id = ${sqlLiteral(collections.public)} AND idea_id = ${sqlLiteral(ideas.unlisted)}`,
+      )[0].count,
+      1,
+      "hidden membership remains stored",
+    );
+    assertStatus(
+      await request(`/api/collections/${collections.public}/ideas`, {
+        method: "POST",
+        userId: users.editor,
+        body: { ideaId: ideas.collectionsOnly },
+      }),
+      204,
+      "editor restores eligible membership",
+    );
+    const idempotentBatch = await request(
+      `/api/collections/${collections.public}/ideas/batch`,
+      {
+        method: "POST",
+        userId: users.owner,
+        body: { ideaIds: [ideas.public, ideas.collectionsOnly] },
+      },
+    );
+    assertStatus(idempotentBatch, 200, "idempotent batch add");
+    assert.deepEqual(idempotentBatch.json.addedIdeaIds, []);
+    assert.deepEqual(
+      idempotentBatch.json.alreadyMemberIdeaIds.sort(),
+      [ideas.public, ideas.collectionsOnly].sort(),
+    );
+    assertStatus(
+      await request(`/api/collections/${collections.public}/ideas`, {
+        method: "POST",
+        userId: users.owner,
+        body: { ideaId: ideas.unlisted },
+      }),
+      404,
+      "link-only membership add is denied",
+    );
+    assertStatus(
+      await request(`/api/collections/${collections.public}/ideas`, {
+        method: "POST",
+        userId: users.owner,
+        body: { ideaId: ideas.strangerPrivate },
+      }),
+      404,
+      "another author's private membership add is denied",
+    );
+    assertStatus(
+      await request(`/api/collections/${collections.public}/ideas/batch`, {
+        method: "POST",
+        userId: users.owner,
+        body: { ideaIds: [ideas.public, ideas.unlisted] },
+      }),
+      404,
+      "batch add denies a hidden idea",
+    );
+
+    const orphan = await request("/api/ideas", {
+      method: "POST",
+      userId: users.owner,
+      body: {
+        title: "Orphan collections-only fixture",
+        content: "orphan-only-token",
+        access: "PUBLIC",
+        distribution: "COLLECTIONS_ONLY",
+      },
+    });
+    assertStatus(
+      orphan,
+      201,
+      "create collections-only idea without membership",
+    );
+    const orphanId = orphan.json.idea.id;
+    assertStatus(
+      await request(`/api/ideas/${orphanId}`),
+      200,
+      "orphan direct link",
+    );
+    assert.equal(
+      (await request("/api/ideas?limit=50")).json.ideas.some(
+        (idea) => idea.id === orphanId,
+      ),
+      false,
+      "orphan is absent from archive",
+    );
+    for (const collectionId of Object.values(collections)) {
+      const nested = await request(`/api/collections/${collectionId}/ideas`, {
+        userId: users.owner,
+      });
+      assert.equal(
+        nested.json.ideas.some((idea) => idea.id === orphanId),
+        false,
+        "zero membership never creates collection discovery",
+      );
+    }
+    const orphanTargets = await request(
+      `/api/collections/idea-targets?ideaId=${orphanId}`,
+      { userId: users.owner },
+    );
+    assertStatus(orphanTargets, 200, "orphan targets");
+    assert.ok(
+      orphanTargets.json.collections.every(
+        (collection) => !collection.isMember,
+      ),
+      "orphan targets report no memberships",
+    );
+    const skippedInsertTrigger = join(temporaryDirectory, "skip-add.sql");
+    writeFileSync(
+      skippedInsertTrigger,
+      `CREATE TRIGGER skip_single_add BEFORE INSERT ON collection_ideas WHEN NEW.idea_id = ${sqlLiteral(orphanId)} BEGIN SELECT RAISE(IGNORE); END;`,
+    );
+    executeFile(stateDirectory, skippedInsertTrigger);
+    const skippedAdd = await request(
+      `/api/collections/${collections.public}/ideas`,
+      { method: "POST", userId: users.owner, body: { ideaId: orphanId } },
+    );
+    assertStatus(skippedAdd, 404, "skipped insert cannot report success");
+    assert.equal(
+      skippedAdd.body.includes("Orphan collections-only fixture"),
+      false,
+      "skipped insert error has no idea title",
+    );
+    query(stateDirectory, "DROP TRIGGER skip_single_add");
+    assertStatus(
+      await request(`/api/collections/${collections.public}/ideas`, {
+        method: "POST",
+        userId: users.owner,
+        body: { ideaId: orphanId },
+      }),
+      204,
+      "single add succeeds after skip condition clears",
+    );
+    assertStatus(
+      await request(`/api/ideas/${orphanId}`, {
+        method: "DELETE",
+        userId: users.owner,
+      }),
+      204,
+      "delete orphan fixture",
+    );
+
+    // All six stored states, including private distribution preservation.
+    const transition = await request("/api/ideas", {
+      method: "POST",
+      userId: users.owner,
+      body: {
+        title: "Policy transition fixture",
+        content: "transitiontoken",
+        tags: ["transitiontag"],
+      },
+    });
+    assertStatus(transition, 201, "create listed transition fixture");
+    const transitionId = transition.json.idea.id;
+    assert.equal(transition.json.idea.access, "PUBLIC");
+    assert.equal(transition.json.idea.distribution, "LISTED");
+    assertStatus(
+      await request(`/api/collections/${collections.public}/ideas`, {
+        method: "POST",
+        userId: users.owner,
+        body: { ideaId: transitionId },
+      }),
+      204,
+      "listed membership add",
+    );
+    async function transitionState(
+      access,
+      distribution,
+      archive,
+      global,
+      anonymousCollection,
+      ownerCollection,
+      publicTagCount,
+    ) {
+      const changed = await request(`/api/ideas/${transitionId}`, {
+        method: "PATCH",
+        userId: users.owner,
+        body: { access, distribution },
+      });
+      assertStatus(changed, 200, "transition patch");
+      assert.equal(changed.json.idea.access, access);
+      assert.equal(changed.json.idea.distribution, distribution);
+      const archiveIds = (await request("/api/ideas?limit=50")).json.ideas.map(
+        (idea) => idea.id,
+      );
+      assert.equal(
+        archiveIds.includes(transitionId),
+        archive,
+        "archive transition",
+      );
+      const globalIds = (
+        await request("/api/search?q=transitiontoken&limit=50")
+      ).json.results.map((idea) => idea.id);
+      assert.equal(
+        globalIds.includes(transitionId),
+        global,
+        "anonymous global search transition",
+      );
+      const authorSearchIds = (
+        await request("/api/search?q=transitiontoken&limit=50", {
+          userId: users.owner,
+        })
+      ).json.results.map((idea) => idea.id);
+      assert.equal(
+        authorSearchIds.includes(transitionId),
+        global || access === "PRIVATE",
+        "author global search transition",
+      );
+      const anonymousIds = (
+        await request(`/api/collections/${collections.public}/ideas?limit=50`)
+      ).json.ideas.map((idea) => idea.id);
+      assert.equal(
+        anonymousIds.includes(transitionId),
+        anonymousCollection,
+        "anonymous collection transition",
+      );
+      const ownerIds = (
+        await request(`/api/collections/${collections.public}/ideas?limit=50`, {
+          userId: users.owner,
+        })
+      ).json.ideas.map((idea) => idea.id);
+      assert.equal(
+        ownerIds.includes(transitionId),
+        ownerCollection,
+        "author collection transition",
+      );
+      const tags = await request("/api/tags?q=transitiontag");
+      assertStatus(tags, 200, "public tag discovery transition");
+      assert.equal(
+        tags.json.tags.find((tag) => tag.name === "transitiontag")?.ideaCount ??
+          0,
+        publicTagCount,
+        "public tag count transition",
+      );
+    }
+    await transitionState("PUBLIC", "LISTED", true, true, true, true, 1);
+    await transitionState(
+      "PUBLIC",
+      "COLLECTIONS_ONLY",
+      false,
+      false,
+      true,
+      true,
+      0,
+    );
+    await transitionState(
+      "PRIVATE",
+      "COLLECTIONS_ONLY",
+      false,
+      false,
+      false,
+      true,
+      0,
+    );
+    await transitionState("PRIVATE", "UNLISTED", false, false, false, true, 0);
+    await transitionState("PRIVATE", "LISTED", false, false, false, true, 0);
+    await transitionState("PUBLIC", "UNLISTED", false, false, false, false, 0);
+    await transitionState("PUBLIC", "LISTED", true, true, true, true, 1);
+    assertStatus(
+      await request(`/api/ideas/${transitionId}`, {
+        method: "DELETE",
+        userId: users.owner,
+      }),
+      204,
+      "delete transition fixture",
     );
 
     // Capabilities and mutation boundaries.
@@ -804,6 +1539,55 @@ async function main() {
       plan.map((row) => row.detail).join("\n"),
       /collections_visibility_updated_row_id_idx/,
       "public discovery uses its visibility/sort index",
+    );
+
+    const plannerFixturePath = join(temporaryDirectory, "planner-fixture.sql");
+    writeFileSync(plannerFixturePath, plannerFixtureSql());
+    executeFile(stateDirectory, plannerFixturePath);
+    assert.equal(
+      query(
+        stateDirectory,
+        "SELECT count(*) AS count FROM ideas WHERE row_id BETWEEN 1001 AND 1900",
+      )[0].count,
+      900,
+      "planner fixture contains 900 ideas",
+    );
+
+    const archivePlan = query(
+      stateDirectory,
+      "EXPLAIN QUERY PLAN SELECT id FROM ideas WHERE access = 'PUBLIC' AND distribution = 'LISTED' ORDER BY updated_at DESC, row_id DESC LIMIT 20",
+    );
+    assert.match(
+      archivePlan.map((row) => row.detail).join("\n"),
+      /ideas_access_distribution_updated_row_id_idx/,
+      "archive uses policy/sort index",
+    );
+    const ftsPlan = query(
+      stateDirectory,
+      "EXPLAIN QUERY PLAN SELECT i.id FROM ideas_fts JOIN ideas i ON i.row_id = ideas_fts.rowid WHERE ideas_fts MATCH 'Matrix' AND i.access = 'PUBLIC' AND i.distribution = 'LISTED' LIMIT 20",
+    );
+    assert.match(
+      ftsPlan.map((row) => row.detail).join("\n"),
+      /VIRTUAL TABLE INDEX/,
+      "FTS uses its virtual index",
+    );
+    const nestedPlan = query(
+      stateDirectory,
+      `EXPLAIN QUERY PLAN SELECT i.id FROM collection_ideas ci JOIN ideas i ON i.id = ci.idea_id WHERE ci.collection_id = ${sqlLiteral(collections.public)} AND i.access = 'PUBLIC' AND i.distribution IN ('LISTED', 'COLLECTIONS_ONLY') ORDER BY i.updated_at DESC, i.row_id DESC LIMIT 20`,
+    );
+    assert.match(
+      nestedPlan.map((row) => row.detail).join("\n"),
+      /sqlite_autoindex_collection_ideas_1/,
+      "nested listing uses the membership index",
+    );
+    const countPlan = query(
+      stateDirectory,
+      `EXPLAIN QUERY PLAN SELECT count(*) FROM collection_ideas ci JOIN ideas i ON i.id = ci.idea_id WHERE ci.collection_id = ${sqlLiteral(collections.public)} AND i.access = 'PUBLIC' AND i.distribution IN ('LISTED', 'COLLECTIONS_ONLY')`,
+    );
+    assert.match(
+      countPlan.map((row) => row.detail).join("\n"),
+      /sqlite_autoindex_collection_ideas_1/,
+      "collection count uses membership index",
     );
 
     console.log(

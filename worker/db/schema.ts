@@ -37,6 +37,15 @@ export const ideaVisibilityValues = ["PUBLIC", "UNLISTED", "PRIVATE"] as const;
 
 export type IdeaVisibility = (typeof ideaVisibilityValues)[number];
 
+export const ideaAccessValues = ["PUBLIC", "PRIVATE"] as const;
+export type IdeaAccess = (typeof ideaAccessValues)[number];
+export const ideaDistributionValues = [
+  "LISTED",
+  "COLLECTIONS_ONLY",
+  "UNLISTED",
+] as const;
+export type IdeaDistribution = (typeof ideaDistributionValues)[number];
+
 export const collectionVisibilityValues = [
   "PUBLIC",
   "UNLISTED",
@@ -205,6 +214,12 @@ export const ideas = sqliteTable(
     })
       .notNull()
       .default("PUBLIC"),
+    access: text("access", { enum: ideaAccessValues })
+      .notNull()
+      .default("PUBLIC"),
+    distribution: text("distribution", { enum: ideaDistributionValues })
+      .notNull()
+      .default("LISTED"),
 
     // Stashed user who created the idea.
     authorId: text("author_id")
@@ -223,6 +238,18 @@ export const ideas = sqliteTable(
   (table) => [
     // Used for queries such as "all ideas created by this user".
     index("ideas_author_id_idx").on(table.authorId),
+    index("ideas_access_distribution_updated_row_id_idx").on(
+      table.access,
+      table.distribution,
+      desc(table.updatedAt),
+      desc(table.rowId),
+    ),
+    index("ideas_access_distribution_created_row_id_idx").on(
+      table.access,
+      table.distribution,
+      desc(table.createdAt),
+      desc(table.rowId),
+    ),
     index("ideas_visibility_updated_row_id_idx").on(
       table.visibility,
       desc(table.updatedAt),

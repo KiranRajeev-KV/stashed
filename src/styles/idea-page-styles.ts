@@ -89,10 +89,6 @@ max-lg:[&]:grid-cols-[repeat(2,_minmax(0,_1fr))] max-lg:[&]:gap-x-6
 max-phone:[&]:grid-cols-[minmax(0,_1fr)]
 `;
 
-export const twIdeaReaderVisibility = `
-idea-reader-visibility [&]:flex [&]:items-center [&]:gap-[7px] [&_svg]:text-muted-foreground
-`;
-
 export const twIdeaReaderStatus = `
 idea-reader-status [&]:inline-flex [&]:items-center [&]:gap-[7px] [&]:min-h-control [&]:border-0
 [&]:rounded-control [&]:bg-transparent [&]:text-foreground [&]:p-0 [&]:font-sans [&]:font-normal

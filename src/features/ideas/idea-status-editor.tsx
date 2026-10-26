@@ -8,6 +8,7 @@ import { ActionFeedback } from "../../components/ui/action-feedback.js";
 
 import {
   ideaQueryKey,
+  invalidateIdeaSurfaces,
   type IdeaListItem,
   type IdeaStatus,
   updateIdea,
@@ -26,10 +27,7 @@ export function IdeaStatusEditor({ idea }: IdeaStatusEditorProps) {
     onSuccess: async ({ idea: updatedIdea }) => {
       setSelectedStatus(updatedIdea.status);
       queryClient.setQueryData(ideaQueryKey(updatedIdea.id), updatedIdea);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["ideas"] }),
-        queryClient.invalidateQueries({ queryKey: ["search"] }),
-      ]);
+      await invalidateIdeaSurfaces(queryClient);
     },
     onError: () => {
       setSelectedStatus(idea.status);

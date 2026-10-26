@@ -11,7 +11,7 @@ import { ArrowUpRight } from "lucide-react";
 import type { IdeaListItem } from "../../api/ideas.js";
 import { IDEA_STATUS_LABELS } from "./idea-status.js";
 import { IdeaStatusEditor } from "./idea-status-editor.js";
-import { IdeaVisibilityEditor } from "./idea-visibility-editor.js";
+import { IdeaSharingSummary } from "./idea-sharing-summary.js";
 
 type IdeaCardProps = {
   idea: IdeaListItem;
@@ -73,12 +73,15 @@ export function IdeaCard({
           {isOwner ? (
             <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
               <IdeaStatusEditor idea={idea} />
-              <IdeaVisibilityEditor idea={idea} />
+              <IdeaSharingSummary idea={idea} isOwner />
             </div>
           ) : (
-            <span className={twIdeaStatus} data-status={idea.status}>
-              {IDEA_STATUS_LABELS[idea.status]}
-            </span>
+            <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
+              <span className={twIdeaStatus} data-status={idea.status}>
+                {IDEA_STATUS_LABELS[idea.status]}
+              </span>
+              <IdeaSharingSummary idea={idea} isOwner={false} />
+            </div>
           )}
           <time
             dateTime={timestamp}

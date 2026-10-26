@@ -17,7 +17,11 @@ import { Trash2 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 
-import { deleteIdea, ideaQueryKey } from "../../api/ideas.js";
+import {
+  deleteIdea,
+  ideaQueryKey,
+  invalidateIdeaSurfaces,
+} from "../../api/ideas.js";
 
 type DeleteIdeaDialogProps = {
   ideaId: string;
@@ -39,11 +43,7 @@ export function DeleteIdeaDialog({ ideaId, ideaTitle }: DeleteIdeaDialogProps) {
         queryKey: ideaQueryKey(ideaId),
         exact: true,
       });
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["ideas"] }),
-        queryClient.invalidateQueries({ queryKey: ["tags"] }),
-        queryClient.invalidateQueries({ queryKey: ["search"] }),
-      ]);
+      await invalidateIdeaSurfaces(queryClient);
 
       toast.success("Idea deleted");
       await navigate({ to: "/ideas", replace: true });

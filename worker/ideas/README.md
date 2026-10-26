@@ -1,8 +1,8 @@
 # Ideas API
 
 The Ideas API is a Hono API backed by Cloudflare D1 and Drizzle ORM. Public
-ideas are readable by anyone; authors can additionally read their own unlisted
-and private ideas. Only an idea's author can update or delete it.
+ideas are readable by anyone through a direct link; authors can additionally
+read their own private ideas. Only an idea's author can update or delete it.
 
 ## Structure
 
@@ -29,30 +29,48 @@ the database middleware. They do not create global database state.
 Create, update, and delete endpoints require a valid Stashed session cookie.
 Read endpoints use a session when present to include the author's own ideas.
 
-## Visibility
+## Access and distribution
 
-Ideas have one of three visibility values:
+`access` is `PUBLIC` or `PRIVATE`; `distribution` is `LISTED`,
+`COLLECTIONS_ONLY`, or `UNLISTED`. Direct detail reads allow any public idea
+and only the author of a private idea. `distribution` remains stored when an
+idea becomes private, so switching it back to public restores its placement.
 
-- `PUBLIC` is listed in feeds, search, and tag discovery, and is readable by anyone.
-- `UNLISTED` is omitted from feeds, search, and tag discovery, but is readable by anyone who knows its direct URL.
-- `PRIVATE` is readable only by its author.
+| Surface                          | Idea policy                                           |
+| -------------------------------- | ----------------------------------------------------- |
+| `/api/ideas` default `DISCOVER`  | Public listed only                                    |
+| `/api/ideas?scope=MINE`          | Authenticated author's ideas, including hidden        |
+| `/api/search` default `DISCOVER` | Public listed plus the requester's private ideas      |
+| `/api/search?scope=MINE`         | Authenticated author's ideas, including public hidden |
+| Direct detail                    | Public ideas or the private idea's author             |
+| Tag discovery                    | Public listed only                                    |
 
-For feeds and search, anonymous visitors and non-authors receive only public
-ideas. An author receives all of their own ideas alongside public ideas. A
-direct request for a private idea by anyone else returns `IDEA_NOT_FOUND`.
+Collection-local policy additionally requires access to the collection. It
+includes public listed, public collections-only, and the requester's private
+ideas, but never public unlisted. All list and search predicates run in SQL
+before sorting and pagination. `policy.ts` defines the same decisions for
+in-memory checks, Drizzle queries, and parameterized FTS SQL.
+
+Malformed legacy `visibility` query values fall back to public discovery.
+The `visibility` request/response field is retained during the frontend
+transition. New writes should use `access` and `distribution`; a request may
+not mix these with `visibility`. The legacy projection is `PUBLIC/LISTED →
+PUBLIC`, `PUBLIC/*hidden → UNLISTED`, and `PRIVATE/* → PRIVATE`.
 
 ## List ideas
 
 `GET /api/ideas` accepts these query parameters:
 
-| Parameter    | Behavior                                         |
-| ------------ | ------------------------------------------------ |
-| `status`     | Filter by one of the configured idea statuses    |
-| `visibility` | Filter by `PUBLIC`, `UNLISTED`, or `PRIVATE`     |
-| `sort`       | Order results; defaults to `UPDATED_DESC`        |
-| `tagId`      | Filter by one or more tag UUIDs (repeat the key) |
-| `cursor`     | Continue after an opaque pagination cursor       |
-| `limit`      | Page size; defaults to `20` and is at most `50`  |
+| Parameter      | Behavior                                         |
+| -------------- | ------------------------------------------------ |
+| `status`       | Filter by one of the configured idea statuses    |
+| `scope`        | `DISCOVER` (default) or authenticated `MINE`     |
+| `access`       | Filter by `PUBLIC` or `PRIVATE` within the scope |
+| `distribution` | Filter by stored distribution within the scope   |
+| `sort`         | Order results; defaults to `UPDATED_DESC`        |
+| `tagId`        | Filter by one or more tag UUIDs (repeat the key) |
+| `cursor`       | Continue after an opaque pagination cursor       |
+| `limit`        | Page size; defaults to `20` and is at most `50`  |
 
 Multiple `tagId` values use AND matching: an idea is included only when it has
 every selected tag. A single `tagId` remains supported for backwards
@@ -70,6 +88,8 @@ Sort accepts `UPDATED_DESC` (default), `CREATED_DESC`, `CREATED_ASC`,
       "title": "Build a search page",
       "excerpt": "Add filters and keyboard navigation…",
       "status": "DRAFT",
+      "access": "PUBLIC",
+      "distribution": "LISTED",
       "visibility": "PUBLIC",
       "author": {
         "id": "c856838e-9e07-460e-ac93-ef2279082e97",
@@ -97,16 +117,17 @@ Create an idea with:
   "title": "Build a search page",
   "content": "Add filters and keyboard navigation.",
   "status": "DRAFT",
-  "visibility": "UNLISTED",
+  "access": "PUBLIC",
+  "distribution": "UNLISTED",
   "tags": ["frontend", "search"]
 }
 ```
 
-`status`, `visibility`, and `tags` are optional when creating an idea. Missing
-values use `DRAFT` and `PUBLIC`. The API obtains `author_id` exclusively from
+`status`, `access`, `distribution`, and `tags` are optional when creating an idea. Missing
+values use `DRAFT`, `PUBLIC`, and `LISTED`. The API obtains `author_id` exclusively from
 the authenticated session; it is not accepted in request JSON.
 
-PATCH requests may contain `title`, `content`, `status`, `visibility`, or `tags`:
+PATCH requests may contain `title`, `content`, `status`, `access`, `distribution`, or `tags`:
 
 - An omitted field remains unchanged.
 - Omitted `tags` preserve the existing tag set.
@@ -130,13 +151,13 @@ database.
 
 ## Search
 
-`GET /api/search` requires `q` and accepts `status`, `visibility`, repeated
-`tagId`, `sort`, `limit`, and `offset`. It applies status, tag, and visibility
-rules in the same way as the ideas list endpoint. `sort` defaults to
+`GET /api/search` requires `q` and accepts `scope`, `status`, `access`,
+`distribution`, repeated `tagId`, `sort`, `limit`, and `offset`. Its default
+scope includes listed public ideas and the requester's private ideas. `sort` defaults to
 `UPDATED_DESC` and accepts the same values as the ideas list endpoint:
 
 ```text
-GET /api/search?q=cloudflare+d1&status=ACTIVE&visibility=PUBLIC&sort=NAME_ASC&limit=20&offset=0
+GET /api/search?q=cloudflare+d1&status=ACTIVE&access=PUBLIC&sort=NAME_ASC&limit=20&offset=0
 ```
 
 Search uses the custom `ideas_fts` FTS5 table and joins matches back through
@@ -166,7 +187,7 @@ Current input limits are:
 - Tag name: 1–50 trimmed characters
 - List/search limit: 1–50
 - Search offset: 0–10,000
-- Visibility: `PUBLIC`, `UNLISTED`, or `PRIVATE`
+- Access: `PUBLIC` or `PRIVATE`; distribution: `LISTED`, `COLLECTIONS_ONLY`, or `UNLISTED`
 - Public idea and tag IDs: UUIDs
 
 API errors use one shape:

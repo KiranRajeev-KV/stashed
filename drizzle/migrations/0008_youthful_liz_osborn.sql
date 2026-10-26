@@ -1,0 +1,2 @@
+CREATE INDEX `ideas_access_distribution_updated_row_id_idx` ON `ideas` (`access`,`distribution`,"updated_at" desc,"row_id" desc);--> statement-breakpoint
+CREATE INDEX `ideas_access_distribution_created_row_id_idx` ON `ideas` (`access`,`distribution`,"created_at" desc,"row_id" desc);

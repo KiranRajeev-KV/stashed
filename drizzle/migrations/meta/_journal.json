@@ -50,6 +50,20 @@
       "when": 1790109879255,
       "tag": "0006_luxuriant_boomer",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1790411037119,
+      "tag": "0007_messy_ghost_rider",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1790411423092,
+      "tag": "0008_youthful_liz_osborn",
+      "breakpoints": true
     }
   ]
 }

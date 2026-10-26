@@ -20,16 +20,17 @@ import { TechnicalMarkdownEditor } from "../markdown/technical-markdown-editor.j
 import { TagSelector } from "../tags/tag-selector.js";
 import { TagSuggestions } from "../tags/tag-suggestions.js";
 import { IDEA_STATUSES } from "./idea-status.js";
-import { IDEA_VISIBILITIES } from "./idea-visibility.js";
+import { IDEA_ACCESSES, IDEA_DISTRIBUTIONS } from "./idea-sharing.js";
+import { IdeaSharingSettings } from "./idea-sharing-settings.js";
 import { StatusSelect } from "./status-select.js";
-import { VisibilitySelect } from "./visibility-select.js";
 
 const ideaFormSchema = z
   .object({
     title: z.string().trim().min(1, "Give the idea a title.").max(200),
     content: z.string().max(200_000),
     status: z.enum(IDEA_STATUSES),
-    visibility: z.enum(IDEA_VISIBILITIES),
+    access: z.enum(IDEA_ACCESSES),
+    distribution: z.enum(IDEA_DISTRIBUTIONS),
     tags: z.array(z.string().trim().min(1).max(50)).max(20),
     tagDraft: z.string().trim().max(50, "Tags can be up to 50 characters."),
   })
@@ -50,7 +51,12 @@ const ideaFormSchema = z
   });
 
 type IdeaFormValues = z.infer<typeof ideaFormSchema>;
-export type IdeaFormSubmission = Required<CreateIdeaInput>;
+export type IdeaFormSubmission = Required<
+  Pick<
+    CreateIdeaInput,
+    "title" | "content" | "status" | "access" | "distribution" | "tags"
+  >
+>;
 
 type IdeaFormProps = {
   ideaId?: string;
@@ -152,7 +158,8 @@ export function IdeaForm({
         title: value.title.trim(),
         content: value.content,
         status: value.status,
-        visibility: value.visibility,
+        access: value.access,
+        distribution: value.distribution,
         tags: normalizeTags(value.tags, value.tagDraft),
       }),
   });
@@ -347,30 +354,26 @@ export function IdeaForm({
             )}
           </form.Field>
 
-          <form.Field name="visibility">
-            {(field) => (
-              <VisibilitySelect
-                className="grid min-w-0 gap-2"
-                description={
-                  <span className="flex justify-between gap-3 text-caption leading-relaxed text-muted-foreground">
-                    <span>
-                      {field.state.value === "PUBLIC"
-                        ? "Shown in the public feed and search."
-                        : field.state.value === "UNLISTED"
-                          ? "Hidden from feeds and search, but its URL works for anyone."
-                          : "Hidden from everyone except you."}
-                    </span>
-                  </span>
-                }
-                label="Visibility"
-                labelClassName="text-xs font-medium text-muted-foreground"
-                name={field.name}
-                onBlur={field.handleBlur}
-                onValueChange={(visibility) => {
-                  if (visibility) field.handleChange(visibility);
-                }}
-                value={field.state.value}
-              />
+          <form.Field name="access">
+            {(accessField) => (
+              <form.Field name="distribution">
+                {(distributionField) => (
+                  <form.Subscribe selector={(state) => state.isSubmitting}>
+                    {(isSubmitting) => (
+                      <IdeaSharingSettings
+                        access={accessField.state.value}
+                        distribution={distributionField.state.value}
+                        disabled={isSubmitting}
+                        mode={mode}
+                        onAccessChange={accessField.handleChange}
+                        onDistributionChange={distributionField.handleChange}
+                        onAccessBlur={accessField.handleBlur}
+                        onDistributionBlur={distributionField.handleBlur}
+                      />
+                    )}
+                  </form.Subscribe>
+                )}
+              </form.Field>
             )}
           </form.Field>
 

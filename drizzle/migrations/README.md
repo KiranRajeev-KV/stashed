@@ -150,3 +150,32 @@ Use `--local` for local development. Enable only after verification with the
 same command using `enabled = 1`. Keep `user_daily_limit` and
 `global_monthly_limit` positive; they can be changed in this row without a
 code deployment. Already-reserved requests may finish after disabling.
+
+### `0007_messy_ghost_rider.sql`: idea access and distribution
+
+Adds non-null `access` and `distribution`, backfills all legacy visibility
+values, and keeps `visibility` as a temporary compatibility projection. Bridge
+triggers map writes from the old Worker during the migration-before-deploy
+window. The new Worker writes all three columns. Public tag count triggers now
+use `access = PUBLIC AND distribution = LISTED` and remain authoritative.
+
+Run `python3 scripts/verify-idea-policy.py` against the fixture before release.
+Deploy the compatibility Worker before enabling `COLLECTIONS_ONLY` in the UI;
+the original Worker is not a safe rollback target after those writes begin.
+Record a D1 Time Travel bookmark or export before the production migration.
+For a data incident, repair forward from the stored access/distribution values
+or restore the database only after reviewing the whole-database impact.
+
+Check counts after migration with:
+
+```sql
+SELECT t.id, t.public_idea_count, count(i.id) AS actual_count
+FROM tags t LEFT JOIN idea_tags it ON it.tag_id = t.id
+LEFT JOIN ideas i ON i.id = it.idea_id
+  AND i.access = 'PUBLIC' AND i.distribution = 'LISTED'
+GROUP BY t.id HAVING t.public_idea_count != count(i.id);
+```
+
+`0008_youthful_liz_osborn.sql` adds archive indexes after `EXPLAIN QUERY
+PLAN` showed a full scan and temporary sort for listed public ideas. FTS and
+collection count queries use their existing FTS and membership indexes.

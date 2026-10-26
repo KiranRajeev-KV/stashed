@@ -27,7 +27,6 @@ import {
   twIdeaReaderStatus,
   twIdeaReaderTags,
   twIdeaReaderUsername,
-  twIdeaReaderVisibility,
 } from "../../styles/idea-page-styles.js";
 import { IdeaTagLink } from "./idea-page-ui.js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -40,6 +39,7 @@ import { ApiClientError } from "../../api/client.js";
 import {
   type Idea,
   ideaQueryKey,
+  invalidateIdeaSurfaces,
   ideaQueryOptions,
   updateIdea,
 } from "../../api/ideas.js";
@@ -52,11 +52,16 @@ import {
 import { DeleteIdeaDialog } from "./delete-idea-dialog.js";
 import { IDEA_STATUS_LABELS } from "./idea-status.js";
 import { IdeaStatusEditor } from "./idea-status-editor.js";
-import { VisibilityIcon } from "./visibility-icon.js";
-import { IdeaVisibilityEditor } from "./idea-visibility-editor.js";
+import {
+  IdeaAudienceLabel,
+  IdeaDistributionLabel,
+} from "./idea-sharing-summary.js";
 import { AddIdeaToCollectionsPanel } from "./add-idea-to-collections-panel.js";
 
-import { IDEA_VISIBILITY_LABELS } from "./idea-visibility.js";
+import {
+  IDEA_DISTRIBUTION_LABELS,
+  IDEA_PUBLIC_LINK_NOTE,
+} from "./idea-sharing.js";
 import { ProceduralIdeaBanner } from "./procedural-art/procedural-idea-banner.js";
 
 const routeApi = getRouteApi("/ideas/$ideaId");
@@ -92,10 +97,7 @@ export function IdeaDetail() {
       queryClient.setQueryData(ideaQueryKey(idea.id), idea);
     },
     onSettled: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["ideas"] }),
-        queryClient.invalidateQueries({ queryKey: ["search"] }),
-      ]);
+      await invalidateIdeaSurfaces(queryClient);
     },
   });
 
@@ -122,6 +124,8 @@ export function IdeaDetail() {
   const idea = ideaQuery.data;
   const isOwner = currentUserQuery.data?.id === idea.author.id;
   const content = idea.content;
+  const isPublicLinkOnly =
+    idea.access === "PUBLIC" && idea.distribution === "UNLISTED";
   const authorInitials =
     idea.author.displayName.trim().slice(0, 2).toUpperCase() || "ST";
 
@@ -145,9 +149,9 @@ export function IdeaDetail() {
           <>
             <CopyLinkButton
               key={idea.id}
-              isPrivate={idea.visibility === "PRIVATE"}
+              isPrivate={idea.access === "PRIVATE"}
             />
-            {currentUserQuery.data ? (
+            {currentUserQuery.data && !isPublicLinkOnly ? (
               <Button
                 variant="secondary"
                 onClick={() => setCollectionPickerOpen(true)}
@@ -289,18 +293,18 @@ export function IdeaDetail() {
               </dd>
             </div>
             <div>
-              <dt>Visibility</dt>
+              <dt>Audience</dt>
               <dd>
-                {isOwner ? (
-                  <IdeaVisibilityEditor idea={idea} />
+                <IdeaAudienceLabel access={idea.access} />
+              </dd>
+            </div>
+            <div>
+              <dt>Appears in</dt>
+              <dd>
+                {idea.access === "PUBLIC" ? (
+                  <IdeaDistributionLabel distribution={idea.distribution} />
                 ) : (
-                  <span className={twIdeaReaderVisibility}>
-                    <VisibilityIcon
-                      visibility={idea.visibility}
-                      className="size-3.5 shrink-0"
-                    />
-                    {IDEA_VISIBILITY_LABELS[idea.visibility]}
-                  </span>
+                  "Hidden from others"
                 )}
               </dd>
             </div>
@@ -327,6 +331,34 @@ export function IdeaDetail() {
               </dd>
             </div>
           </dl>
+          <div className="mt-4 grid gap-3 text-caption text-muted-foreground">
+            {idea.access === "PRIVATE" ? (
+              <p>
+                If you choose Anyone again, this idea will use:{" "}
+                {IDEA_DISTRIBUTION_LABELS[idea.distribution]}.
+              </p>
+            ) : (
+              <p>{IDEA_PUBLIC_LINK_NOTE}</p>
+            )}
+            {isPublicLinkOnly ? (
+              <p>
+                Link only ideas cannot appear in collections.
+                {isOwner
+                  ? " Choose Everywhere or Collections only to add this idea."
+                  : ""}
+              </p>
+            ) : null}
+            {isOwner ? (
+              <Link
+                to="/ideas/$ideaId/edit"
+                params={{ ideaId: idea.id }}
+                className="inline-flex min-h-11 items-center gap-1.5 justify-self-start text-foreground underline decoration-border-strong underline-offset-4 hover:decoration-foreground"
+              >
+                <Pencil size={13} aria-hidden="true" />
+                Edit sharing
+              </Link>
+            ) : null}
+          </div>
           {idea.tags.length > 0 ? (
             <section className={twIdeaReaderTags} aria-label="Tags">
               <h2>Tags</h2>
