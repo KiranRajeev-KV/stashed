@@ -684,3 +684,79 @@ export async function removeCollectionIdeaRecords(
       .where(eq(collections.id, collectionId)),
   ]);
 }
+
+/** Discoverable memberships plus explicit participants and the supplied link context.
+ * Knowing a public Idea URL must never reveal unlisted/private containers.
+ */
+export async function listIdeaMembershipRecords(
+  db: Database,
+  ideaId: string,
+  viewerId?: string,
+  contextCollectionId?: string,
+) {
+  const participant = viewerId
+    ? or(
+        eq(collections.ownerId, viewerId),
+        exists(
+          db
+            .select({ value: sql`1` })
+            .from(collectionCollaborators)
+            .where(
+              and(
+                eq(collectionCollaborators.collectionId, collections.id),
+                eq(collectionCollaborators.userId, viewerId),
+              ),
+            ),
+        ),
+      )
+    : undefined;
+  const manager = viewerId
+    ? or(
+        eq(collections.ownerId, viewerId),
+        exists(
+          db
+            .select({ value: sql`1` })
+            .from(collectionCollaborators)
+            .where(
+              and(
+                eq(collectionCollaborators.collectionId, collections.id),
+                eq(collectionCollaborators.userId, viewerId),
+                eq(collectionCollaborators.role, "EDITOR"),
+              ),
+            ),
+        ),
+      )
+    : sql`0`;
+  const rows = await db
+    .select({
+      id: collections.id,
+      name: collections.name,
+      icon: collections.icon,
+      manageIdeas: sql<number>`CASE WHEN ${manager} THEN 1 ELSE 0 END`,
+    })
+    .from(collections)
+    .innerJoin(
+      collectionIdeas,
+      and(
+        eq(collectionIdeas.collectionId, collections.id),
+        eq(collectionIdeas.ideaId, ideaId),
+      ),
+    )
+    .where(
+      or(
+        eq(collections.visibility, "PUBLIC"),
+        participant,
+        contextCollectionId
+          ? and(
+              eq(collections.id, contextCollectionId),
+              eq(collections.visibility, "UNLISTED"),
+            )
+          : undefined,
+      ),
+    )
+    .orderBy(asc(collections.name), asc(collections.id));
+  return rows.map(({ manageIdeas, ...collection }) => ({
+    ...collection,
+    capabilities: { manageIdeas: Boolean(manageIdeas) },
+  }));
+}

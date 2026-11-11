@@ -138,3 +138,8 @@ export type CollectionIdeaCandidatesInput = z.infer<
 export type CollectionIdeaTargetsInput = z.infer<
   typeof collectionIdeaTargetsQuerySchema
 >;
+
+export const ideaMembershipsQuerySchema = z.object({
+  ideaId: z.string().uuid(),
+  collectionId: z.string().uuid().optional(),
+});
