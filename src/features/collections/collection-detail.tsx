@@ -613,6 +613,7 @@ export function CollectionDetail() {
           label="Updating collection Ideas"
         >
           <CollectionIdeas
+            collectionId={collectionId}
             canManage={collection.capabilities.manageIdeas}
             currentUserId={session.data?.id}
             filtered={Boolean(search.q || search.status || search.visibility)}
@@ -635,6 +636,7 @@ export function CollectionDetail() {
 }
 
 function CollectionIdeas({
+  collectionId,
   canManage,
   currentUserId,
   filtered,
@@ -645,6 +647,7 @@ function CollectionIdeas({
   removeError,
   removingId,
 }: {
+  collectionId: string;
   canManage: boolean;
   currentUserId?: string;
   filtered: boolean;
@@ -705,6 +708,7 @@ function CollectionIdeas({
           <IdeaCard
             key={idea.id}
             idea={idea}
+            collectionId={collectionId}
             currentUserId={currentUserId}
             footerAction={
               canManage ? (

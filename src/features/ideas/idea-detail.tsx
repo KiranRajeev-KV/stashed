@@ -6,9 +6,7 @@ import {
   Breadcrumbs,
   BreadcrumbSeparator,
 } from "../../components/ui/breadcrumb.js";
-import { Button } from "../../components/ui/button.js";
 import { CopyLinkButton } from "../../components/ui/copy-link-button.js";
-import { ResourceEditSheet } from "../../components/ui/resource-edit-sheet.js";
 import { ResourcePageToolbar } from "../../components/ui/resource-page-toolbar.js";
 import { buttonStyles } from "../../components/ui/button-variants.js";
 import {
@@ -32,9 +30,9 @@ import {
 import { IdeaTagLink } from "./idea-page-ui.js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi } from "@tanstack/react-router";
-import { FileText, FolderPlus, Pencil } from "lucide-react";
-import { useState } from "react";
+import { FileText, Pencil } from "lucide-react";
 
+import { ideaMembershipsQueryOptions } from "../../api/collections.js";
 import { currentUserQueryOptions } from "../../api/auth.js";
 import { ApiClientError } from "../../api/client.js";
 import {
@@ -54,7 +52,7 @@ import { IDEA_STATUS_LABELS } from "./idea-status.js";
 import { IdeaStatusEditor } from "./idea-status-editor.js";
 import { VisibilityIcon } from "./visibility-icon.js";
 import { IdeaVisibilityEditor } from "./idea-visibility-editor.js";
-import { AddIdeaToCollectionsPanel } from "./add-idea-to-collections-panel.js";
+import { IdeaCollectionsControl } from "./idea-collections-control.js";
 
 import { IDEA_VISIBILITY_LABELS } from "./idea-visibility.js";
 import { ProceduralIdeaBanner } from "./procedural-art/procedural-idea-banner.js";
@@ -66,11 +64,14 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
 
 export function IdeaDetail() {
   const { ideaId } = routeApi.useParams();
+  const { collectionId } = routeApi.useSearch();
+  const navigate = routeApi.useNavigate();
+  const membershipsQuery = useQuery(
+    ideaMembershipsQueryOptions(ideaId, collectionId),
+  );
   const currentUserQuery = useQuery(currentUserQueryOptions());
   const ideaQuery = useQuery(ideaQueryOptions(ideaId));
   const queryClient = useQueryClient();
-  const [collectionPickerOpen, setCollectionPickerOpen] = useState(false);
-  const [collectionSelectionCount, setCollectionSelectionCount] = useState(0);
   const taskListMutation = useMutation({
     mutationFn: (content: string) => updateIdea(ideaId, { content }),
     onMutate: async (content) => {
@@ -121,6 +122,10 @@ export function IdeaDetail() {
 
   const idea = ideaQuery.data;
   const isOwner = currentUserQuery.data?.id === idea.author.id;
+  const memberships = membershipsQuery.data?.collections ?? [];
+  const contextCollection = memberships.find(
+    (collection) => collection.id === collectionId,
+  );
   const content = idea.content;
   const authorInitials =
     idea.author.displayName.trim().slice(0, 2).toUpperCase() || "ST";
@@ -132,9 +137,28 @@ export function IdeaDetail() {
           <Breadcrumbs>
             <BreadcrumbItem>
               <BreadcrumbLink>
-                <Link to="/ideas">Ideas</Link>
+                {contextCollection ? (
+                  <Link to="/collections">Collections</Link>
+                ) : (
+                  <Link to="/ideas">Ideas</Link>
+                )}
               </BreadcrumbLink>
             </BreadcrumbItem>
+            {contextCollection ? (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink>
+                    <Link
+                      to="/collections/$collectionId"
+                      params={{ collectionId: contextCollection.id }}
+                    >
+                      {contextCollection.name}
+                    </Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+              </>
+            ) : null}
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbCurrent>{idea.title}</BreadcrumbCurrent>
@@ -147,15 +171,23 @@ export function IdeaDetail() {
               key={idea.id}
               isPrivate={idea.visibility === "PRIVATE"}
             />
-            {currentUserQuery.data ? (
-              <Button
-                variant="secondary"
-                onClick={() => setCollectionPickerOpen(true)}
-              >
-                <FolderPlus size={15} aria-hidden="true" />
-                Add to collection
-              </Button>
-            ) : null}
+            <IdeaCollectionsControl
+              key={idea.id}
+              ideaId={idea.id}
+              signedIn={Boolean(currentUserQuery.data)}
+              membershipsQuery={membershipsQuery}
+              onRemoved={async (removedId) => {
+                if (removedId === collectionId) {
+                  await navigate({
+                    replace: true,
+                    search: (previous) => ({
+                      ...previous,
+                      collectionId: undefined,
+                    }),
+                  });
+                }
+              }}
+            />
             {isOwner ? (
               <Link
                 to="/ideas/$ideaId/edit"
@@ -171,25 +203,6 @@ export function IdeaDetail() {
       />
 
       <ProceduralIdeaBanner ideaId={idea.id} />
-
-      <ResourceEditSheet
-        open={collectionPickerOpen}
-        title="Add to collection"
-        description="Choose collections you own or can edit. Adding never changes this Idea’s permissions."
-        dirty={collectionSelectionCount > 0}
-        onClose={() => {
-          setCollectionSelectionCount(0);
-          setCollectionPickerOpen(false);
-        }}
-      >
-        {() => (
-          <AddIdeaToCollectionsPanel
-            key={collectionPickerOpen ? "open" : "closed"}
-            ideaId={idea.id}
-            onSelectionCountChange={setCollectionSelectionCount}
-          />
-        )}
-      </ResourceEditSheet>
 
       <div className={twIdeaReaderLayout}>
         <div className={twIdeaReaderDocument}>

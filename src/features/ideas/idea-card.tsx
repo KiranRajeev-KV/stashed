@@ -16,6 +16,7 @@ import { IdeaVisibilityEditor } from "./idea-visibility-editor.js";
 type IdeaCardProps = {
   idea: IdeaListItem;
   currentUserId?: string;
+  collectionId?: string;
   excerpt?: ReactNode;
   footerAction?: ReactNode;
   title?: ReactNode;
@@ -57,6 +58,7 @@ function IdeaAuthor({ idea }: IdeaCardProps) {
 
 export function IdeaCard({
   currentUserId,
+  collectionId,
   excerpt,
   footerAction,
   idea,
@@ -94,6 +96,7 @@ export function IdeaCard({
           <Link
             to="/ideas/$ideaId"
             params={{ ideaId: idea.id }}
+            search={{ collectionId }}
             className="text-foreground decoration-border-strong decoration-1 underline-offset-4 hover:underline"
           >
             {title ?? idea.title}
@@ -123,6 +126,7 @@ export function IdeaCard({
               <Link
                 to="/ideas/$ideaId"
                 params={{ ideaId: idea.id }}
+                search={{ collectionId }}
                 className="inline-flex min-h-9.5 shrink-0 items-center justify-center gap-2 rounded-sm font-medium text-muted-foreground transition-[color,transform] duration-200 hover:translate-x-0.5 hover:text-foreground motion-reduce:transform-none motion-reduce:transition-none"
                 aria-label={`Open ${idea.title}`}
               >

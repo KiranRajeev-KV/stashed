@@ -27,6 +27,7 @@ type ResourceEditSheetProps = {
   pending?: boolean;
   size?: "default" | "wide";
   onClose: () => void;
+  finalFocus?: RefObject<HTMLElement | null>;
   children: (controls: {
     requestClose: () => void;
     selectPortalContainer: RefObject<HTMLDivElement | null>;
@@ -45,6 +46,7 @@ export function ResourceEditSheet({
   pending = false,
   size = "default",
   onClose,
+  finalFocus,
   children,
 }: ResourceEditSheetProps) {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
@@ -75,6 +77,7 @@ export function ResourceEditSheet({
           />
           <Dialog.Viewport className="fixed inset-0 z-[50]">
             <Dialog.Popup
+              finalFocus={finalFocus}
               className={`${twResourceEditSheet} ${size === "wide" ? twResourceEditSheetWide : ""}`}
             >
               <div className={twResourceEditSheetHeader}>
