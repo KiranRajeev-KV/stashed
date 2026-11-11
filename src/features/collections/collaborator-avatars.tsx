@@ -1,9 +1,10 @@
 import { Tooltip } from "@base-ui/react/tooltip";
+import { useId } from "react";
 
 type Person = { id: string; displayName: string; avatarUrl: string | null };
 type CollaboratorRole = "Owner" | "Editor";
 
-const MAX_VISIBLE_AVATARS = 4;
+const MAX_VISIBLE_AVATARS = 3;
 
 export function Avatar({
   person,
@@ -30,7 +31,7 @@ export function Avatar({
   return (
     <span
       aria-hidden="true"
-      className={`${dimensions} grid shrink-0 place-items-center rounded-full border border-surface bg-surface-muted font-mono text-micro text-muted-foreground ${ring}`}
+      className={`${dimensions} grid shrink-0 place-items-center rounded-full border border-surface bg-surface-muted font-sans text-metadata font-medium text-muted-foreground ${ring}`}
     >
       {person.displayName.slice(0, 2).toUpperCase()}
     </span>
@@ -48,7 +49,13 @@ export function CollectionCollaboratorAvatars({
 }) {
   const people = [
     { person: owner, role: "Owner" as const },
-    ...editors.map((person) => ({ person, role: "Editor" as const })),
+    ...editors
+      .filter(
+        (person, index) =>
+          person.id !== owner.id &&
+          editors.findIndex((editor) => editor.id === person.id) === index,
+      )
+      .map((person) => ({ person, role: "Editor" as const })),
   ];
   const visible = people.slice(0, MAX_VISIBLE_AVATARS);
   const hidden = people.slice(MAX_VISIBLE_AVATARS);
@@ -86,6 +93,7 @@ function CollaboratorAvatarBadge({
   role: CollaboratorRole;
   overlap: boolean;
 }) {
+  const tooltipId = useId();
   return (
     <span className={overlap ? "-ml-1.5" : ""}>
       <Tooltip.Root>
@@ -93,42 +101,47 @@ function CollaboratorAvatarBadge({
           delay={300}
           className="grid size-8 cursor-pointer place-items-center rounded-full p-0.5 outline-none focus-visible:bg-surface-muted focus-visible:ring-2 focus-visible:ring-ring/45"
           aria-label={`${role}: ${person.displayName}`}
+          aria-describedby={tooltipId}
           onKeyDown={(event) => {
             if (event.key === "Escape") event.currentTarget.blur();
           }}
         >
           <Avatar person={person} size="sm" owner={role === "Owner"} />
         </Tooltip.Trigger>
-        <CollaboratorTooltip role={role} people={[person]} />
+        <CollaboratorTooltip id={tooltipId} role={role} people={[person]} />
       </Tooltip.Root>
     </span>
   );
 }
 
 function CollaboratorOverflowBadge({ people }: { people: Person[] }) {
+  const tooltipId = useId();
   return (
     <span className="-ml-1.5">
       <Tooltip.Root>
         <Tooltip.Trigger
           delay={300}
-          className="grid size-8 cursor-pointer place-items-center rounded-full border border-surface bg-surface p-0.5 font-mono text-micro text-muted-foreground ring-1 ring-border outline-none focus-visible:bg-surface-muted focus-visible:ring-2 focus-visible:ring-ring/45"
+          className="grid size-8 cursor-pointer place-items-center rounded-full border border-surface bg-surface p-0.5 font-sans text-metadata font-medium text-muted-foreground ring-1 ring-border outline-none focus-visible:bg-surface-muted focus-visible:ring-2 focus-visible:ring-ring/45"
           aria-label={`${people.length} more editor${people.length === 1 ? "" : "s"}`}
+          aria-describedby={tooltipId}
           onKeyDown={(event) => {
             if (event.key === "Escape") event.currentTarget.blur();
           }}
         >
           +{people.length}
         </Tooltip.Trigger>
-        <CollaboratorTooltip role="Editor" people={people} />
+        <CollaboratorTooltip id={tooltipId} role="Editor" people={people} />
       </Tooltip.Root>
     </span>
   );
 }
 
 function CollaboratorTooltip({
+  id,
   role,
   people,
 }: {
+  id: string;
   role: CollaboratorRole;
   people: Person[];
 }) {
@@ -140,8 +153,12 @@ function CollaboratorTooltip({
         sideOffset={8}
         className="z-[70]"
       >
-        <Tooltip.Popup className="pointer-events-none w-max max-w-[min(14rem,calc(100vw_-_2rem))] rounded-control border border-border-strong bg-surface-elevated px-2.5 py-2 text-left shadow-overlay transition-[opacity,transform] duration-(--duration-fast) data-[starting-style]:translate-y-1 data-[starting-style]:opacity-0 data-[ending-style]:translate-y-1 data-[ending-style]:opacity-0 motion-reduce:transition-none">
-          <span className="block font-mono text-micro uppercase tracking-wider text-muted-foreground">
+        <Tooltip.Popup
+          id={id}
+          role="tooltip"
+          className="pointer-events-none w-max max-w-[min(14rem,calc(100vw_-_2rem))] rounded-control border border-border-strong bg-surface-elevated px-2.5 py-2 text-left shadow-overlay transition-[opacity,transform] duration-(--duration-fast) data-[starting-style]:translate-y-1 data-[starting-style]:opacity-0 data-[ending-style]:translate-y-1 data-[ending-style]:opacity-0 motion-reduce:transition-none"
+        >
+          <span className="block text-caption font-medium text-muted-foreground">
             {role}
             {people.length > 1 ? "s" : ""}
           </span>

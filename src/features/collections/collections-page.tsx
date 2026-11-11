@@ -168,7 +168,7 @@ export function CollectionsPage() {
               }
             />
           </div>
-          <div className="hidden min-w-0 flex-wrap items-end justify-between gap-4 border-t border-border-subtle pt-4 lg:flex">
+          <div className="hidden min-w-0 flex-wrap items-end justify-between gap-4 pt-4 lg:flex">
             <div className="grid min-w-0 gap-2">
               <span className={labelClass}>View</span>
               <div

@@ -56,7 +56,6 @@ import {
 } from "../../styles/archive-styles.js";
 import {
   twIdeaReader,
-  twIdeaReaderAuthor,
   twIdeaReaderProperties,
 } from "../../styles/idea-page-styles.js";
 import {
@@ -257,6 +256,12 @@ export function CollectionDetail() {
         }
         actions={
           <>
+            <div className="mr-2 flex min-h-control items-center border-r border-border-subtle pr-4">
+              <CollectionCollaboratorAvatars
+                owner={collection.owner}
+                editors={collection.editors}
+              />
+            </div>
             <CopyLinkButton
               isPrivate={collection.visibility === "PRIVATE"}
               subject="collection"
@@ -298,12 +303,6 @@ export function CollectionDetail() {
               <h1 className="m-0 font-display text-idea-title font-normal text-pretty wrap-anywhere">
                 {collection.name}
               </h1>
-              <div className={twIdeaReaderAuthor}>
-                <CollectionCollaboratorAvatars
-                  owner={collection.owner}
-                  editors={collection.editors}
-                />
-              </div>
             </div>
           </div>
           <p className="mt-7 max-w-[var(--layout-reading)] whitespace-pre-wrap text-body leading-reading text-muted-foreground">
