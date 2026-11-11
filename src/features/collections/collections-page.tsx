@@ -168,7 +168,7 @@ export function CollectionsPage() {
               }
             />
           </div>
-          <div className="hidden min-w-0 flex-wrap items-end justify-between gap-4 border-t border-border-subtle pt-4 lg:flex">
+          <div className="hidden min-w-0 flex-wrap items-end justify-between gap-4 pt-4 lg:flex">
             <div className="grid min-w-0 gap-2">
               <span className={labelClass}>View</span>
               <div
@@ -353,7 +353,7 @@ function CollectionsEmpty({
   return (
     <section className={twIdeaEmptyState}>
       <FolderSearch
-        className="mx-auto mb-5 box-content size-6 rounded-dialog bg-surface-muted p-4 text-primary [transform:rotate(-5deg)]"
+        className="mx-auto mb-5 box-content size-6 rounded-dialog bg-surface-muted p-4 text-primary transform-[rotate(-5deg)]"
         aria-hidden="true"
       />
       <p className="font-mono text-label uppercase text-accent">{label}</p>

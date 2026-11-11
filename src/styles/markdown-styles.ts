@@ -5,8 +5,8 @@ markdown-reading-surface min-w-0
 `;
 
 export const twMarkdownContent = `
-markdown-content min-w-0 max-w-[var(--layout-reading)] text-foreground font-editor text-base
-leading-reading wrap-anywhere [&_>_:first-child]:mt-0 [&_>_:last-child]:mb-0 [&_p]:my-4
+markdown-content min-w-0 max-w-(--layout-reading) text-foreground font-editor text-base
+leading-reading wrap-anywhere *:first:mt-0 *:last:mb-0 [&_p]:my-4
 [&_h1]:text-foreground [&_h1]:font-emphasis [&_h1]:tracking-tight [&_h1]:leading-heading
 [&_h1]:text-pretty [&_h1]:mt-10 [&_h1]:mb-4 [&_h1]:text-document-title
 [&_h2]:text-foreground [&_h2]:font-emphasis [&_h2]:tracking-tight [&_h2]:leading-heading
@@ -19,9 +19,9 @@ leading-reading wrap-anywhere [&_>_:first-child]:mt-0 [&_>_:last-child]:mb-0 [&_
 [&_ul]:[list-style:disc] [&_ol]:my-4 [&_ol]:pl-[1.6rem] [&_ol]:[list-style:decimal]
 [&_li]:my-[0.4rem] [&_li]:pl-1 [&_li_>_p]:my-0 [&_li_>_div_>_p]:my-0
 [&_.markdown-block-list]:relative [&_.markdown-block-list]:my-[0.4rem]
-[&_.markdown-block-list_+_.markdown-block-list]:mt-0 [&_a]:text-primary [&_a]:font-medium
-[&_a]:[text-decoration-line:underline] [&_a]:[text-decoration-thickness:1px]
-[&_a]:[text-underline-offset:0.2em] [&_a:hover]:text-accent [&_code]:border [&_code]:border-border
+[&_.markdown-block-list+.markdown-block-list]:mt-0 [&_a]:text-primary [&_a]:font-medium
+[&_a]:underline [&_a]:decoration-1
+[&_a]:underline-offset-[0.2em] [&_a:hover]:text-accent [&_code]:border [&_code]:border-border
 [&_code]:rounded-control [&_code]:bg-surface-muted [&_code]:py-[0.1em] [&_code]:px-[0.35em]
 [&_code]:font-mono [&_code]:text-inline-code
 `;
@@ -29,9 +29,9 @@ leading-reading wrap-anywhere [&_>_:first-child]:mt-0 [&_>_:last-child]:mb-0 [&_
 export const twMarkdownCodeBlock = `
 markdown-code-block relative my-7 overflow-hidden border border-border-strong rounded-card
 bg-surface-muted [&_pre]:max-w-full [&_pre]:m-0 [&_pre]:overflow-x-auto
-[&_pre]:p-[2.5rem_1rem_1.25rem] [&_pre]:[overscroll-behavior-inline:contain] [&_pre]:[tab-size:2]
-[&_code]:border-0 [&_code]:rounded-[0] [&_code]:bg-transparent [&_code]:p-0 [&_code]:text-ui
-[&_code]:leading-relaxed [&_code]:[white-space:pre]
+[&_pre]:p-[2.5rem_1rem_1.25rem] [&_pre]:[overscroll-behavior-inline:contain] [&_pre]:tab-2
+[&_code]:border-0 [&_code]:rounded-none [&_code]:bg-transparent [&_code]:p-0 [&_code]:text-ui
+[&_code]:leading-relaxed [&_code]:whitespace-pre
 `;
 
 export const twMarkdownCodeLanguage = `
@@ -53,49 +53,49 @@ markdown-task-complete text-muted-foreground [text-decoration:line-through]
 `;
 
 export const twIdeaEditor = `
-idea-editor [&[data-invalid]]:border-danger min-w-0 overflow-clip border border-border
+idea-editor data-invalid:border-danger min-w-0 overflow-clip border border-border
 rounded-surface bg-surface shadow-raised
-[transition:border-color_var(--duration-fast)_var(--motion-standard),_box-shadow_var(--duration-fast)_var(--motion-standard)]
-[&:focus-within]:[box-shadow:0_0_0_2px_color-mix(in_srgb,_var(--ring)_30%,_transparent),_var(--elevation-raised)]
+[transition:border-color_var(--duration-fast)_var(--motion-standard),box-shadow_var(--duration-fast)_var(--motion-standard)]
+focus-within:[box-shadow:0_0_0_2px_color-mix(in_srgb,var(--ring)_30%,transparent),var(--elevation-raised)]
 `;
 
 export const twIdeaEditorToolbarShell = `
 idea-editor-toolbar-shell border-b border-b-border
-[background:color-mix(in_srgb,_var(--surface-elevated)_94%,_transparent)]
+[background:color-mix(in_srgb,var(--surface-elevated)_94%,transparent)]
 [backdrop-filter:blur(0.75rem)]
 `;
 
 export const twIdeaEditorToolbar = `
 idea-editor-toolbar flex min-h-13 flex-wrap items-center gap-[0.4rem] p-[0.4rem]
-[overscroll-behavior-inline:contain] [scrollbar-width:thin]
+[overscroll-behavior-inline:contain] scrollbar-thin
 `;
 
 export const twIdeaEditorToolGroup = `
-idea-editor-tool-group inline-flex [flex:none] gap-[0.15rem] border-l border-l-border pl-[0.4rem]
+idea-editor-tool-group inline-flex flex-none gap-[0.15rem] border-l border-l-border pl-[0.4rem]
 `;
 
 export const twIdeaEditorTool = `
-idea-editor-tool grid min-h-control w-11 [flex:none] place-items-center rounded-control
+idea-editor-tool grid min-h-control w-11 flex-none place-items-center rounded-control
 text-muted-foreground
-[transition:color_var(--duration-fast)_var(--motion-standard),_background-color_var(--duration-fast)_var(--motion-standard)]
+[transition:color_var(--duration-fast)_var(--motion-standard),background-color_var(--duration-fast)_var(--motion-standard)]
 [&:hover]:bg-surface-muted [&:hover]:text-foreground
-[&[aria-pressed='true']]:[background:color-mix(in_srgb,_var(--primary)_15%,_var(--surface))]
-[&[aria-pressed='true']]:text-primary [&_svg]:w-[1.1rem] [&_svg]:h-[1.1rem]
-[&_svg]:[stroke-width:1.8]
+aria-pressed:[background:color-mix(in_srgb,var(--primary)_15%,var(--surface))]
+aria-pressed:text-primary [&_svg]:w-[1.1rem] [&_svg]:h-[1.1rem]
+[&_svg]:stroke-[1.8]
 `;
 
 export const twIdeaEditorLinkActions = `
 idea-editor-link-actions [&_button]:grid [&_button]:min-h-control [&_button]:w-11
-[&_button]:[flex:none] [&_button]:place-items-center [&_button]:rounded-control
+[&_button]:flex-none [&_button]:place-items-center [&_button]:rounded-control
 [&_button]:text-muted-foreground
-[&_button]:[transition:color_var(--duration-fast)_var(--motion-standard),_background-color_var(--duration-fast)_var(--motion-standard)]
+[&_button]:[transition:color_var(--duration-fast)_var(--motion-standard),background-color_var(--duration-fast)_var(--motion-standard)]
 [&_button:hover]:bg-surface-muted [&_button:hover]:text-foreground [&_svg]:w-[1.1rem]
-[&_svg]:h-[1.1rem] [&_svg]:[stroke-width:1.8] flex items-end gap-[0.2rem]
+[&_svg]:h-[1.1rem] [&_svg]:stroke-[1.8] flex items-end gap-[0.2rem]
 `;
 
 export const twIdeaEditorLinkRow = `
 idea-editor-link-row grid gap-[0.65rem] border-t border-t-border p-3
-sm:[&]:grid-cols-[minmax(0,_1.5fr)_minmax(0,_1fr)_auto] sm:[&]:items-end
+sm:[&]:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_auto] sm:[&]:items-end
 `;
 
 export const twIdeaEditorLinkField = `
@@ -105,11 +105,11 @@ idea-editor-link-field grid min-w-0 gap-[0.3rem] [&_label]:font-mono [&_label]:t
 `;
 
 export const twIdeaEditorLinkError = `
-idea-editor-link-error [grid-column:1_/_-1] m-0 text-danger text-metadata
+idea-editor-link-error col-span-full m-0 text-danger text-metadata
 `;
 
 export const twIdeaEditorContent = `
-idea-editor-content min-h-[min(52vh,_32rem)] [&]:max-w-none py-6 px-5 bg-none
-[caret-color:var(--primary)] [outline:0] [&[data-slate-placeholder='true']]:text-muted-foreground
+idea-editor-content min-h-[min(52vh,32rem)] [&]:max-w-none py-6 px-5 bg-none
+[caret-color:var(--primary)] [outline:0] data-[slate-placeholder='true']:text-muted-foreground
 md:[&]:py-8 md:[&]:px-7
 `;

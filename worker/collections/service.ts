@@ -13,6 +13,7 @@ import {
   listCollectionIdeaTargetRecords,
   listCollectionMemberIdeaIds,
   listCollectionRecords,
+  listIdeaMembershipRecords,
   removeCollaboratorRecord,
   removeCollectionIdeaRecord,
   removeCollectionIdeaRecords,
@@ -402,4 +403,22 @@ export async function removeCollaborator(
     "Only the collection owner may manage collaborators",
   );
   await removeCollaboratorRecord(db, id, targetUserId);
+}
+
+export async function listIdeaMemberships(
+  db: Database,
+  input: { ideaId: string; collectionId?: string },
+  viewerId?: string,
+) {
+  if (!(await getIdeaRecord(db, input.ideaId, viewerId))) {
+    throw new ApiError(404, "IDEA_NOT_FOUND", "Idea not found");
+  }
+  return {
+    collections: await listIdeaMembershipRecords(
+      db,
+      input.ideaId,
+      viewerId,
+      input.collectionId,
+    ),
+  };
 }

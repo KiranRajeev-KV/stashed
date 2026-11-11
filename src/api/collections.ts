@@ -22,6 +22,13 @@ const addIdeasRequest = apiClient.api.collections[":id"].ideas.batch.$post;
 const removeIdeasRequest = apiClient.api.collections[":id"].ideas.batch.$delete;
 const collaboratorsRequest =
   apiClient.api.collections[":id"].collaborators.$get;
+const ideaMembershipsRequest =
+  apiClient.api.collections["idea-memberships"].$get;
+export type IdeaCollectionMembership = InferResponseType<
+  typeof ideaMembershipsRequest,
+  200
+>["collections"][number];
+
 const ideaTargetsRequest = apiClient.api.collections["idea-targets"].$get;
 
 export type CollectionListQuery = InferRequestType<typeof listRequest>["query"];
@@ -281,4 +288,26 @@ export function removeCollectionCollaborator(id: string, userId: string) {
       }),
     ),
   );
+}
+
+export function ideaMembershipsQueryOptions(
+  ideaId: string,
+  collectionId?: string,
+) {
+  return queryOptions({
+    queryKey: [
+      "collections",
+      "idea-memberships",
+      ideaId,
+      collectionId,
+    ] as const,
+    queryFn: () =>
+      apiRequest(() =>
+        parseResponse(
+          apiClient.api.collections["idea-memberships"].$get({
+            query: { ideaId, collectionId },
+          }),
+        ),
+      ),
+  });
 }

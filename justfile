@@ -64,9 +64,13 @@ db-generate:
 db-local:
     pnpm db:local
 
-# Populate local D1 with deterministic users, ideas, and tags
-db-seed:
-    pnpm db:seed
+# Migrate and populate every application table in local D1
+db-seed *ARGS:
+    pnpm db:seed {{ ARGS }}
+
+# Verify seed migrations, reruns, existing data, search, counters and rollback
+verify-seed:
+    pnpm verify:seed
 
 # Regenerate the committed README and documentation screenshots
 screenshots:
