@@ -113,7 +113,7 @@ export function IdeaCollectionsControl({
 
   const membershipList = (
     <>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-[5px] [scrollbar-width:thin]">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-1.25 scrollbar-thin">
         {membershipsQuery.isPending ? (
           <p className="p-3 text-caption text-muted-foreground" role="status">
             Loading collections…
@@ -154,7 +154,7 @@ export function IdeaCollectionsControl({
               <Link
                 to="/collections/$collectionId"
                 params={{ collectionId: collection.id }}
-                className={`${twUiSelectItem} flex min-w-0 flex-1 items-center text-left outline-none focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring max-lg:[&]:min-h-11`}
+                className={`${twUiSelectItem} flex min-w-0 flex-1 items-center text-left outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring max-lg:[&]:min-h-11`}
                 onClick={() => {
                   setPopoverOpen(false);
                   setSheet(null);
@@ -164,13 +164,15 @@ export function IdeaCollectionsControl({
                   icon={collection.icon}
                   className="size-3.5 shrink-0 text-muted-foreground"
                 />
-                <span className="min-w-0 break-words">{collection.name}</span>
+                <span className="min-w-0 wrap-break-word">
+                  {collection.name}
+                </span>
               </Link>
               {collection.capabilities.manageIdeas ? (
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="mr-0.5 shrink-0 text-muted-foreground hover:text-danger [&]:size-8 [&]:min-h-8 [&]:rounded-[5px] max-lg:[&]:size-11 max-lg:[&]:min-h-11 [@media(pointer:_coarse)]:[&]:size-control [@media(pointer:_coarse)]:[&]:min-h-control"
+                  className="mr-0.5 shrink-0 text-muted-foreground hover:text-danger [&]:size-8 [&]:min-h-8 [&]:rounded-[5px] max-lg:[&]:size-11 max-lg:[&]:min-h-11 pointer-coarse:[&]:size-control pointer-coarse:[&]:min-h-control"
                   aria-label={`Remove from ${collection.name}`}
                   title={`Remove from ${collection.name}`}
                   loading={
@@ -212,7 +214,7 @@ export function IdeaCollectionsControl({
         </ActionFeedback>
       </div>
       {signedIn ? (
-        <div className="shrink-0 border-t border-border p-[5px]">
+        <div className="shrink-0 border-t border-border p-1.25">
           <Button
             variant="ghost"
             className={`${twUiSelectItem} w-full justify-start border-0 text-left max-lg:[&]:min-h-11`}
@@ -280,7 +282,7 @@ export function IdeaCollectionsControl({
             align="end"
             sideOffset={6}
             collisionPadding={16}
-            className="z-[70] outline-none"
+            className="z-70 outline-none"
           >
             <Popover.Popup
               finalFocus={() =>

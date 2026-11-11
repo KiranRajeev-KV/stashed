@@ -15,7 +15,7 @@ export function Avatar({
   size?: "sm" | "md";
   owner?: boolean;
 }) {
-  const dimensions = size === "sm" ? "!size-7" : "!size-9";
+  const dimensions = size === "sm" ? "size-7!" : "size-9!";
   const ring = owner ? "ring-1 ring-primary" : "ring-1 ring-border";
   if (person.avatarUrl) {
     return (
@@ -151,12 +151,12 @@ function CollaboratorTooltip({
         side="top"
         align="end"
         sideOffset={8}
-        className="z-[70]"
+        className="z-70"
       >
         <Tooltip.Popup
           id={id}
           role="tooltip"
-          className="pointer-events-none w-max max-w-[min(14rem,calc(100vw_-_2rem))] rounded-control border border-border-strong bg-surface-elevated px-2.5 py-2 text-left shadow-overlay transition-[opacity,transform] duration-(--duration-fast) data-[starting-style]:translate-y-1 data-[starting-style]:opacity-0 data-[ending-style]:translate-y-1 data-[ending-style]:opacity-0 motion-reduce:transition-none"
+          className="pointer-events-none w-max max-w-[min(14rem,calc(100vw-2rem))] rounded-control border border-border-strong bg-surface-elevated px-2.5 py-2 text-left shadow-overlay transition-[opacity,transform] duration-(--duration-fast) data-starting-style:translate-y-1 data-starting-style:opacity-0 data-ending-style:translate-y-1 data-ending-style:opacity-0 motion-reduce:transition-none"
         >
           <span className="block text-caption font-medium text-muted-foreground">
             {role}

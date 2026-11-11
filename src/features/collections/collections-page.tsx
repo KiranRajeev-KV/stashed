@@ -353,7 +353,7 @@ function CollectionsEmpty({
   return (
     <section className={twIdeaEmptyState}>
       <FolderSearch
-        className="mx-auto mb-5 box-content size-6 rounded-dialog bg-surface-muted p-4 text-primary [transform:rotate(-5deg)]"
+        className="mx-auto mb-5 box-content size-6 rounded-dialog bg-surface-muted p-4 text-primary transform-[rotate(-5deg)]"
         aria-hidden="true"
       />
       <p className="font-mono text-label uppercase text-accent">{label}</p>

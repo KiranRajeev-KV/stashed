@@ -213,7 +213,7 @@ export function TagSuggestions({
           ref={actionRef}
           type="button"
           variant="secondary"
-          className="[&]:min-h-9 [&]:px-2.5 [&]:py-1 [&]:text-caption [@media(pointer:coarse)]:[&]:min-h-control"
+          className="[&]:min-h-9 [&]:px-2.5 [&]:py-1 [&]:text-caption pointer-coarse:[&]:min-h-control"
           disabled={!canSuggest}
           loading={visibleAttempt?.state === "pending"}
           loadingLabel="Finding tags…"
@@ -261,7 +261,7 @@ export function TagSuggestions({
                 }}
                 type="button"
                 aria-label={`Add ${tag.name} tag`}
-                className="inline-flex min-h-9 max-w-full items-center gap-1.5 rounded-control border border-border bg-surface-muted px-2.5 py-1 text-left text-metadata text-foreground transition-colors hover:border-border-strong hover:bg-surface-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [@media(pointer:coarse)]:min-h-control motion-reduce:transition-none"
+                className="inline-flex min-h-9 max-w-full items-center gap-1.5 rounded-control border border-border bg-surface-muted px-2.5 py-1 text-left text-metadata text-foreground transition-colors hover:border-border-strong hover:bg-surface-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring pointer-coarse:min-h-control motion-reduce:transition-none"
                 onClick={() => acceptTag(tag, index)}
               >
                 <Plus aria-hidden="true" className="size-3.5 shrink-0" />

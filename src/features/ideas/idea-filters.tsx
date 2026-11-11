@@ -37,11 +37,11 @@ const filterFieldClass = "grid min-w-0 gap-2";
 const filterLabelClass =
   "font-mono text-xs uppercase tracking-wider text-muted-foreground";
 const filterTriggerClass =
-  "flex min-h-11 w-full min-w-0 cursor-pointer items-center justify-between gap-3 rounded-control border border-border bg-surface px-3 text-left text-sm text-foreground transition-colors duration-(--duration-fast) hover:border-border-strong hover:bg-surface-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[popup-open]:border-border-strong data-[popup-open]:bg-surface-elevated";
+  "flex min-h-11 w-full min-w-0 cursor-pointer items-center justify-between gap-3 rounded-control border border-border bg-surface px-3 text-left text-sm text-foreground transition-colors duration-(--duration-fast) hover:border-border-strong hover:bg-surface-elevated focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-popup-open:border-border-strong data-popup-open:bg-surface-elevated";
 const filterOptionClass =
-  "group grid min-h-9 w-full cursor-pointer grid-cols-[1rem_minmax(0,1fr)_auto] items-center gap-2.5 rounded-control px-2.5 py-1.5 text-ui text-foreground outline-none select-none data-[highlighted]:bg-surface-muted";
+  "group grid min-h-9 w-full cursor-pointer grid-cols-[1rem_minmax(0,1fr)_auto] items-center gap-2.5 rounded-control px-2.5 py-1.5 text-ui text-foreground outline-none select-none data-highlighted:bg-surface-muted";
 const filterIndicatorClass =
-  "grid size-4 place-items-center rounded-[4px] border border-border-strong bg-transparent text-transparent transition-colors duration-(--duration-fast) group-data-[selected]:border-primary group-data-[selected]:bg-primary group-data-[selected]:text-primary-foreground! [&_svg]:size-3 [&_svg]:opacity-0 group-data-[selected]:[&_svg]:opacity-100 motion-reduce:transition-none";
+  "grid size-4 place-items-center rounded-sm border border-border-strong bg-transparent text-transparent transition-colors duration-(--duration-fast) group-data-selected:border-primary group-data-selected:bg-primary group-data-selected:text-primary-foreground! [&_svg]:size-3 [&_svg]:opacity-0 group-data-selected:[&_svg]:opacity-100 motion-reduce:transition-none";
 
 type FilterTag = Pick<Tag, "id" | "name"> & {
   ideaCount?: number;
@@ -175,7 +175,7 @@ function TagFilter({
         <Combobox.Portal>
           <Combobox.Positioner
             align="start"
-            className="z-[70] w-[min(18rem,calc(100vw-2rem))] min-w-[min(var(--anchor-width),calc(100vw-2rem))] outline-none"
+            className="z-70 w-[min(18rem,calc(100vw-2rem))] min-w-[min(var(--anchor-width),calc(100vw-2rem))] outline-none"
             sideOffset={6}
           >
             <Combobox.Popup
@@ -232,7 +232,7 @@ function TagFilter({
                         ? `No tags match “${debouncedInput}”.`
                         : "No tags have been used yet."}
                   </Combobox.Empty>
-                  <Combobox.List className="w-full max-h-[min(13.5rem,calc(var(--available-height)-5rem))] overflow-y-auto p-1 outline-none [scrollbar-gutter:stable]">
+                  <Combobox.List className="w-full max-h-[min(13.5rem,calc(var(--available-height)-5rem))] overflow-y-auto p-1 outline-none scrollbar-gutter-stable">
                     {(tag: FilterTag) => (
                       <Combobox.Item
                         key={tag.id}
@@ -245,7 +245,7 @@ function TagFilter({
                         >
                           <Check aria-hidden="true" />
                         </Combobox.ItemIndicator>
-                        <span className="min-w-0 break-words leading-5">
+                        <span className="min-w-0 wrap-break-word leading-5">
                           {tag.name}
                         </span>
                         {tag.ideaCount === undefined ? null : (

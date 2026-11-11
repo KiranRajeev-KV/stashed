@@ -1,18 +1,18 @@
 /** Tailwind recipes for common. Named hooks support scoped descendant variants. */
 
 export const twStashedToast = `
-stashed-toast [[data-sonner-toast]&]:border-border-strong! [[data-sonner-toast]&]:rounded-card!
-[[data-sonner-toast]&]:bg-surface-elevated! [[data-sonner-toast]&]:text-foreground!
-[[data-sonner-toast]&]:shadow-overlay! [[data-sonner-toast]&]:font-sans!
+stashed-toast data-sonner-toast:border-border-strong! data-sonner-toast:rounded-card!
+data-sonner-toast:bg-surface-elevated! data-sonner-toast:text-foreground!
+data-sonner-toast:shadow-overlay! data-sonner-toast:font-sans!
 `;
 
 export const twStashedToastDescription = `
-stashed-toast-description [[data-sonner-toast]_&]:text-muted-foreground!
+stashed-toast-description in-data-sonner-toast:text-muted-foreground!
 `;
 
 export const twStashedToastClose = `
-stashed-toast-close [[data-sonner-toast]_&]:border-border! [[data-sonner-toast]_&]:bg-surface-muted!
-[[data-sonner-toast]_&]:text-foreground!
+stashed-toast-close in-data-sonner-toast:border-border! in-data-sonner-toast:bg-surface-muted!
+in-data-sonner-toast:text-foreground!
 `;
 
 export const twAnimatePulse = `

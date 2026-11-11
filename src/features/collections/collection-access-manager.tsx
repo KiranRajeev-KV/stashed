@@ -563,10 +563,10 @@ function MobileCollaboratorActions({
       </Drawer.Trigger>
       <Drawer.Portal>
         <Drawer.Backdrop
-          className={`${twUiDialogBackdrop} fixed inset-0 z-[79] bg-foreground/35 opacity-100 backdrop-blur-[2px] transition-opacity duration-(--duration-standard) data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 motion-reduce:transition-none`}
+          className={`${twUiDialogBackdrop} fixed inset-0 z-79 bg-foreground/35 opacity-100 backdrop-blur-[2px] transition-opacity duration-(--duration-standard) data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none`}
         />
-        <Drawer.Viewport className="fixed inset-0 z-[80] flex items-end justify-center">
-          <Drawer.Popup className="flex max-h-[min(76dvh,30rem)] w-full translate-y-[var(--drawer-swipe-movement-y)] flex-col overflow-hidden rounded-t-dialog border border-b-0 border-border bg-surface-elevated text-foreground shadow-dialog transition-transform duration-(--duration-slow) ease-emphasized data-[ending-style]:translate-y-full data-[starting-style]:translate-y-full data-[swiping]:select-none motion-reduce:transition-none sm:max-w-xl">
+        <Drawer.Viewport className="fixed inset-0 z-80 flex items-end justify-center">
+          <Drawer.Popup className="flex max-h-[min(76dvh,30rem)] w-full translate-y-(--drawer-swipe-movement-y) flex-col overflow-hidden rounded-t-dialog border border-b-0 border-border bg-surface-elevated text-foreground shadow-dialog transition-transform duration-(--duration-slow) ease-emphasized data-ending-style:translate-y-full data-starting-style:translate-y-full data-swiping:select-none motion-reduce:transition-none sm:max-w-xl">
             <div className="grid shrink-0 gap-4 border-b border-border px-4 pb-4 pt-2">
               <div
                 className="mx-auto h-1 w-11 rounded-full bg-border-strong"
@@ -599,7 +599,7 @@ function MobileCollaboratorActions({
                       type="button"
                       aria-pressed={selected}
                       disabled={pending}
-                      className="grid min-h-14 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-control px-3 py-2 text-left transition-colors duration-(--duration-fast) hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring aria-pressed:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
+                      className="grid min-h-14 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-control px-3 py-2 text-left transition-colors duration-(--duration-fast) hover:bg-surface-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring aria-pressed:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
                       onClick={() => updateRole(option.value)}
                     >
                       <span className="min-w-0">
@@ -656,10 +656,10 @@ function RemoveAccessDialog({
     <AlertDialog.Root open={Boolean(person)} onOpenChange={onOpenChange}>
       <AlertDialog.Portal>
         <AlertDialog.Overlay
-          className={`${twDeleteDialogOverlay} ${twUiDialogBackdrop} z-[89]`}
+          className={`${twDeleteDialogOverlay} ${twUiDialogBackdrop} z-89`}
         />
         <AlertDialog.Content
-          className={`${twDeleteDialogContent} ${twUiDialogPanel} z-[90]`}
+          className={`${twDeleteDialogContent} ${twUiDialogPanel} z-90`}
           onEscapeKeyDown={(event) => {
             if (pending) event.preventDefault();
           }}

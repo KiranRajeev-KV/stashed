@@ -249,7 +249,7 @@ export function IdeaForm({
                   </span>
                   <textarea
                     rows={2}
-                    className={`${twIdeaTitleInput} ${twFormTitleInput} min-h-24 w-full scroll-mt-60 text-idea-title [field-sizing:content]`}
+                    className={`${twIdeaTitleInput} ${twFormTitleInput} min-h-24 w-full scroll-mt-60 text-idea-title field-sizing-content`}
                     onKeyDown={(event) => {
                       if (
                         event.key === "Enter" &&

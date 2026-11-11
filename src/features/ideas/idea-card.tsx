@@ -92,7 +92,7 @@ export function IdeaCard({
           </time>
         </div>
 
-        <h2 className="mt-[19px] font-display text-card-title font-normal">
+        <h2 className="mt-4.75 font-display text-card-title font-normal">
           <Link
             to="/ideas/$ideaId"
             params={{ ideaId: idea.id }}
@@ -110,7 +110,7 @@ export function IdeaCard({
         ) : null}
 
         {idea.tags.length > 0 ? (
-          <ul className="mt-[17px] flex flex-wrap gap-1.75" aria-label="Tags">
+          <ul className="mt-4.25 flex flex-wrap gap-1.75" aria-label="Tags">
             {idea.tags.map((tag) => (
               <li key={tag.id} className="min-w-0 max-w-full">
                 <IdeaTagLink tag={tag} />

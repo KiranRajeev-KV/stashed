@@ -305,7 +305,7 @@ export function CollectionDetail() {
               </h1>
             </div>
           </div>
-          <p className="mt-7 max-w-[var(--layout-reading)] whitespace-pre-wrap text-body leading-reading text-muted-foreground">
+          <p className="mt-7 max-w-(--layout-reading) whitespace-pre-wrap text-body leading-reading text-muted-foreground">
             {collection.description || "No description has been added yet."}
           </p>
         </div>
@@ -676,7 +676,7 @@ function CollectionIdeas({
     return (
       <section className={`${twIdeaEmptyState} mt-7`}>
         <FolderKanban
-          className="mx-auto mb-5 box-content size-6 rounded-dialog bg-surface-muted p-4 text-primary [transform:rotate(-5deg)]"
+          className="mx-auto mb-5 box-content size-6 rounded-dialog bg-surface-muted p-4 text-primary transform-[rotate(-5deg)]"
           aria-hidden="true"
         />
         <p className="font-mono text-label uppercase text-accent">

@@ -1,21 +1,21 @@
 /** Tailwind recipes for idea-page. Named hooks support scoped descendant variants. */
 
 export const twIdeaReader = /* @__PURE__ */ String.raw`
-idea-reader [&]:min-w-0 [&]:[animation:reader-arrive_240ms_ease-out_both]
-[&_:is(a,_button):focus-visible]:[outline:2px_solid_var(--ring)]
-[&_:is(a,_button):focus-visible]:[outline-offset:4px] [&_.idea-status]:inline-flex
-[&_.idea-status]:items-center [&_.idea-status]:gap-[7px] [&_.idea-status]:min-h-control
+idea-reader [&]:min-w-0 [&]:animate-[reader-arrive_240ms_ease-out_both]
+[&_:is(a,button):focus-visible]:[outline:2px_solid_var(--ring)]
+[&_:is(a,button):focus-visible]:outline-offset-4 [&_.idea-status]:inline-flex
+[&_.idea-status]:items-center [&_.idea-status]:gap-1.75 [&_.idea-status]:min-h-control
 [&_.idea-status]:border-0 [&_.idea-status]:rounded-control [&_.idea-status]:bg-transparent
 [&_.idea-status]:text-foreground [&_.idea-status]:p-0 [&_.idea-status]:font-sans
 [&_.idea-status]:font-normal [&_.idea-status]:not-italic [&_.idea-status]:text-metadata
 [&_.idea-status]:leading-normal [&_.idea-status]:whitespace-nowrap
 [&_.idea-status:hover]:bg-surface-muted [&_.idea-status::before]:[content:'']
-[&_.idea-status::before]:w-[5px] [&_.idea-status::before]:h-[5px] [&_.idea-status::before]:shrink-0
+[&_.idea-status::before]:w-1.25 [&_.idea-status::before]:h-1.25 [&_.idea-status::before]:shrink-0
 [&_.idea-status::before]:rounded-[50%] [&_.idea-status::before]:bg-muted-foreground
 [&_[data-status='ACTIVE']::before]:bg-status-active [&_[data-status='COMPLETED']::before]:bg-success
 [&_[data-status='PLANNED']::before]:bg-status-planned [&_[data-status='ARCHIVED']::before]:bg-status-archived
 [&_[data-status='IN\_PROGRESS']::before]:bg-warning motion-reduce:[&]:animate-none
-motion-reduce:[&_*]:transition-none motion-reduce:[&_*::before]:transition-none
+motion-reduce:**:transition-none motion-reduce:[&_*::before]:transition-none
 `;
 
 export const twIdeaReaderToolbar = `
@@ -25,8 +25,8 @@ max-phone:[&]:pb-4
 `;
 
 export const twIdeaReaderLayout = `
-idea-reader-layout [&]:grid [&]:grid-cols-[minmax(0,_1fr)_260px] [&]:items-start [&]:gap-12 [&]:pt-9
-max-lg:[&]:grid-cols-[minmax(0,_1fr)] max-lg:[&]:gap-8 max-lg:[&]:pt-7.5
+idea-reader-layout [&]:grid [&]:grid-cols-[minmax(0,1fr)_260px] [&]:items-start [&]:gap-12 [&]:pt-9
+max-lg:[&]:grid-cols-[minmax(0,1fr)] max-lg:[&]:gap-8 max-lg:[&]:pt-7.5
 `;
 
 export const twIdeaBanner = `
@@ -41,25 +41,25 @@ idea-reader-document [&]:min-w-0
 export const twIdeaReaderHeading = `
 idea-reader-heading [&]:pb-7.5 [&_h1]:m-0
 [&_h1]:font-display [&_h1]:font-normal [&_h1]:text-idea-title
-[&_h1]:wrap-anywhere [&_h1]:[text-wrap:pretty]
+[&_h1]:wrap-anywhere [&_h1]:text-pretty
 `;
 
 export const twIdeaReaderKicker = `
-idea-reader-kicker [&]:flex [&]:items-center [&]:gap-[7px] [&]:text-muted-foreground [&]:font-mono
+idea-reader-kicker [&]:flex [&]:items-center [&]:gap-1.75 [&]:text-muted-foreground [&]:font-mono
 [&]:font-normal [&]:not-italic [&]:text-micro [&]:leading-normal [&]:tracking-eyebrow [&]:uppercase
 [&]:m-[0_0_18px]
 `;
 
 export const twIdeaReaderAuthor = `
-idea-reader-author [&]:flex [&]:items-center [&]:flex-wrap [&]:gap-[9px] [&]:mt-6
+idea-reader-author [&]:flex [&]:items-center [&]:flex-wrap [&]:gap-2.25 [&]:mt-6
 [&]:text-muted-foreground [&]:text-metadata [&]:wrap-anywhere [&_img]:w-7.5 [&_img]:h-7.5
 [&_img]:shrink-0 [&_img]:border [&_img]:border-border [&_img]:rounded-[50%]
-[&_img]:[object-fit:cover]
+[&_img]:object-cover
 `;
 
 export const twIdeaReaderAvatar = `
 idea-reader-avatar [&]:w-7.5 [&]:h-7.5 [&]:shrink-0 [&]:border [&]:border-border [&]:rounded-[50%]
-[&]:[object-fit:cover] [&]:grid [&]:place-items-center [&]:font-mono [&]:font-normal [&]:not-italic
+[&]:object-cover [&]:grid [&]:place-items-center [&]:font-mono [&]:font-normal [&]:not-italic
 [&]:text-micro [&]:leading-normal [&]:bg-surface-muted
 `;
 
@@ -83,21 +83,21 @@ max-lg:[&]:border-t-border-subtle
 
 export const twIdeaReaderProperties = `
 idea-reader-properties [&]:grid [&]:gap-2 [&]:m-0 [&]:text-metadata [&_>_div]:grid
-[&_>_div]:grid-cols-[67px_minmax(0,_1fr)] [&_>_div]:items-center [&_>_div]:gap-2.5 [&_>_div]:min-h-9
+[&_>_div]:grid-cols-[67px_minmax(0,1fr)] [&_>_div]:items-center [&_>_div]:gap-2.5 [&_>_div]:min-h-9
 [&_dt]:text-muted-foreground [&_dd]:m-0 [&_dd]:min-w-0
-max-lg:[&]:grid-cols-[repeat(2,_minmax(0,_1fr))] max-lg:[&]:gap-x-6
-max-phone:[&]:grid-cols-[minmax(0,_1fr)]
+max-lg:[&]:grid-cols-2 max-lg:[&]:gap-x-6
+max-phone:[&]:grid-cols-[minmax(0,1fr)]
 `;
 
 export const twIdeaReaderVisibility = `
-idea-reader-visibility [&]:flex [&]:items-center [&]:gap-[7px] [&_svg]:text-muted-foreground
+idea-reader-visibility [&]:flex [&]:items-center [&]:gap-1.75 [&_svg]:text-muted-foreground
 `;
 
 export const twIdeaReaderStatus = `
-idea-reader-status [&]:inline-flex [&]:items-center [&]:gap-[7px] [&]:min-h-control [&]:border-0
+idea-reader-status [&]:inline-flex [&]:items-center [&]:gap-1.75 [&]:min-h-control [&]:border-0
 [&]:rounded-control [&]:bg-transparent [&]:text-foreground [&]:p-0 [&]:font-sans [&]:font-normal
 [&]:not-italic [&]:text-metadata [&]:leading-normal [&]:whitespace-nowrap [&::before]:[content:'']
-[&::before]:w-[5px] [&::before]:h-[5px] [&::before]:shrink-0 [&::before]:rounded-[50%]
+[&::before]:w-1.25 [&::before]:h-1.25 [&::before]:shrink-0 [&::before]:rounded-[50%]
 [&::before]:bg-muted-foreground
 `;
 
@@ -119,8 +119,8 @@ idea-reader-empty [&]:flex [&]:flex-col [&]:items-start [&]:gap-3 [&]:py-3 [&]:p
 export const twResourcePageToolbar = `
 resource-page-toolbar [&]:flex [&]:items-center [&]:justify-between [&]:gap-6 [&]:min-w-0 [&]:pt-3
 [&]:pb-5 [&]:border-b [&]:border-b-border
-[&_:is(a,_button):focus-visible]:[outline:2px_solid_var(--ring)]
-[&_:is(a,_button):focus-visible]:[outline-offset:3px] max-phone:[&]:flex-wrap
+[&_:is(a,button):focus-visible]:[outline:2px_solid_var(--ring)]
+[&_:is(a,button):focus-visible]:outline-offset-[3px] max-phone:[&]:flex-wrap
 max-md:[&]:flex-wrap max-md:[&]:gap-2
 `;
 
@@ -142,12 +142,12 @@ resource-page-actions [&]:flex [&]:flex-wrap [&]:min-w-0 [&]:max-w-full [&]:item
 `;
 
 export const twIdeaTagLink = `
-idea-tag-link [&]:inline-flex [&]:items-center [&]:gap-[5px] [&]:min-h-8 [&]:max-w-full [&]:py-1
+idea-tag-link [&]:inline-flex [&]:items-center [&]:gap-1.25 [&]:min-h-8 [&]:max-w-full [&]:py-1
 [&]:px-2 [&]:border [&]:border-border [&]:rounded-control [&]:bg-surface [&]:text-muted-foreground
 [&]:font-sans [&]:font-normal [&]:not-italic [&]:text-caption [&]:leading-normal
-[&]:[transition:border-color_120ms,_color_120ms] [&_svg]:shrink-0 [&_span]:wrap-anywhere
+[&]:[transition:border-color_120ms,color_120ms] [&_svg]:shrink-0 [&_span]:wrap-anywhere
 [&_span]:min-w-0 [&:hover]:border-border-strong [&:hover]:text-foreground
-[&:focus-visible]:[outline:2px_solid_var(--ring)] [&:focus-visible]:[outline-offset:3px]
+focus-visible:[outline:2px_solid_var(--ring)] focus-visible:outline-offset-[3px]
 motion-reduce:[&]:transition-none
 `;
 
