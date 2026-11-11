@@ -58,7 +58,7 @@ export function FilterChoiceGroup<Value extends string>({
           <Toggle<Value>
             key={choice.value}
             value={choice.value}
-            className={`group inline-flex min-h-9 min-w-0 items-center gap-1.5 rounded-[4px] text-caption text-muted-foreground transition-[background-color,color,box-shadow] duration-(--duration-fast) hover:bg-surface-muted/55 hover:text-foreground focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring data-pressed:bg-surface-muted data-pressed:font-medium data-pressed:text-foreground data-pressed:shadow-control disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none ${choiceVariants[variant]}`}
+            className={`group inline-flex min-h-9 min-w-0 items-center gap-1.5 rounded-sm text-caption text-muted-foreground transition-[background-color,color,box-shadow] duration-(--duration-fast) hover:bg-surface-muted/55 hover:text-foreground focus-visible:relative focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring data-pressed:bg-surface-muted data-pressed:font-medium data-pressed:text-foreground data-pressed:shadow-control disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none ${choiceVariants[variant]}`}
           >
             {choice.icon ? (
               <span

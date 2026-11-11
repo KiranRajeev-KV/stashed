@@ -176,7 +176,7 @@ export function CollectionForm({
               onChange={(event) =>
                 setValues({ ...values, name: event.currentTarget.value })
               }
-              className={`${twFormTitleInput} w-full font-display [field-sizing:content] ${mode === "create" ? "min-h-24 text-idea-title" : "min-h-16 text-document-title"}`}
+              className={`${twFormTitleInput} w-full font-display field-sizing-content ${mode === "create" ? "min-h-24 text-idea-title" : "min-h-16 text-document-title"}`}
               placeholder="Give the collection a name…"
             />
             <span className="flex justify-between gap-3 text-caption text-muted-foreground">

@@ -1,7 +1,7 @@
 /** Linear-inspired recipes for collection browsing and management surfaces. */
 
 export const twCollectionGrid = `
-collection-grid grid grid-cols-[repeat(2,minmax(0,1fr))] gap-3.5
+collection-grid grid grid-cols-2 items-start gap-4
 max-md:grid-cols-[minmax(0,1fr)] motion-reduce:[&_>_article]:transition-none
 `;
 
@@ -12,7 +12,7 @@ hover:border-border-strong hover:bg-surface-elevated hover:shadow-raised focus-w
 `;
 
 export const twCollectionCardBody = `
-collection-card-body flex min-h-52 min-w-0 flex-col p-5 sm:p-5.5
+collection-card-body flex min-w-0 flex-col p-5
 `;
 
 export const twCollectionIconTile = `

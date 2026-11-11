@@ -83,11 +83,11 @@ export function MobileFilterDrawer({
       <Drawer.VirtualKeyboardProvider>
         <Drawer.Portal>
           <Drawer.Backdrop
-            className={`${twUiDialogBackdrop} fixed inset-0 z-50 bg-foreground/35 opacity-100 backdrop-blur-[2px] transition-opacity duration-(--duration-standard) data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 motion-reduce:transition-none`}
+            className={`${twUiDialogBackdrop} fixed inset-0 z-50 bg-foreground/35 opacity-100 backdrop-blur-[2px] transition-opacity duration-(--duration-standard) data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none`}
           />
           <Drawer.Viewport className="fixed inset-0 z-50 flex items-end justify-center">
             <Drawer.Popup
-              className={`${twUiDialogSheet} ${twUiSelectSheet} flex max-h-[min(88dvh,52rem)] w-full translate-y-[var(--drawer-swipe-movement-y)] flex-col overflow-hidden rounded-t-[1rem] border border-b-0 border-border-strong bg-surface-elevated text-foreground shadow-overlay transition-transform duration-(--duration-slow) ease-emphasized data-[ending-style]:translate-y-full data-[starting-style]:translate-y-full data-[swiping]:select-none motion-reduce:transition-none sm:max-w-xl`}
+              className={`${twUiDialogSheet} ${twUiSelectSheet} flex max-h-[min(88dvh,52rem)] w-full translate-y-(--drawer-swipe-movement-y) flex-col overflow-hidden rounded-t-2xl border border-b-0 border-border-strong bg-surface-elevated text-foreground shadow-overlay transition-transform duration-(--duration-slow) ease-emphasized data-ending-style:translate-y-full data-starting-style:translate-y-full data-swiping:select-none motion-reduce:transition-none sm:max-w-xl`}
             >
               <div className="grid shrink-0 gap-4 border-b border-border px-4 pb-4 pt-2 sm:px-6">
                 <div

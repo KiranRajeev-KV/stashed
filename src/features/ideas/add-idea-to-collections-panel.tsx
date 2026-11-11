@@ -41,15 +41,18 @@ function collectionLabel(count: number) {
 
 /**
  * Contextual picker for associating one Idea with collections the current user
- * owns or can edit. It intentionally does not expose collection metadata on
- * the Idea reader itself.
+ * owns or can edit. Existing memberships remain disabled.
  */
 export function AddIdeaToCollectionsPanel({
   ideaId,
   onSelectionCountChange,
+  onPendingChange,
+  onAdded,
 }: {
   ideaId: string;
   onSelectionCountChange: (count: number) => void;
+  onPendingChange: (pending: boolean) => void;
+  onAdded: () => void;
 }) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
@@ -117,8 +120,17 @@ export function AddIdeaToCollectionsPanel({
         queryClient.invalidateQueries({ queryKey: ["collections"] }),
         queryClient.invalidateQueries({ queryKey: ["collection"] }),
       ]);
+      if (result.failedCollectionIds.length === 0) {
+        onPendingChange(false);
+        onAdded();
+      }
     },
   });
+
+  useEffect(() => {
+    onPendingChange(add.isPending);
+    return () => onPendingChange(false);
+  }, [add.isPending, onPendingChange]);
 
   const toggleCollection = (collection: CollectionIdeaTarget) => {
     if (collection.isMember || add.isPending) return;

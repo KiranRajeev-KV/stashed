@@ -5,6 +5,7 @@ import { apiError } from "../api/errors.js";
 import { loadOptionalSession, requireSession } from "../middleware/session.js";
 import type { AppEnv } from "../types.js";
 import {
+  ideaMembershipsQuerySchema,
   addCollectionIdeasSchema,
   addCollectionIdeaSchema,
   collectionCollaboratorParamSchema,
@@ -20,6 +21,7 @@ import {
   updateCollectionSchema,
 } from "./schemas.js";
 import {
+  listIdeaMemberships,
   addCollectionIdeas,
   addCollectionIdea,
   createCollection,
@@ -100,6 +102,18 @@ export const collectionsRoutes = new Hono<AppEnv>()
           c.get("db"),
           c.req.valid("query"),
           c.get("currentUserId"),
+        ),
+      ),
+  )
+  .get(
+    "/idea-memberships",
+    zValidator("query", ideaMembershipsQuerySchema, validationHook),
+    async (c) =>
+      c.json(
+        await listIdeaMemberships(
+          c.get("db"),
+          c.req.valid("query"),
+          c.get("sessionUserId"),
         ),
       ),
   )

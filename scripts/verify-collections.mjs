@@ -409,6 +409,68 @@ async function main() {
       };
     }
 
+    // Reader membership summaries respect discovery, roles and explicit URL context.
+    const membershipPath = `/api/collections/idea-memberships?ideaId=${ideas.public}`;
+    for (const [userId, expected] of [
+      [undefined, [collections.public]],
+      [users.stranger, [collections.public]],
+      [users.owner, Object.values(collections)],
+      [users.editor, Object.values(collections)],
+      [users.viewer, Object.values(collections)],
+    ]) {
+      const result = await request(membershipPath, { userId });
+      assertStatus(result, 200, "reader memberships");
+      assert.deepEqual(
+        result.json.collections.map((collection) => collection.id).sort(),
+        [...expected].sort(),
+      );
+      for (const collection of result.json.collections) {
+        assert.equal(collection.icon, "folder");
+        assert.equal(
+          collection.capabilities.manageIdeas,
+          userId === users.owner || userId === users.editor,
+          "membership actions follow Collection roles, not Idea authorship",
+        );
+      }
+    }
+    const linkedUnlisted = await request(
+      `${membershipPath}&collectionId=${collections.unlisted}`,
+    );
+    assertStatus(linkedUnlisted, 200, "linked unlisted membership");
+    assert.deepEqual(
+      linkedUnlisted.json.collections.map((collection) => collection.id).sort(),
+      [collections.public, collections.unlisted].sort(),
+    );
+    const linkedPrivate = await request(
+      `${membershipPath}&collectionId=${collections.private}`,
+    );
+    assertStatus(linkedPrivate, 200, "private context does not grant access");
+    assert.deepEqual(
+      linkedPrivate.json.collections.map((collection) => collection.id),
+      [collections.public],
+    );
+    assertStatus(
+      await request(
+        `/api/collections/idea-memberships?ideaId=${ideas.ownerPrivate}`,
+      ),
+      404,
+      "private idea memberships remain hidden",
+    );
+    const nonMember = await request(
+      `/api/collections/idea-memberships?ideaId=${ideas.extraPublic}&collectionId=${collections.public}`,
+    );
+    assertStatus(nonMember, 200, "unrelated context");
+    assert.deepEqual(
+      nonMember.json.collections,
+      [],
+      "context must be an actual membership",
+    );
+    assertStatus(
+      await request(`${membershipPath}&collectionId=invalid`),
+      400,
+      "invalid membership context",
+    );
+
     // Discovery and direct Collection access.
     const anonymousDiscovery = await request("/api/collections?scope=DISCOVER");
     assertStatus(anonymousDiscovery, 200, "anonymous discovery");
@@ -599,6 +661,20 @@ async function main() {
       "collection editor receives no idea edit rights",
     );
 
+    for (const userId of [users.viewer, users.stranger]) {
+      assertStatus(
+        await request(
+          `/api/collections/${collections.public}/ideas/${ideas.public}`,
+          {
+            method: "DELETE",
+            userId,
+          },
+        ),
+        403,
+        "viewers and Idea authors without Collection edit access cannot remove memberships",
+      );
+    }
+
     // Membership is idempotent, unordered, and independent from Idea lifetime.
     const concurrentAdds = await Promise.all(
       Array.from({ length: 2 }, () =>
@@ -635,6 +711,16 @@ async function main() {
       await request(`/api/ideas/${ideas.extraPublic}`),
       200,
       "removing membership leaves the idea unchanged",
+    );
+    const removedMembership = await request(
+      `/api/collections/idea-memberships?ideaId=${ideas.extraPublic}`,
+      { userId: users.editor },
+    );
+    assertStatus(removedMembership, 200, "membership summary after removal");
+    assert.deepEqual(
+      removedMembership.json.collections,
+      [],
+      "removed memberships disappear from the reader summary",
     );
     const cascadeIdea = await request("/api/ideas", {
       method: "POST",

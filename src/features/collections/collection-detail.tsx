@@ -56,7 +56,6 @@ import {
 } from "../../styles/archive-styles.js";
 import {
   twIdeaReader,
-  twIdeaReaderAuthor,
   twIdeaReaderProperties,
 } from "../../styles/idea-page-styles.js";
 import {
@@ -257,6 +256,12 @@ export function CollectionDetail() {
         }
         actions={
           <>
+            <div className="mr-2 flex min-h-control items-center border-r border-border-subtle pr-4">
+              <CollectionCollaboratorAvatars
+                owner={collection.owner}
+                editors={collection.editors}
+              />
+            </div>
             <CopyLinkButton
               isPrivate={collection.visibility === "PRIVATE"}
               subject="collection"
@@ -298,15 +303,9 @@ export function CollectionDetail() {
               <h1 className="m-0 font-display text-idea-title font-normal text-pretty wrap-anywhere">
                 {collection.name}
               </h1>
-              <div className={twIdeaReaderAuthor}>
-                <CollectionCollaboratorAvatars
-                  owner={collection.owner}
-                  editors={collection.editors}
-                />
-              </div>
             </div>
           </div>
-          <p className="mt-7 max-w-[var(--layout-reading)] whitespace-pre-wrap text-body leading-reading text-muted-foreground">
+          <p className="mt-7 max-w-(--layout-reading) whitespace-pre-wrap text-body leading-reading text-muted-foreground">
             {collection.description || "No description has been added yet."}
           </p>
         </div>
@@ -613,6 +612,7 @@ export function CollectionDetail() {
           label="Updating collection Ideas"
         >
           <CollectionIdeas
+            collectionId={collectionId}
             canManage={collection.capabilities.manageIdeas}
             currentUserId={session.data?.id}
             filtered={Boolean(search.q || search.status || search.visibility)}
@@ -635,6 +635,7 @@ export function CollectionDetail() {
 }
 
 function CollectionIdeas({
+  collectionId,
   canManage,
   currentUserId,
   filtered,
@@ -645,6 +646,7 @@ function CollectionIdeas({
   removeError,
   removingId,
 }: {
+  collectionId: string;
   canManage: boolean;
   currentUserId?: string;
   filtered: boolean;
@@ -674,7 +676,7 @@ function CollectionIdeas({
     return (
       <section className={`${twIdeaEmptyState} mt-7`}>
         <FolderKanban
-          className="mx-auto mb-5 box-content size-6 rounded-dialog bg-surface-muted p-4 text-primary [transform:rotate(-5deg)]"
+          className="mx-auto mb-5 box-content size-6 rounded-dialog bg-surface-muted p-4 text-primary transform-[rotate(-5deg)]"
           aria-hidden="true"
         />
         <p className="font-mono text-label uppercase text-accent">
@@ -705,6 +707,7 @@ function CollectionIdeas({
           <IdeaCard
             key={idea.id}
             idea={idea}
+            collectionId={collectionId}
             currentUserId={currentUserId}
             footerAction={
               canManage ? (

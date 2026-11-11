@@ -177,12 +177,12 @@ export function Select<Value extends string>({
           collisionPadding={16}
           sideOffset={6}
           {...positionerProps}
-          className={`z-[70] w-max min-w-(--anchor-width) max-w-[calc(100vw-2rem)] outline-none ${positionerClassName ?? ""}`}
+          className={`z-70 w-max min-w-(--anchor-width) max-w-[calc(100vw-2rem)] outline-none ${positionerClassName ?? ""}`}
         >
           <BaseSelect.Popup
             className={`${twUiSelectPopup} flex w-full min-w-0 flex-col overflow-hidden ${popupClassName ?? ""}`}
           >
-            <BaseSelect.List className="max-h-[min(24rem,var(--available-height))] w-full overflow-x-hidden overflow-y-auto p-[5px] outline-none">
+            <BaseSelect.List className="max-h-[min(24rem,var(--available-height))] w-full overflow-x-hidden overflow-y-auto p-1.25 outline-none">
               {options.map((option) => (
                 <BaseSelect.Item
                   key={option.value}

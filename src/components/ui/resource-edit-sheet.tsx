@@ -27,6 +27,7 @@ type ResourceEditSheetProps = {
   pending?: boolean;
   size?: "default" | "wide";
   onClose: () => void;
+  finalFocus?: RefObject<HTMLElement | null>;
   children: (controls: {
     requestClose: () => void;
     selectPortalContainer: RefObject<HTMLDivElement | null>;
@@ -45,6 +46,7 @@ export function ResourceEditSheet({
   pending = false,
   size = "default",
   onClose,
+  finalFocus,
   children,
 }: ResourceEditSheetProps) {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
@@ -73,8 +75,9 @@ export function ResourceEditSheet({
             className={twResourceEditSheetBackdrop}
             onClick={requestClose}
           />
-          <Dialog.Viewport className="fixed inset-0 z-[50]">
+          <Dialog.Viewport className="fixed inset-0 z-50">
             <Dialog.Popup
+              finalFocus={finalFocus}
               className={`${twResourceEditSheet} ${size === "wide" ? twResourceEditSheetWide : ""}`}
             >
               <div className={twResourceEditSheetHeader}>
@@ -106,7 +109,7 @@ export function ResourceEditSheet({
               </div>
               <div
                 ref={selectPortalContainer}
-                className="pointer-events-none fixed inset-0 z-[60] [&_[data-base-ui-portal]]:pointer-events-auto"
+                className="pointer-events-none fixed inset-0 z-60 **:data-base-ui-portal:pointer-events-auto"
               />
             </Dialog.Popup>
           </Dialog.Viewport>
@@ -121,10 +124,10 @@ export function ResourceEditSheet({
       >
         <AlertDialog.Portal>
           <AlertDialog.Overlay
-            className={`${twDeleteDialogOverlay} ${twUiDialogBackdrop} z-[89]`}
+            className={`${twDeleteDialogOverlay} ${twUiDialogBackdrop} z-89`}
           />
           <AlertDialog.Content
-            className={`${twDeleteDialogContent} ${twUiDialogPanel} z-[90]`}
+            className={`${twDeleteDialogContent} ${twUiDialogPanel} z-90`}
           >
             <AlertDialog.Title className={twDeleteDialogTitle}>
               Discard unsaved changes?

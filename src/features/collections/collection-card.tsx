@@ -20,21 +20,12 @@ export function CollectionCard({
   return (
     <article className={twCollectionCard}>
       <div className={twCollectionCardBody}>
-        <div className="flex min-w-0 items-start gap-3.5">
-          <span className={twCollectionIconTile}>
-            <CollectionIcon icon={collection.icon} className="size-[18px]" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <h2 className="min-w-0 font-display text-card-title font-normal text-pretty">
-              <Link
-                to="/collections/$collectionId"
-                params={{ collectionId: collection.id }}
-                className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
-              >
-                {collection.name}
-              </Link>
-            </h2>
-            <div className={`${twCollectionMeta} mt-1.5`}>
+        <div className="flex min-w-0 items-center justify-between gap-2 sm:gap-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className={`${twCollectionIconTile} shrink-0 [&]:size-8`}>
+              <CollectionIcon icon={collection.icon} className="size-4" />
+            </span>
+            <div className={twCollectionMeta}>
               <span className="inline-flex items-center gap-1.5 capitalize">
                 <VisibilityIcon
                   visibility={collection.visibility}
@@ -49,21 +40,33 @@ export function CollectionCard({
               </span>
             </div>
           </div>
+          <div className="pointer-events-none flex shrink-0 items-center gap-2 sm:gap-3">
+            <CollectionCollaboratorAvatars
+              owner={collection.owner}
+              editors={collection.editors}
+              className="pointer-events-auto"
+            />
+            <ArrowRight
+              className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
+              aria-hidden="true"
+            />
+          </div>
         </div>
-        <p className="mt-4 line-clamp-3 text-ui leading-description text-muted-foreground">
-          {collection.description ||
-            "No description has been added to this collection."}
-        </p>
-        <footer className="mt-auto flex min-w-0 items-center justify-between gap-3 pt-5 text-caption text-muted-foreground">
-          <CollectionCollaboratorAvatars
-            owner={collection.owner}
-            editors={collection.editors}
-          />
-          <ArrowRight
-            className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
-            aria-hidden="true"
-          />
-        </footer>
+        <div className="mt-3 min-w-0">
+          <h2 className="font-display text-card-title font-normal text-pretty wrap-anywhere">
+            <Link
+              to="/collections/$collectionId"
+              params={{ collectionId: collection.id }}
+              className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
+            >
+              {collection.name}
+            </Link>
+          </h2>
+          <p className="mt-1.5 line-clamp-2 text-ui leading-description text-muted-foreground">
+            {collection.description?.trim() ||
+              "No description has been added to this collection."}
+          </p>
+        </div>
       </div>
     </article>
   );

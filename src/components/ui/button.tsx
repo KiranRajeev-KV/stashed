@@ -1,11 +1,11 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { LoaderCircle } from "lucide-react";
 import { buttonStyles, type ButtonStyleOptions } from "./button-variants.js";
 
 type ButtonProps = ComponentProps<"button"> &
   ButtonStyleOptions & {
     loading?: boolean;
-    loadingLabel?: string;
+    loadingLabel?: ReactNode;
   };
 
 /** React 19 forwards ref through props, including Radix asChild triggers. */

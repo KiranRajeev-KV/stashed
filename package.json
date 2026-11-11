@@ -17,11 +17,12 @@
     "cf-typegen": "wrangler types",
     "db:generate": "drizzle-kit generate",
     "db:local": "wrangler d1 migrations apply stashed-db --local",
-    "db:seed": "node ./scripts/seed.mjs",
+    "db:seed": "node --experimental-strip-types ./scripts/seed.mjs",
     "screenshots": "node ./scripts/screenshots.mjs",
     "db:backfill-content-plain": "node --experimental-strip-types ./scripts/backfill-idea-content-plain.ts",
     "verify:collections": "node ./scripts/verify-collections.mjs",
-    "db:remote": "wrangler d1 migrations apply stashed-db --remote"
+    "db:remote": "wrangler d1 migrations apply stashed-db --remote",
+    "verify:seed": "node --experimental-strip-types ./scripts/verify-seed.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

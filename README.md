@@ -57,7 +57,7 @@ Significant technical decisions are recorded as
 
 ## Prerequisites
 
-- Node.js 22+
+- Node.js 22.6+
 - [pnpm](https://pnpm.io)
 - [just](https://just.systems) (optional — you can use the npm scripts directly)
 - A Cloudflare account (only needed for deploying and `db:remote`)
@@ -66,7 +66,7 @@ Significant technical decisions are recorded as
 
 ```sh
 pnpm install
-pnpm db:local
+pnpm db:seed # Applies local migrations and seeds every application table
 pnpm dev
 ```
 
@@ -93,6 +93,29 @@ Run `just` to list every recipe. The ones you'll use most:
 | `just db-remote`   | Apply migrations to the remote D1 database                |
 | `just screenshots` | Regenerate committed README/documentation screenshots     |
 | `just clean`       | Remove build artifacts (dist, .wrangler, tsbuildinfo)     |
+
+### Local seed data
+
+`pnpm db:seed` applies local migrations and loads deterministic development data
+for all 12 application tables. It includes Ideas across every status/visibility,
+Collections and collaborators, shared memberships, tags, derived search text,
+and historical tag-suggestion usage. It never targets remote D1.
+
+```sh
+pnpm db:seed
+pnpm db:seed --owner-github-id 12345 --owner-username demo-maintainer
+pnpm db:seed --persist-to /tmp/stashed-demo
+pnpm db:seed --dry-run
+pnpm verify:seed
+```
+
+The default personas are synthetic; use your numeric GitHub ID to own the main
+persona's Ideas and Collections after signing in. Keep using the same owner
+options on subsequent runs. Existing login profiles are reused unchanged.
+Seed-owned records and their links are restored on reruns; other records remain.
+
+See the [seed guide](./docs/seeding.md) for scenarios, stable URLs, isolated-state
+usage, verification, and instructions for adding fixtures when the schema changes.
 
 ### Screenshots
 
